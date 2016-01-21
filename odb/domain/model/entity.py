@@ -1,5 +1,5 @@
 from infrastructure.errors.exceptions import ConsistencyError
-from a4ai.domain.model.events import DomainEvent
+from odb.domain.model.events import DomainEvent
 
 
 # =======================================================================================

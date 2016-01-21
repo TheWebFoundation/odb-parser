@@ -1,11 +1,11 @@
 __author__ = 'Rodrigo'
 
-from a4ai.domain.model.entity import Entity
-import uuid
-from a4ai.domain.model.events import publish
+from odb.domain.model.entity import Entity
+from odb.domain.model.events import publish
 from utility.mutators import when, mutate
 from abc import ABCMeta
-from a4ai.domain.model.events import DomainEvent
+from odb.domain.model.events import DomainEvent
+import uuid
 
 
 # =======================================================================================
@@ -25,11 +25,15 @@ class Indicator(Entity):
         description (str): Description of the indicator
         uri (str): URI that identifies this unique resource, normally composed depending on deployment address
         subindex (str): Indicator name of the subindex that this indicator belongs to
-        type (str): Type of the indicator, normally one of: Index, SubIndex, Primary or Secondary
+        component (str): Indicator name of the component that this indicator belongs to
+        type (str): Type of the indicator, normally one of: Index, SubIndex, Component, Primary or Secondary
         children (list of Indicator): Children that have this indicator as its parent
+        source_name (str): Name of the source where data have been obtained
         provider_name (str): Name of the provider where data have been obtained
         republish (bool): If republish of this indicator data are allowed or not
         is_percentage (bool): If the value is a percentage or not
+        weight (float): The weight of the indicator
+        tags (str): Tags for the indicator
     """
 
     class Created(Entity.Created):
@@ -60,14 +64,19 @@ class Indicator(Entity):
         self._provider_url = event.provider_url
         self._description = event.description
         self._uri = event.uri
+        self._component = event.component
         self._subindex = event.subindex
         self._type = event.type
         self._children = event.children
+        self._source_name = event.source_name
         self._provider_name = event.provider_name
         self._republish = event.republish
         self._is_percentage = event.is_percentage
+        self._tags = event.tags
+        self._weight = event.weight
         self._scale = event.scale
 
+    # FIXME: Review this repr because I think it is not correct
     def __repr__(self):
         return "{d}Indicator(id={id!r}," \
                "country_coverage={i._country_coverage!r}, " \
@@ -86,14 +95,14 @@ class Indicator(Entity):
             dict: Dictionary representation of self object
         """
         return {
-            'index': self.index, 'indicator': self.indicator, 'name': self.name,
-            'parent': self.parent, 'provider_url': self.provider_url, 'description': self.description,
-            'uri': self.uri,
-            'subindex': self.subindex,
-            'id': self.id, 'type': self.type, 'children': [child.to_dict() for child in self.children],
-            'provider_name': self.provider_name, 'republish': self.republish, 'is_percentage': self.is_percentage,
-            'scale': self.scale
-        }
+            'index': self.index, 'indicator': self.indicator, 'name': self.name, 'parent': self.parent,
+            'provider_url': self.provider_url, 'description': self.description, 'uri': self.uri,
+            'component': self.component, 'subindex': self.subindex, 'id': self.id, 'type': self.type,
+            'children': [child.to_dict() for child in self.children], 'provider_name': self.provider_name,
+            'source_name': self.source_name, 'republish': self.republish, 'is_percentage': self.is_percentage,
+            'tags': self.tags, 'scale': self.scale, 'weight': self.weight}
+
+    # TODO: Enforce rules about naming here?
 
     # =======================================================================================
     # Properties
@@ -169,6 +178,11 @@ class Indicator(Entity):
     def description(self):
         return self._description
 
+    @description.setter
+    def description(self, description):
+        self._description = description
+        self.increment_version()
+
     @property
     def uri(self):
         return self._uri
@@ -180,11 +194,20 @@ class Indicator(Entity):
 
     @property
     def subindex(self):
-        return self._uri
+        return self._subindex
 
-    @uri.setter
+    @subindex.setter
     def subindex(self, subindex):
         self._subindex = subindex
+        self.increment_version()
+
+    @property
+    def component(self):
+        return self._component
+
+    @component.setter
+    def component(self, component):
+        self._component = component
         self.increment_version()
 
     @property
@@ -194,6 +217,24 @@ class Indicator(Entity):
     @provider_name.setter
     def provider_name(self, provider_name):
         self._provider_name = provider_name
+        self.increment_version()
+
+    @property
+    def source_name(self):
+        return self._source_name
+
+    @source_name.setter
+    def source_name(self, source_name):
+        self._source_name = source_name
+        self.increment_version()
+
+    @property
+    def tags(self):
+        return self._tags
+
+    @tags.setter
+    def tags(self, tags):
+        self._tags = tags
         self.increment_version()
 
     @property
@@ -221,6 +262,15 @@ class Indicator(Entity):
     @scale.setter
     def scale(self, scale):
         self._scale = scale
+        self.increment_version()
+
+    @property
+    def weight(self):
+        return self._weight
+
+    @weight.setter
+    def weight(self, weight):
+        self._weight = weight
         self.increment_version()
 
     # =======================================================================================
@@ -258,11 +308,12 @@ class Indicator(Entity):
 # =======================================================================================
 # Indicator aggregate root factory
 # =======================================================================================
-def create_indicator(id=None, index=None, indicator=None, name=None,
-                     provider_url=None, description=None, uri=None,
-                     parent=None, scale=None,
-                     provider_name=None, republish=False, is_percentage=False,
-                     subindex=None, type=None, children=[]):
+# FIXME: children used to have an empty list as default argument which can cause problems
+# FIXME: why an additional originator_id?
+def create_indicator(id=None, index=None, indicator=None, name=None, component=None, source_name=None,
+                     provider_url=None, description=None, uri=None, parent=None, scale=None, provider_name=None,
+                     republish=False, is_percentage=False, subindex=None, type=None, tags=None, weight=None,
+                     children=None):
     """
     This function creates new indicators and acts as a factory
 
@@ -271,31 +322,31 @@ def create_indicator(id=None, index=None, indicator=None, name=None,
         index (str, optional): Index to which this indicator belongs to
         indicator (str, optional): Indicator name, this is used to reference from other indicators
         name (str, optional): Indicator name, this is used as the long name so it could be longer and more complex than indicator
+        component (str, optional):  Indicator name of the component that this indicator belongs to
         parent (str, optional): Indicator name of the parent, this must reference indicator attribute of the parent indicator
         provider_url (str, optional): URL where data have been obtained
         description (str, optional): Description of the indicator
         uri (str, optional): URI that identifies this unique resource, normally composed depending on deployment address
         subindex (str, optional): Indicator name of the subindex that this indicator belongs to
-        type (str, optional): Type of the indicator, normally one of: Index, SubIndex, Primary or Secondary
+        type (str, optional): Type of the indicator, normally one of: Index, SubIndex, Component, Primary or Secondary
+        weight(float, optional): The weight of the indicator
         children (list of Indicator, optional): Children that have this indicator as its parent
+        source_name (str, optional): Name of the source where data have been obtained
         provider_name (str, optional): Name of the provider where data have been obtained
         republish (bool, optional): If republish of this indicator data are allowed or not
         is_percentage (bool): If the value is a percentage or not
+        tags (str, optional): Tags for the indicator
 
     Returns:
         Indicator: Created indicator
     """
     indicator_id = uuid.uuid4().hex[:24]
-    event = Indicator.Created(originator_id=indicator_id, originator_version=0,
-                              id=id, index=index, indicator=indicator, name=name,
-                              parent=parent,
-                              provider_url=provider_url,
-                              description=description, uri=uri,
-                              scale=scale,
-                              provider_name=provider_name, republish=republish,
-                              subindex=subindex, type=type, children=children,
-                              is_percentage=is_percentage
-                              )
+    children = [] if children is None else children
+    event = Indicator.Created(originator_id=indicator_id, originator_version=0, id=id, index=index, indicator=indicator,
+                              name=name, parent=parent, provider_url=provider_url, description=description, uri=uri,
+                              scale=scale, provider_name=provider_name, republish=republish, subindex=subindex,
+                              component=component, source_name=source_name, type=type, tags=tags,
+                              is_percentage=is_percentage, weight=weight, children=children)
     indicator = when(event)
     publish(event)
     return indicator
@@ -327,38 +378,38 @@ class Repository(object):
     """Abstract implementation of generic queries for managing indicators."""
     __metaclass__ = ABCMeta
 
-    def find_indicator_by_code(self, indicator_code):
-        pass
-
-    def find_indicators_index(self):
-        pass
-
-    def find_indicators_sub_indexes(self):
-        pass
-
-    def find_indicators_components(self, parent=None):
-        pass
-
-    def find_indicators_primary(self, parent=None):
-        pass
-
-    def find_indicators_secondary(self, parent=None):
-        pass
-
-    def find_indicators_indicators(self, parent=None):
-        pass
-
-    def find_indicators_by_level(self, level, parent=None):
-        pass
-
-    def find_indicator_children(self, indicator):
-        pass
-
-    def indicator_error(self, indicator_code):
-        pass
-
-    def indicator_uri(self, indicator_code):
-        pass
+    # def find_indicator_by_code(self, indicator_code):
+    #     pass
+    #
+    # def find_indicators_index(self):
+    #     pass
+    #
+    # def find_indicators_sub_indexes(self):
+    #     pass
+    #
+    # def find_indicators_components(self, parent=None):
+    #     pass
+    #
+    # def find_indicators_primary(self, parent=None):
+    #     pass
+    #
+    # def find_indicators_secondary(self, parent=None):
+    #     pass
+    #
+    # def find_indicators_indicators(self, parent=None):
+    #     pass
+    #
+    # def find_indicators_by_level(self, level, parent=None):
+    #     pass
+    #
+    # def find_indicator_children(self, indicator):
+    #     pass
+    #
+    # def indicator_error(self, indicator_code):
+    #     pass
+    #
+    # def indicator_uri(self, indicator_code):
+    #     pass
 
     def insert_indicator(self, indicator, indicator_uri=None, component_name=None, subindex_name=None, index_name=None,
                          weight=None, provider_name=None, provider_url=None):

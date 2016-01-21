@@ -3,8 +3,8 @@ __author__ = 'Rodrigo'
 import uuid
 from abc import ABCMeta
 
-from a4ai.domain.model.entity import Entity
-from a4ai.domain.model.events import DomainEvent, publish
+from odb.domain.model.entity import Entity
+from odb.domain.model.events import DomainEvent, publish
 from utility.mutators import mutate, when
 from infrastructure.errors.exceptions import DiscardedEntityError
 

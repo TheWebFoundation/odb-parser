@@ -1,3 +1,7 @@
+from __future__ import division
+
+import re
+
 from odb.domain.model.indicator.indicator import *
 from odb.domain.model.observation.observation import *
 from odb.domain.model.observation.year import Year
@@ -9,6 +13,8 @@ This module provides utility functions to the parsing classes. Among these funct
 for transforming the elements retrieved from the Excel files from their auxiliary model classes to the corresponding
 domain model classes.
 """
+
+is_fraction_pattern = re.compile(ur'^\d+(\.\d*)?(/\d+(\.\d*)?)?$')
 
 
 def string_to_bool(string):
@@ -32,14 +38,37 @@ def is_number(s):
     return False
 
 
+def weight_to_float(s):
+    if s is not None and is_fraction_pattern.match(s):
+        try:
+            return eval(s)
+        except ZeroDivisionError:
+            pass
+
+    return None
+
+
 def excel_indicator_to_dom(excel_indicator):
-    indicator = create_indicator(type=excel_indicator.type,
+    # Excel indicator
+    # index_code, code, name, _type, subindex_code, component_code, description, source_name, provider_name, tags, weight):
+
+    # Domain
+    # id=None, index=None, indicator=None, name=None, component=None, source_name=None,
+    # provider_url=None, description=None, uri=None, parent=None, scale=None, provider_name=None,
+    # republish=False, is_percentage=False, subindex=None, type=None, tags=None, weight=None,
+    # children=None
+
+    indicator = create_indicator(index=excel_indicator.index_code,
+                                 type=excel_indicator.type,
                                  name=excel_indicator.name,
                                  indicator=excel_indicator.code,
-                                 republish=excel_indicator.republishable,
-                                 description=excel_indicator.name,
+                                 description=excel_indicator.description,
                                  provider_name=excel_indicator.provider_name,
-                                 provider_url=excel_indicator.provider_url)
+                                 component=excel_indicator.component_code,
+                                 source_name=excel_indicator.source_name,
+                                 subindex=excel_indicator.subindex_code,
+                                 tags=excel_indicator.tags,
+                                 weight=excel_indicator.weight)
     return indicator
 
 
@@ -56,3 +85,14 @@ def excel_observation_to_dom(excel_observation, area, indicator):
                                      year=Year(2014),
                                      continent=area.area)
     return observation
+
+
+if __name__ == "__main__":
+    assert weight_to_float('0') == 0
+    assert weight_to_float('0.') == 0
+    assert weight_to_float('1') == 1
+    assert weight_to_float('1/2') == 0.5
+    assert weight_to_float('1/3') == 1 / 3
+    assert weight_to_float('') is None
+    assert weight_to_float(None) is None
+    print 'OK!'

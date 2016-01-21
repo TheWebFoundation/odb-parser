@@ -1,4 +1,4 @@
-from application.a4aiFetcher.enrichment.indicator_data import IndicatorData
+from application.odbFetcher.enrichment.indicator_data import IndicatorData
 from infrastructure.mongo_repos.area_repository import AreaRepository
 from rest_client import *
 from collections import defaultdict

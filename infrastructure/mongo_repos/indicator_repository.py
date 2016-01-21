@@ -1,11 +1,11 @@
-__author__ = 'Rodrigo'
+__author__ = 'guillermo'
 
 from infrastructure.errors.errors import IndicatorRepositoryError
-from a4ai.domain.model.indicator.indicator import Repository, Indicator
+from odb.domain.model.indicator.indicator import Repository, Indicator
 from config import port, db_name, host
-from .mongo_connection import connect_to_db
-from utils import error, success, uri, normalize_group_name
-from a4ai.domain.model.indicator.indicator import create_indicator
+from mongo_connection import connect_to_db
+from infrastructure.utils import error, success, uri, normalize_group_name
+from odb.domain.model.indicator.indicator import create_indicator
 
 
 class IndicatorRepository(Repository):

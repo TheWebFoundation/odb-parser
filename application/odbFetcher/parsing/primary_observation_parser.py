@@ -1,6 +1,6 @@
-from application.a4aiFetcher.parsing.excel_model.excel_observation import ExcelObservation
-from application.a4aiFetcher.parsing.parser import Parser
-from application.a4aiFetcher.parsing.utils import excel_observation_to_dom
+from application.odbFetcher.parsing.excel_model.excel_observation import ExcelObservation
+from application.odbFetcher.parsing.parser import Parser
+from application.odbFetcher.parsing.utils import excel_observation_to_dom
 
 __author__ = 'Rodrigo'
 

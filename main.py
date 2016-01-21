@@ -29,7 +29,7 @@ def run():
 def parse(log, config):
     IndicatorParser(log, config).run()
     # SecondaryObservationParser(log, config).run()
-    PrimaryObservationParser(log, config).run()
+    # PrimaryObservationParser(log, config).run()
     # GroupedObservationParser(log, config).run()
 
 
