@@ -177,7 +177,6 @@ class IndicatorRowAdapter(object):
 if __name__ == "__main__":
     import logging
     import ConfigParser
-    import json
 
     logger = logging.getLogger(__name__)
     config = ConfigParser.RawConfigParser()
@@ -195,5 +194,11 @@ if __name__ == "__main__":
     indicator = repo.find_indicator_by_code('government_policies')
     assert indicator.indicator == 'GOVERNMENT_POLICIES'
     assert len(indicator.children) > 0
+    assert indicator.children[0]._type == 'PRIMARY' or indicator.children._type == 'SECONDARY'
+
+    indicator = repo.find_indicator_by_code('readiness')
+    assert indicator.indicator == 'READINESS'
+    assert len(indicator.children) > 0
+    assert indicator.children[0].type == 'COMPONENT'
 
     print 'OK!'
