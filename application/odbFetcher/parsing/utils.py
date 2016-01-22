@@ -49,15 +49,6 @@ def weight_to_float(s):
 
 
 def excel_indicator_to_dom(excel_indicator):
-    # Excel indicator
-    # index_code, code, name, _type, subindex_code, component_code, description, source_name, provider_name, tags, weight):
-
-    # Domain
-    # id=None, index=None, indicator=None, name=None, component=None, source_name=None,
-    # provider_url=None, description=None, uri=None, parent=None, scale=None, provider_name=None,
-    # republish=False, is_percentage=False, subindex=None, type=None, tags=None, weight=None,
-    # children=None
-
     indicator = create_indicator(index=excel_indicator.index_code,
                                  type=excel_indicator.type,
                                  name=excel_indicator.name,

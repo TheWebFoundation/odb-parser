@@ -1,14 +1,14 @@
 from __builtin__ import reduce
-from a4ai.domain.model.area.area_info import AreaInfo
-from a4ai.domain.model.area.area_short_info import AreaShortInfo
-from a4ai.domain.model.area.indicator_info import IndicatorInfo, IndicatorInfoList
+from odb.domain.model.area.area_info import AreaInfo
+from odb.domain.model.area.area_short_info import AreaShortInfo
+from odb.domain.model.area.indicator_info import IndicatorInfo, IndicatorInfoList
 
 __author__ = 'Rodrigo'
 
 from infrastructure.errors.errors import AreaRepositoryError
-from a4ai.domain.model.area import area
-from a4ai.domain.model.area.country import create_country
-from a4ai.domain.model.area.region import create_region
+from odb.domain.model.area import area
+from odb.domain.model.area.country import create_country
+from odb.domain.model.area.region import create_region
 from config import port, db_name, host
 from .mongo_connection import connect_to_db
 from infrastructure.utils import uri
@@ -77,7 +77,7 @@ class AreaRepository(area.Repository):
 
         if area is None:
             # Find if code is an income code
-            # TODO: This is not working, order by is needed on method call
+            # FIXME: This is not working, order by is needed on method call
             countries = self.find_countries_by_continent_or_income_or_type(area_code_or_income_upper)
             if countries is None:
                 raise AreaRepositoryError("No countries for code " + area_code_or_income)

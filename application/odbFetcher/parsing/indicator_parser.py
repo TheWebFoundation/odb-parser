@@ -48,7 +48,7 @@ class IndicatorParser(Parser):
         self._log.info("\tRetrieving index indicator...")
         print "\tRetrieving index indicator..."
         # FIXME: source_name?
-        indicator = ExcelIndicator(index_code=None, code="INDEX", name="Index", _type="index", subindex_code=None,
+        indicator = ExcelIndicator(index_code=None, code="INDEX", name="Index", _type="INDEX", subindex_code=None,
                                    component_code=None, description=None, source_name="ODB report",
                                    provider_name="Web Foundation", tags=None, weight=None)
         self._excel_indicators.append(indicator)
@@ -66,11 +66,12 @@ class IndicatorParser(Parser):
             retrieved_code = indicator_sheet.cell(row_number, code_column).value
             code = retrieved_code.upper().replace(" ", "_")
             name = indicator_sheet.cell(row_number, name_column).value
-            _type = indicator_sheet.cell(row_number, type_column).value
+            retrieved_type = indicator_sheet.cell(row_number, type_column).value
+            _type = retrieved_type.upper()
             retrieved_weight = indicator_sheet.cell(row_number, weight_column).value
             weight = weight_to_float(retrieved_weight)
-            if _type == "subindex": last_subindex_code = code
-            subindex_code = last_subindex_code if _type == "component" else None
+            if _type == "SUBINDEX": last_subindex_code = code
+            subindex_code = last_subindex_code if _type == "COMPONENT" else None
             # FIXME: Provider and source data?
             indicator = ExcelIndicator(index_code="INDEX", code=code, name=name, _type=_type,
                                        subindex_code=subindex_code, component_code=None, description=None,
@@ -94,7 +95,8 @@ class IndicatorParser(Parser):
             retrieved_code = indicator_sheet.cell(row_number, code_column).value
             code = retrieved_code.upper().replace(" ", "_")
             name = indicator_sheet.cell(row_number, name_column).value
-            _type = indicator_sheet.cell(row_number, type_column).value
+            retrieved_type = indicator_sheet.cell(row_number, type_column).value
+            _type = retrieved_type.upper()
             retrieved_subindex_code = indicator_sheet.cell(row_number, subindex_column).value
             subindex_code = retrieved_subindex_code.upper().replace(" ", "_")
             retrieved_component_code = indicator_sheet.cell(row_number, component_column).value

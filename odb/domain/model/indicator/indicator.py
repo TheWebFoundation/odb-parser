@@ -77,15 +77,15 @@ class Indicator(Entity):
         self._scale = event.scale
 
     # FIXME: Review this repr because I think it is not correct
-    def __repr__(self):
-        return "{d}Indicator(id={id!r}," \
-               "country_coverage={i._country_coverage!r}, " \
-               "provider_link={i._provider_link!r}," \
-               "republish={i._republish!r}, high_low={i._high_low!r}, " \
-               "type={i._type!r}, label={i._label!r}, comment={i._comment!r}, " \
-               "notation={i._notation!r}, interval_starts={i._interval_starts!r}, " \
-               "interval_ends={i._interval_ends!r}, organization={i._organization})". \
-            format(d="*Discarded* " if self._discarded else "", id=self._id, i=self)
+    # def __repr__(self):
+    #     return "{d}Indicator(id={id!r}," \
+    #            "country_coverage={i._country_coverage!r}, " \
+    #            "provider_link={i._provider_link!r}," \
+    #            "republish={i._republish!r}, high_low={i._high_low!r}, " \
+    #            "type={i._type!r}, label={i._label!r}, comment={i._comment!r}, " \
+    #            "notation={i._notation!r}, interval_starts={i._interval_starts!r}, " \
+    #            "interval_ends={i._interval_ends!r}, organization={i._organization})". \
+    #         format(d="*Discarded* " if self._discarded else "", id=self._id, i=self)
 
     def to_dict(self):
         """
@@ -378,8 +378,8 @@ class Repository(object):
     """Abstract implementation of generic queries for managing indicators."""
     __metaclass__ = ABCMeta
 
-    # def find_indicator_by_code(self, indicator_code):
-    #     pass
+    def find_indicator_by_code(self, indicator_code):
+        pass
     #
     # def find_indicators_index(self):
     #     pass

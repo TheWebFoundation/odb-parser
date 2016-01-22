@@ -25,7 +25,7 @@ class Parser(object):
         :return indicator_repo, observation_repo, area_repo:
         """
         # indicator_repo = IndicatorRepository(self._config.get("CONNECTION", "MONGO_IP"))
-        indicator_repo = IndicatorRepository(self._log)
+        indicator_repo = IndicatorRepository(True, self._log, self._config)
         observation_repo = None  # ObservationRepository(self._config.get("CONNECTION", "MONGO_IP"))
         area_repo = None  # AreaRepository(self._config.get("CONNECTION", "MONGO_IP"))
         return indicator_repo, observation_repo, area_repo
@@ -40,5 +40,5 @@ class Parser(object):
         """
         book = xlrd.open_workbook(file_name)
         sheet = book.sheet_by_index(sheet_name_or_index) if is_number(sheet_name_or_index) else book.sheet_by_name(
-            sheet_name_or_index)
+                sheet_name_or_index)
         return sheet
