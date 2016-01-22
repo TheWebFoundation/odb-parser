@@ -101,10 +101,10 @@ class IndicatorParser(Parser):
             subindex_code = retrieved_subindex_code.upper().replace(" ", "_")
             retrieved_component_code = indicator_sheet.cell(row_number, component_column).value
             component_code = retrieved_component_code.upper().replace(" ", "_")
-            description = indicator_sheet.cell(row_number, description_column).value
-            source_name = indicator_sheet.cell(row_number, source_name_column).value
-            provider_name = indicator_sheet.cell(row_number, provider_name_column).value
-            tags = indicator_sheet.cell(row_number, tags_column).value
+            description = str_to_none(indicator_sheet.cell(row_number, description_column).value)
+            source_name = str_to_none(indicator_sheet.cell(row_number, source_name_column).value)
+            provider_name = str_to_none(indicator_sheet.cell(row_number, provider_name_column).value)
+            tags = str_to_none(indicator_sheet.cell(row_number, tags_column).value)
             weight = None
             indicator = ExcelIndicator(index_code="INDEX", code=code, name=name, _type=_type,
                                        subindex_code=subindex_code, component_code=component_code,
