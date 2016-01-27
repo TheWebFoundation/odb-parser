@@ -1,10 +1,11 @@
 __author__ = 'Rodrigo'
 
-from a4ai.domain.model.entity import Entity
 import uuid
-from ..events import DomainEvent, publish
+from abc import ABCMeta
+
+from odb.domain.model.entity import Entity
+from odb.domain.model.events import DomainEvent, publish
 from utility.mutators import when, mutate
-from abc import ABCMeta, abstractmethod
 
 
 class Area(Entity):
@@ -55,10 +56,11 @@ class Area(Entity):
         self._search = event.search
         self._info = event.info
 
-    def __repr__(self):
-        return "{d}Region(id={s._id}, type={s._type}, label={s._label}, " \
-               "countries=[0..{n}])".format(d="*Discarded* " if self._discarded else "",
-                                            s=self, n=len(self._countries))
+    # FIXME: Review repr
+    # def __repr__(self):
+    #     return "{d}Region(id={s._id}, type={s._type}, label={s._label}, " \
+    #            "countries=[0..{n}])".format(d="*Discarded* " if self._discarded else "",
+    #                                         s=self, n=len(self._countries))
 
     def to_dict(self):
         """

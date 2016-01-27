@@ -1,9 +1,10 @@
 __author__ = 'Rodrigo'
 
-from a4ai.domain.model.area.area import Area
-from a4ai.domain.model.entity import Entity
 import uuid
-from ..events import DomainEvent, publish
+
+from odb.domain.model.area.area import Area
+from odb.domain.model.entity import Entity
+from odb.domain.model.events import DomainEvent, publish
 from utility.mutators import when, mutate
 
 

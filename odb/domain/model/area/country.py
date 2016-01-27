@@ -1,11 +1,12 @@
 __author__ = 'Rodrigo'
 
 import uuid
+
+from odb.domain.model.area.area import Area
+from odb.domain.model.area.region import Region
+from odb.domain.model.entity import Entity
+from odb.domain.model.events import publish
 from utility.mutators import mutate, when
-from a4ai.domain.model.area.area import Area
-from a4ai.domain.model.area.region import Region
-from a4ai.domain.model.events import publish
-from a4ai.domain.model.entity import Entity
 
 
 class Country(Area):
