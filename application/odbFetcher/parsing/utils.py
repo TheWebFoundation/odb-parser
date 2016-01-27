@@ -62,7 +62,6 @@ def excel_indicator_to_dom(excel_indicator):
                                  weight=excel_indicator.weight)
     return indicator
 
-
 def excel_observation_to_dom(excel_observation, area, indicator):
     observation = create_observation(value=excel_observation.value,
                                      republish=indicator.republish,
@@ -76,6 +75,14 @@ def excel_observation_to_dom(excel_observation, area, indicator):
                                      year=Year(2014),
                                      continent=area.area)
     return observation
+
+
+def str_to_none(s):
+    if s is not None:
+        stripped = s.strip()
+        return None if not stripped else stripped
+    else:
+        return s
 
 
 if __name__ == "__main__":

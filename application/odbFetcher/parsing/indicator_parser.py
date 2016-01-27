@@ -11,8 +11,8 @@ class IndicatorParser(Parser):
     Retrieves the indicators and their information from the structure Excel file and stores them into the database.
     """
 
-    def __init__(self, log, config):
-        super(IndicatorParser, self).__init__(log, config)
+    def __init__(self, log, config, area_repo=None, indicator_repo=None, observation_repo=None):
+        super(IndicatorParser, self).__init__(log, config, area_repo, indicator_repo, observation_repo)
         self._excel_indicators = []
 
     def run(self):

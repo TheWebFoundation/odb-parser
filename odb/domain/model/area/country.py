@@ -37,11 +37,12 @@ class Country(Area):
         self._income = event.income
         self._type = event.type
 
-    def __repr__(self):
-        return "{d}Country(id={id!r}, region_id={c._region.id!r}, " \
-               "iso2_code={c._iso2_code}, iso3_code={c._iso3_code}, label={c._label!r})". \
-            format(d="Discarded" if self.discarded else "", id=self._id, c=self,
-                   type=self._type)
+    # FIXME: Bad repr
+    # def __repr__(self):
+    #     return "{d}Country(id={id!r}, region_id={c._region.id!r}, " \
+    #            "iso2_code={c._iso2_code}, iso3_code={c._iso3_code}, label={c._label!r})". \
+    #         format(d="Discarded" if self.discarded else "", id=self._id, c=self,
+    #                type=self._type)
 
     def to_dict(self):
         """
