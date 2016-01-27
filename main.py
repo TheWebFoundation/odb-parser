@@ -1,11 +1,10 @@
-import logging
 import ConfigParser
+import logging
+
 # from application.odbFetcher.enrichment.enricher import Enricher
 # from application.odbFetcher.parsing.grouped_observation_parser import GroupedObservationParser
 from application.odbFetcher.parsing.indicator_parser import IndicatorParser
-from application.odbFetcher.parsing.primary_observation_parser import PrimaryObservationParser
 # from application.odbFetcher.parsing.ranker import Ranker
-from application.odbFetcher.parsing.secondary_observation_parser import SecondaryObservationParser
 from infrastructure.sql_repos.indicator_repository import IndicatorRepository
 
 __author__ = 'Rodrigo'
@@ -30,8 +29,8 @@ def run():
     # enrich(log, config)
 
 
-def parse(log, config, area_repo, indicator_repo):
-    IndicatorParser(log, config, area_repo, indicator_repo).run()
+def parse(log, config, area_repo, indicator_repo, observation_repo):
+    IndicatorParser(log, config, area_repo, indicator_repo, observation_repo).run()
     # SecondaryObservationParser(log, config).run()
     # PrimaryObservationParser(log, config).run()
     # GroupedObservationParser(log, config).run()
