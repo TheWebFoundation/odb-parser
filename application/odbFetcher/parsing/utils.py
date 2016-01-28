@@ -51,7 +51,7 @@ def weight_to_float(s):
 
 
 def excel_indicator_to_dom(excel_indicator):
-    indicator = create_indicator(component=excel_indicator.component_code,
+    indicator = create_indicator(component=excel_indicator.component,
                                  description=excel_indicator.description,
                                  format_notes=excel_indicator.format_notes,
                                  index=excel_indicator.index,
@@ -64,7 +64,7 @@ def excel_indicator_to_dom(excel_indicator):
                                  source_data=excel_indicator.source_data,
                                  source_name=excel_indicator.source_name,
                                  source_url=excel_indicator.source_url,
-                                 subindex=excel_indicator.subindex_code,
+                                 subindex=excel_indicator.subindex,
                                  tags=excel_indicator.tags,
                                  type=excel_indicator.type,
                                  units=excel_indicator.units,

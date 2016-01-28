@@ -62,9 +62,9 @@ class IndicatorParser(Parser):
             index = "INDEX" if _type != 'INDEX' else None
             weight = weight_to_float(retrieved_weight)
             if _type == "SUBINDEX": last_subindex_code = code
-            subindex_code = last_subindex_code if _type == "COMPONENT" else None
+            subindex = last_subindex_code if _type == "COMPONENT" else None
             indicator = ExcelIndicator(index=index, code=code, name=name, _type=_type,
-                                       subindex_code=subindex_code, weight=weight)
+                                       subindex=subindex, weight=weight)
             self._excel_indicators.append(indicator)
 
     # TODO: too much boilerplate
@@ -90,14 +90,14 @@ class IndicatorParser(Parser):
         start_row = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_START_ROW")
         for row_number in range(start_row, indicator_sheet.nrows):
             retrieved_code = indicator_sheet.cell(row_number, code_column).value
-            retrieved_component_code = indicator_sheet.cell(row_number, component_column).value
-            retrieved_subindex_code = indicator_sheet.cell(row_number, subindex_column).value
+            retrieved_component = indicator_sheet.cell(row_number, component_column).value
+            retrieved_subindex = indicator_sheet.cell(row_number, subindex_column).value
             retrieved_type = indicator_sheet.cell(row_number, type_column).value
             _license = str_to_none(indicator_sheet.cell(row_number, license_column).value)
             _range = str_to_none(indicator_sheet.cell(row_number, range_column).value)
             _type = retrieved_type.upper()
             code = retrieved_code.upper().replace(" ", "_")
-            component_code = retrieved_component_code.upper().replace(" ", "_")
+            component = retrieved_component.upper().replace(" ", "_")
             description = str_to_none(indicator_sheet.cell(row_number, description_column).value)
             format_notes = str_to_none(indicator_sheet.cell(row_number, format_notes_column).value)
             name = indicator_sheet.cell(row_number, name_column).value
@@ -106,11 +106,11 @@ class IndicatorParser(Parser):
             source_data = str_to_none(indicator_sheet.cell(row_number, source_data_column).value)
             source_name = str_to_none(indicator_sheet.cell(row_number, source_name_column).value)
             source_url = str_to_none(indicator_sheet.cell(row_number, source_url_column).value)
-            subindex_code = retrieved_subindex_code.upper().replace(" ", "_")
+            subindex = retrieved_subindex.upper().replace(" ", "_")
             tags = str_to_none(indicator_sheet.cell(row_number, tags_column).value)
             units = str_to_none(indicator_sheet.cell(row_number, units_column).value)
             indicator = ExcelIndicator(index="INDEX", code=code, name=name, _type=_type,
-                                       subindex_code=subindex_code, component_code=component_code,
+                                       subindex=subindex, component=component,
                                        description=description, source_name=source_name, provider_name=provider_name,
                                        tags=tags, _license=_license, format_notes=format_notes, _range=_range,
                                        source_data=source_data, source_url=source_url, provider_url=provider_url,

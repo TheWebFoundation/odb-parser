@@ -7,11 +7,11 @@ class ExcelIndicator(object):
     corresponds with the columns in the file.
     """
 
-    def __init__(self, index=None, code=None, name=None, _type=None, subindex_code=None, component_code=None,
+    def __init__(self, index=None, code=None, name=None, _type=None, subindex=None, component=None,
                  description=None, source_name=None, provider_name=None, tags=None, weight=None, _range=None,
                  source_url=None, provider_url=None, units=None, format_notes=None, _license=None, source_data=None):
         self._code = code
-        self._component_code = component_code
+        self._component = component
         self._description = description
         self._format_notes = format_notes
         self._index = index
@@ -23,7 +23,7 @@ class ExcelIndicator(object):
         self._source_data = source_data
         self._source_name = source_name
         self._source_url = source_url
-        self._subindex_code = subindex_code
+        self._subindex = subindex
         self._tags = tags
         self._type = _type
         self._units = units
@@ -50,12 +50,12 @@ class ExcelIndicator(object):
         return self._description
 
     @property
-    def subindex_code(self):
-        return self._subindex_code
+    def subindex(self):
+        return self._subindex
 
     @property
-    def component_code(self):
-        return self._component_code
+    def component(self):
+        return self._component
 
     @property
     def source_name(self):
