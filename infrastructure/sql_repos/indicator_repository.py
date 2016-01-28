@@ -40,22 +40,25 @@ class IndicatorRepository(Repository):
                 CREATE TABLE indicator
                 (
                     id INTEGER PRIMARY KEY,
+                    component TEXT,
+                    description TEXT,
+                    format_notes TEXT,
                     index_code TEXT,
                     indicator TEXT NOT NULL,
+                    license TEXT,
                     name TEXT,
-                    provider_url TEXT,
-                    description TEXT,
-                    uri TEXT,
-                    component TEXT,
-                    subindex TEXT,
-                    type TEXT,
-                    source_name TEXT,
                     provider_name TEXT,
-                    republish INTEGER,
-                    is_percentage INTEGER,
+                    provider_url TEXT,
+                    range TEXT,
+                    source_data TEXT,
+                    source_name TEXT,
+                    source_url TEXT,
+                    subindex TEXT,
                     tags TEXT,
-                    weight REAL,
-                    scale REAL
+                    type TEXT,
+                    units TEXT,
+                    uri TEXT,
+                    weight REAL
                 );
                 '''
             db.execute(sql)
@@ -140,7 +143,7 @@ class IndicatorRowAdapter(object):
         return data
 
     @staticmethod
-    def dict_to_indicator(self, indicator_dict):
+    def dict_to_indicator(indicator_dict):
         """
         Transforms one single indicator
 

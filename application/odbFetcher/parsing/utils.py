@@ -51,16 +51,23 @@ def weight_to_float(s):
 
 
 def excel_indicator_to_dom(excel_indicator):
-    indicator = create_indicator(index=excel_indicator.index_code,
-                                 type=excel_indicator.type,
-                                 name=excel_indicator.name,
-                                 indicator=excel_indicator.code,
+    indicator = create_indicator(component=excel_indicator.component_code,
                                  description=excel_indicator.description,
+                                 format_notes=excel_indicator.format_notes,
+                                 index=excel_indicator.index,
+                                 indicator=excel_indicator.code,
+                                 license=excel_indicator.license,
+                                 name=excel_indicator.name,
                                  provider_name=excel_indicator.provider_name,
-                                 component=excel_indicator.component_code,
+                                 provider_url=excel_indicator.provider_url,
+                                 range=excel_indicator.range,
+                                 source_data=excel_indicator.source_data,
                                  source_name=excel_indicator.source_name,
+                                 source_url=excel_indicator.source_url,
                                  subindex=excel_indicator.subindex_code,
                                  tags=excel_indicator.tags,
+                                 type=excel_indicator.type,
+                                 units=excel_indicator.units,
                                  weight=excel_indicator.weight)
     return indicator
 

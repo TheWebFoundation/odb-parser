@@ -1,11 +1,12 @@
 __author__ = 'Rodrigo'
 
+import uuid
+from abc import ABCMeta
+
 from odb.domain.model.entity import Entity
+from odb.domain.model.events import DomainEvent
 from odb.domain.model.events import publish
 from utility.mutators import when, mutate
-from abc import ABCMeta
-from odb.domain.model.events import DomainEvent
-import uuid
 
 
 # =======================================================================================
@@ -56,25 +57,29 @@ class Indicator(Entity):
             event: The event with the required attributes
         """
         super(Indicator, self).__init__(event.originator_id, event.originator_version)
+        self._children = event.children
+        self._component = event.component
+        self._description = event.description
+        self._format_notes = event.format_notes
         self._id = event.id
         self._index = event.index
         self._indicator = event.indicator
+        self._license = event.license
         self._name = event.name
         self._parent = event.parent
-        self._provider_url = event.provider_url
-        self._description = event.description
-        self._uri = event.uri
-        self._component = event.component
-        self._subindex = event.subindex
-        self._type = event.type
-        self._children = event.children
-        self._source_name = event.source_name
         self._provider_name = event.provider_name
-        self._republish = event.republish
-        self._is_percentage = event.is_percentage
+        self._provider_url = event.provider_url
+        self._provider_url = event.provider_url
+        self._range = event.range
+        self._source_data = event.source_data
+        self._source_name = event.source_name
+        self._source_url = event.source_url
+        self._subindex = event.subindex
         self._tags = event.tags
+        self._type = event.type
+        self._units = event.units
+        self._uri = event.uri
         self._weight = event.weight
-        self._scale = event.scale
 
     # FIXME: Review this repr because I think it is not correct
     # def __repr__(self):
@@ -87,6 +92,7 @@ class Indicator(Entity):
     #            "interval_ends={i._interval_ends!r}, organization={i._organization})". \
     #         format(d="*Discarded* " if self._discarded else "", id=self._id, i=self)
 
+    # TODO: This could be greatly simplified using the output of dir(self)
     def to_dict(self):
         """
         Converts self object to dictionary
@@ -99,8 +105,9 @@ class Indicator(Entity):
             'provider_url': self.provider_url, 'description': self.description, 'uri': self.uri,
             'component': self.component, 'subindex': self.subindex, 'id': self.id, 'type': self.type,
             'children': [child.to_dict() for child in self.children], 'provider_name': self.provider_name,
-            'source_name': self.source_name, 'republish': self.republish, 'is_percentage': self.is_percentage,
-            'tags': self.tags, 'scale': self.scale, 'weight': self.weight}
+            'source_name': self.source_name, 'source_url': self.source_url, 'source_data': self.source_data,
+            'units': self.units, 'format_notes': self.format_notes, 'license': self.license, 'range': self.range,
+            'tags': self.tags, 'weight': self.weight}
 
     # TODO: Enforce rules about naming here?
 
@@ -229,6 +236,15 @@ class Indicator(Entity):
         self.increment_version()
 
     @property
+    def source_url(self):
+        return self._source_url
+
+    @source_url.setter
+    def source_url(self, source_url):
+        self._source_url = source_url
+        self.increment_version()
+
+    @property
     def tags(self):
         return self._tags
 
@@ -238,30 +254,48 @@ class Indicator(Entity):
         self.increment_version()
 
     @property
-    def republish(self):
-        return self._republish
+    def source_data(self):
+        return self._source_data
 
-    @republish.setter
-    def republish(self, republish):
-        self._republish = republish
+    @source_data.setter
+    def source_data(self, source_data):
+        self._source_data = source_data
         self.increment_version()
 
     @property
-    def is_percentage(self):
-        return self._is_percentage
+    def units(self):
+        return self._units
 
-    @is_percentage.setter
-    def is_percentage(self, is_percentage):
-        self._is_percentage = is_percentage
+    @units.setter
+    def units(self, units):
+        self._units = units
         self.increment_version()
 
     @property
-    def scale(self):
-        return self._scale
+    def range(self):
+        return self._range
 
-    @scale.setter
-    def scale(self, scale):
-        self._scale = scale
+    @range.setter
+    def range(self, range):
+        self._range = range
+        self.increment_version()
+
+    @property
+    def format_notes(self):
+        return self._format_notes
+
+    @format_notes.setter
+    def format_notes(self, format_notes):
+        self._format_notes = format_notes
+        self.increment_version()
+
+    @property
+    def license(self):
+        return self._license
+
+    @license.setter
+    def license(self, license):
+        self._license = license
         self.increment_version()
 
     @property
@@ -308,17 +342,21 @@ class Indicator(Entity):
 # =======================================================================================
 # Indicator aggregate root factory
 # =======================================================================================
-# FIXME: children used to have an empty list as default argument which can cause problems
-# FIXME: why an additional originator_id?
-def create_indicator(id=None, index=None, indicator=None, name=None, component=None, source_name=None,
-                     provider_url=None, description=None, uri=None, parent=None, scale=None, provider_name=None,
-                     republish=False, is_percentage=False, subindex=None, type=None, tags=None, weight=None,
-                     children=None):
+def create_indicator(id=None, index=None, indicator=None, name=None, component=None, source_name=None, source_url=None,
+                     source_data=None, range=None, units=None, format_notes=None, license=None,
+                     provider_url=None, description=None, uri=None, parent=None, provider_name=None,
+                     subindex=None, type=None, tags=None, weight=None, children=None):
     """
     This function creates new indicators and acts as a factory
 
     Args:
         id (str, optional): Id for the indicator
+        source_data (str, optional): Url for the concrete data source
+        range (str, optional): Data range
+        units (str, optional): Data Units
+        format_notes (str, optional): Additional notes related to data format
+        license (str, optional): License associated to the data
+        source_url (str, optional): URL for the data source
         index (str, optional): Index to which this indicator belongs to
         indicator (str, optional): Indicator name, this is used to reference from other indicators
         name (str, optional): Indicator name, this is used as the long name so it could be longer and more complex than indicator
@@ -333,8 +371,6 @@ def create_indicator(id=None, index=None, indicator=None, name=None, component=N
         children (list of Indicator, optional): Children that have this indicator as its parent
         source_name (str, optional): Name of the source where data have been obtained
         provider_name (str, optional): Name of the provider where data have been obtained
-        republish (bool, optional): If republish of this indicator data are allowed or not
-        is_percentage (bool): If the value is a percentage or not
         tags (str, optional): Tags for the indicator
 
     Returns:
@@ -344,9 +380,10 @@ def create_indicator(id=None, index=None, indicator=None, name=None, component=N
     children = [] if children is None else children
     event = Indicator.Created(originator_id=indicator_id, originator_version=0, id=id, index=index, indicator=indicator,
                               name=name, parent=parent, provider_url=provider_url, description=description, uri=uri,
-                              scale=scale, provider_name=provider_name, republish=republish, subindex=subindex,
-                              component=component, source_name=source_name, type=type, tags=tags,
-                              is_percentage=is_percentage, weight=weight, children=children)
+                              provider_name=provider_name, subindex=subindex, source_data=source_data,
+                              source_url=source_url, units=units, format_notes=format_notes, range=range,
+                              license=license, component=component, source_name=source_name, type=type, tags=tags,
+                              weight=weight, children=children)
     indicator = when(event)
     publish(event)
     return indicator
@@ -380,6 +417,7 @@ class Repository(object):
 
     def find_indicator_by_code(self, indicator_code):
         pass
+
     #
     # def find_indicators_index(self):
     #     pass
