@@ -75,19 +75,31 @@ class IndicatorRepository(Repository):
         self._db.commit()
 
     def find_indicator_by_code(self, indicator_code):
-        query = "SELECT * FROM indicator where indicator=:indicator"
+        query = "SELECT * FROM indicator WHERE indicator=:indicator"
         indicator_code = indicator_code or ''
         r = self._db.execute(query, {'indicator': indicator_code.upper()}).fetchone()
         if r is None:
             raise IndicatorRepositoryError("No indicator with code " + indicator_code)
 
         data = dict(r)
-        children = self._find_indicator_children(data)
+        children = self.find_indicator_children(data)
         data["children"] = children
 
         return IndicatorRowAdapter().dict_to_indicator(data)
 
-    def _find_indicator_children(self, indicator_dict):
+    def find_indicators_index(self):
+        """
+        Finds all indicators whose type is Index
+
+        Returns:
+            list of Indicator: Indicators with type Index
+        """
+        return self.find_indicators_by_level("INDEX")
+
+    def find_indicators_components(self, parent=None):
+        return self.find_indicators_by_level("COMPONENT", parent)
+
+    def find_indicator_children(self, indicator_dict):
         """
         Finds the children of the given indicator
 
@@ -112,11 +124,68 @@ class IndicatorRepository(Repository):
 
         processed_indicators = []
         for indicator in [dict(i) for i in indicators]:
-            children = self._find_indicator_children(indicator)
+            children = self.find_indicator_children(indicator)
             indicator["children"] = children
             processed_indicators.append(indicator)
 
         return processed_indicators
+
+    def find_indicators_sub_indexes(self):
+        return self.find_indicators_by_level("SUBINDEX")
+
+    def find_indicators_primary(self, parent=None):
+        return self.find_indicators_by_level("PRIMARY", parent)
+
+    def find_indicators_secondary(self, parent=None):
+        return self.find_indicators_by_level("SECONDARY", parent)
+
+    def find_indicators_indicators(self, parent=None):
+        """
+        Finds all indicators whose type is Primary or Secondary
+
+        Args:
+            parent: Additional filter to restrict the parent
+
+        Returns:
+            list of Indicator: Indicators with type Primary or Secondary
+        """
+        primary = self.find_indicators_primary(parent)
+        secondary = self.find_indicators_secondary(parent)
+
+        result = (primary + secondary)
+        return result
+
+    def find_indicators_by_level(self, level, parent=None):
+        """
+        Finds indicators whose type is equals to the given level, e.g.: Index, SubIndex, Primary or Secondary
+
+        Args:
+            level (str): Type of the indicators to search
+            parent (Indicator, optional): Parent indicator if more filter is required, default to None
+
+        Returns:
+            list of Indicator: Indicators that fit with the given filters
+        """
+
+        if parent is not None:
+            # We filter by matching the parent_type to the column, in the future we may want to change this if there is
+            # not a clear mapping or we are using relations (e.g. foreign keys)
+            where_clause = "WHERE (type LIKE :type AND %s LIKE :parent_code)" % (parent.type,)
+            query = "SELECT * FROM indicator %s" % (where_clause,)
+            rows = self._db.execute(query, {'type': level, 'parent_code': parent.indicator}).fetchall()
+        else:
+            where_clause = "WHERE (type LIKE :type)"
+            query = "SELECT * FROM indicator %s" % (where_clause,)
+            rows = self._db.execute(query, {'type': level}).fetchall()
+
+        processed_indicators = []
+
+        for indicator in [dict(r) for r in rows]:
+            children = self.find_indicator_children(indicator)
+            indicator["children"] = children
+            processed_indicators.append(indicator)
+
+        return IndicatorRowAdapter().transform_to_indicator_list(processed_indicators)
 
 
 class IndicatorRowAdapter(object):
@@ -176,6 +245,7 @@ class IndicatorRowAdapter(object):
 if __name__ == "__main__":
     import logging
     import ConfigParser
+    import json
 
     logger = logging.getLogger(__name__)
     config = ConfigParser.RawConfigParser()
@@ -199,5 +269,10 @@ if __name__ == "__main__":
     assert indicator.indicator == 'READINESS'
     assert len(indicator.children) > 0
     assert indicator.children[0].type == 'COMPONENT'
+
+    readiness = repo.find_indicator_by_code('readiness')
+    indicators = repo.find_indicators_by_level('component', parent=readiness)
+    assert len(indicators) > 0 and len(indicators) < 10
+    print json.dumps([i.to_dict() for i in indicators])
 
     print 'OK!'

@@ -418,36 +418,29 @@ class Repository(object):
     def find_indicator_by_code(self, indicator_code):
         pass
 
-    #
-    # def find_indicators_index(self):
-    #     pass
-    #
-    # def find_indicators_sub_indexes(self):
-    #     pass
-    #
-    # def find_indicators_components(self, parent=None):
-    #     pass
-    #
-    # def find_indicators_primary(self, parent=None):
-    #     pass
-    #
-    # def find_indicators_secondary(self, parent=None):
-    #     pass
-    #
-    # def find_indicators_indicators(self, parent=None):
-    #     pass
-    #
-    # def find_indicators_by_level(self, level, parent=None):
-    #     pass
-    #
-    # def find_indicator_children(self, indicator):
-    #     pass
-    #
-    # def indicator_error(self, indicator_code):
-    #     pass
-    #
-    # def indicator_uri(self, indicator_code):
-    #     pass
+    def find_indicators_index(self):
+        pass
+
+    def find_indicators_sub_indexes(self):
+        pass
+
+    def find_indicators_components(self, parent=None):
+        pass
+
+    def find_indicators_primary(self, parent=None):
+        pass
+
+    def find_indicators_secondary(self, parent=None):
+        pass
+
+    def find_indicators_indicators(self, parent=None):
+        pass
+
+    def find_indicators_by_level(self, level, parent=None):
+        pass
+
+    def find_indicator_children(self, indicator):
+        pass
 
     def insert_indicator(self, indicator, indicator_uri=None, component_name=None, subindex_name=None, index_name=None,
                          weight=None, provider_name=None, provider_url=None):
