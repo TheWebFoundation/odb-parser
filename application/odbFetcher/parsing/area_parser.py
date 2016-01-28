@@ -147,7 +147,7 @@ if __name__ == "__main__":
     config.add_section("CONNECTION")
     config.set("CONNECTION", 'SQLITE_DB', '../../../odb2015.db')
     config.add_section("STRUCTURE_ACCESS")
-    config.set("STRUCTURE_ACCESS", "FILE_NAME", "../../../20160121_data.xlsx")
+    config.set("STRUCTURE_ACCESS", "FILE_NAME", "../../../20160128_data.xlsx")
     config.set("STRUCTURE_ACCESS", "AREA_SHEET_NUMBER", "2")
     config.set("STRUCTURE_ACCESS", "AREA_START_ROW", "1")
     config.set("STRUCTURE_ACCESS", "AREA_ISO2_COLUMN", "0")

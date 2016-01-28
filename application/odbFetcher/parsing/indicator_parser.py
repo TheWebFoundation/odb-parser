@@ -1,6 +1,6 @@
+from application.odbFetcher.parsing.excel_model.excel_indicator import ExcelIndicator
 from application.odbFetcher.parsing.parser import Parser
 from application.odbFetcher.parsing.utils import *
-from application.odbFetcher.parsing.excel_model.excel_indicator import ExcelIndicator
 from utils import weight_to_float
 
 __author__ = 'Rodrigo'
@@ -40,7 +40,7 @@ class IndicatorParser(Parser):
         return indicator_sheet
 
     def _retrieve_indicators(self, subindex_sheet, indicator_sheet):
-        self._retrieve_index_indicator(indicator_sheet)
+        # self._retrieve_index_indicator(indicator_sheet)
         self._retrieve_subindex_indicators(subindex_sheet)
         self._retrieve_primary_secondary_indicators(indicator_sheet)
 
@@ -72,8 +72,9 @@ class IndicatorParser(Parser):
             weight = weight_to_float(retrieved_weight)
             if _type == "SUBINDEX": last_subindex_code = code
             subindex_code = last_subindex_code if _type == "COMPONENT" else None
+            index_code = "INDEX" if _type != 'INDEX' else None
             # FIXME: Provider and source data?
-            indicator = ExcelIndicator(index_code="INDEX", code=code, name=name, _type=_type,
+            indicator = ExcelIndicator(index_code=index_code, code=code, name=name, _type=_type,
                                        subindex_code=subindex_code, component_code=None, description=None,
                                        source_name=None, provider_name=None, tags=None, weight=weight)
             self._excel_indicators.append(indicator)
