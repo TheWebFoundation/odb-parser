@@ -1,4 +1,4 @@
-__author__ = 'Rodrigo'
+
 
 
 class IndicatorData(object):

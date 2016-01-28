@@ -1,7 +1,5 @@
 from a4ai.domain.model.observation.statistics import Statistics
 
-__author__ = 'Rodrigo'
-
 from a4ai.domain.model.observation.visualisation import Visualisation
 
 

@@ -1,12 +1,10 @@
-__author__ = 'Rodrigo'
-
 import uuid
 from abc import ABCMeta
 
+from infrastructure.errors.exceptions import DiscardedEntityError
 from odb.domain.model.entity import Entity
 from odb.domain.model.events import DomainEvent, publish
 from utility.mutators import mutate, when
-from infrastructure.errors.exceptions import DiscardedEntityError
 
 
 # =======================================================================================

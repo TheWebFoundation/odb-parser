@@ -2,8 +2,6 @@ from application.odbFetcher.parsing.excel_model.excel_observation import ExcelOb
 from application.odbFetcher.parsing.parser import Parser
 from application.odbFetcher.parsing.utils import excel_observation_to_dom
 
-__author__ = 'Rodrigo'
-
 
 class PrimaryObservationParser(Parser):
     """

@@ -2,8 +2,6 @@ from application.odbFetcher.parsing.excel_model.excel_area import ExcelArea
 from application.odbFetcher.parsing.parser import Parser
 from application.odbFetcher.parsing.utils import excel_region_to_dom, excel_country_to_dom
 
-__author__ = 'Rodrigo'
-
 # FIXME: move to configuration
 # If handcrafted iso codes then we need a matching function between names and codes (or include everything in the sheet)
 # Otherwise we could just auto-increment

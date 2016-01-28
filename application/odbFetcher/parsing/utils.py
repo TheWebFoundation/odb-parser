@@ -8,8 +8,6 @@ from odb.domain.model.indicator.indicator import *
 from odb.domain.model.observation.observation import *
 from odb.domain.model.observation.year import Year
 
-__author__ = 'Rodrigo'
-
 """
 This module provides utility functions to the parsing classes. Among these functions, there are the ones responsible
 for transforming the elements retrieved from the Excel files from their auxiliary model classes to the corresponding

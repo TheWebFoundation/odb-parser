@@ -7,8 +7,6 @@ from application.odbFetcher.parsing.indicator_parser import IndicatorParser
 # from application.odbFetcher.parsing.ranker import Ranker
 from infrastructure.sql_repos.indicator_repository import IndicatorRepository
 
-__author__ = 'Rodrigo'
-
 
 def configure_log():
     _format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

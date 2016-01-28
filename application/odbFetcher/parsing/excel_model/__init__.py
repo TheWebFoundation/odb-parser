@@ -1,4 +1,4 @@
-__author__ = 'Rodrigo'
+
 
 """
 This package contains the auxiliar modules used to model the information retrieved directly from the Excel files, just

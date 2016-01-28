@@ -1,4 +1,4 @@
-__author__ = 'Rodrigo'
+
 from pymongo import MongoClient
 
 

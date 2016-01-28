@@ -1,10 +1,8 @@
-__author__ = 'guillermo'
-
-from infrastructure.errors.errors import IndicatorRepositoryError
-from odb.domain.model.indicator.indicator import Repository, Indicator
 from config import port, db_name, host
+from infrastructure.errors.errors import IndicatorRepositoryError
+from infrastructure.utils import normalize_group_name
 from mongo_connection import connect_to_db
-from infrastructure.utils import error, success, uri, normalize_group_name
+from odb.domain.model.indicator.indicator import Repository, Indicator
 from odb.domain.model.indicator.indicator import create_indicator
 
 

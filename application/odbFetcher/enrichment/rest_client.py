@@ -1,8 +1,6 @@
 import requests
 from requests.adapters import HTTPAdapter
 
-__author__ = 'Rodrigo'
-
 
 def get_json(uri, params):
     """

@@ -5,8 +5,6 @@ from infrastructure.sql_repos.utils import create_insert_query
 from odb.domain.model.indicator.indicator import Repository, Indicator
 from odb.domain.model.indicator.indicator import create_indicator
 
-__author__ = 'Rodrigo'
-
 
 class _MockDB(object):
     def __init__(self, log):

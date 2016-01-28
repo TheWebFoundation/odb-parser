@@ -1,4 +1,4 @@
-__author__ = 'Rodrigo'
+
 
 from a4ai.domain.model.observation.statistics import Statistics
 

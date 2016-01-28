@@ -3,8 +3,6 @@ from application.odbFetcher.parsing.parser import Parser
 from application.odbFetcher.parsing.utils import *
 from utils import weight_to_float
 
-__author__ = 'Rodrigo'
-
 
 class IndicatorParser(Parser):
     """

@@ -1,5 +1,3 @@
-__author__ = 'Rodrigo'
-
 import uuid
 
 from odb.domain.model.area.area import Area

@@ -1,8 +1,6 @@
 from infrastructure.mongo_repos.indicator_repository import IndicatorRepository
 from infrastructure.mongo_repos.observation_repository import ObservationRepository
 
-__author__ = 'Rodrigo'
-
 
 class Ranker(object):
     """

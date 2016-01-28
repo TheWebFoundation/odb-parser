@@ -1,17 +1,13 @@
-from __builtin__ import reduce
+from config import port, db_name, host
+from infrastructure.errors.errors import AreaRepositoryError
+from infrastructure.utils import uri
+from odb.domain.model.area import area
 from odb.domain.model.area.area_info import AreaInfo
 from odb.domain.model.area.area_short_info import AreaShortInfo
-from odb.domain.model.area.indicator_info import IndicatorInfo, IndicatorInfoList
-
-__author__ = 'Rodrigo'
-
-from infrastructure.errors.errors import AreaRepositoryError
-from odb.domain.model.area import area
 from odb.domain.model.area.country import create_country
+from odb.domain.model.area.indicator_info import IndicatorInfo, IndicatorInfoList
 from odb.domain.model.area.region import create_region
-from config import port, db_name, host
 from .mongo_connection import connect_to_db
-from infrastructure.utils import uri
 
 
 class AreaRepository(area.Repository):

@@ -10,8 +10,6 @@ from odb.domain.model.area.country import create_country
 from odb.domain.model.area.indicator_info import IndicatorInfo, IndicatorInfoList
 from odb.domain.model.area.region import create_region
 
-__author__ = 'Rodrigo'
-
 
 class AreaRepository(area.Repository):
     """
