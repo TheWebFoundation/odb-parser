@@ -1,11 +1,11 @@
-__author__ = 'Rodrigo'
+import sqlite3
 
 from infrastructure.errors.errors import IndicatorRepositoryError
+from infrastructure.sql_repos.utils import create_insert_query
 from odb.domain.model.indicator.indicator import Repository, Indicator
-from infrastructure.utils import error, success, uri, normalize_group_name
 from odb.domain.model.indicator.indicator import create_indicator
 
-import sqlite3
+__author__ = 'Rodrigo'
 
 
 class _MockDB(object):
@@ -29,7 +29,6 @@ class IndicatorRepository(Repository):
         """
         self._config = config
         self._log = log
-        # FIXME: The structure must be already in place
         self._db = self._initialize_db(recreate_db)
 
     def _initialize_db(self, recreate_db):
@@ -63,18 +62,12 @@ class IndicatorRepository(Repository):
             db.commit()
         return db
 
-    def _create_insert_query(self, data):
-        columns = ', '.join(data.keys())
-        placeholders = ':' + ', :'.join(data.keys())
-        query = 'INSERT INTO indicator (%s) VALUES (%s)' % (columns, placeholders)
-        return query
-
     # FIXME: Why the extra parameters?
     def insert_indicator(self, indicator, indicator_uri=None, component_name=None, subindex_name=None, index_name=None,
                          weight=None, source_name=None, provider_name=None, provider_url=None, is_percentage=None,
                          scale=None, tags=None):
         data = IndicatorRowAdapter().indicator_to_dict(indicator)
-        query = self._create_insert_query(data)
+        query = create_insert_query('indicator', data)
         self._db.execute(query, data)
         self._db.commit()
 
@@ -128,7 +121,8 @@ class IndicatorRowAdapter(object):
     Adapter class to transform indicators between SQLite objects and Domain objects
     """
 
-    def indicator_to_dict(self, indicator):
+    @staticmethod
+    def indicator_to_dict(indicator):
         """
         Transforms one single indicator into a dict ready to be used in a sqlite statement
 
@@ -145,6 +139,7 @@ class IndicatorRowAdapter(object):
         data.pop('index')
         return data
 
+    @staticmethod
     def dict_to_indicator(self, indicator_dict):
         """
         Transforms one single indicator
@@ -158,10 +153,11 @@ class IndicatorRowAdapter(object):
         data = dict(indicator_dict)
         data['index'] = data['index_code']
         data.pop('index_code')
-        data['children'] = self._transform_to_indicator_list(data['children'])
+        data['children'] = IndicatorRowAdapter.transform_to_indicator_list(data['children'])
         return create_indicator(**data)
 
-    def _transform_to_indicator_list(self, indicator_dict_list):
+    @staticmethod
+    def transform_to_indicator_list(indicator_dict_list):
         """
         Transforms a list of indicators
 
@@ -171,7 +167,7 @@ class IndicatorRowAdapter(object):
         Returns:
             list of Indicator: A list of indicators with the data in indicator_row_list
         """
-        return [self.dict_to_indicator(indicator_dict) for indicator_dict in indicator_dict_list]
+        return [IndicatorRowAdapter.dict_to_indicator(indicator_dict) for indicator_dict in indicator_dict_list]
 
 
 if __name__ == "__main__":

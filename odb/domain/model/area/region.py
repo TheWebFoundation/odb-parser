@@ -38,10 +38,11 @@ class Region(Area):
         super(Region, self).__init__(event)
         self._countries = event.countries
 
-    def __repr__(self):
-        return "{d}Region(id={s._id}, type={s._type}, label={s._label}, " \
-               "countries=[0..{n}])".format(d="*Discarded* " if self._discarded else "",
-                                            s=self, n=len(self._countries))
+    # FIXME: Review repr
+    # def __repr__(self):
+    #     return "{d}Region(id={s._id}, type={s._type}, label={s._label}, " \
+    #            "countries=[0..{n}])".format(d="*Discarded* " if self._discarded else "",
+    #                                         s=self, n=len(self._countries))
 
     def to_dict(self):
         dictionary = super(Region, self).to_dict()
@@ -127,8 +128,8 @@ class Region(Area):
 # =======================================================================================
 # Region aggregate root factory
 # =======================================================================================
-def create_region(name=None, short_name=None, area=None, countries=[],
-                  uri=None, iso3=None, iso2=None, iso_num=None, id=None, search=None, info=[]):
+def create_region(name=None, short_name=None, area=None, countries=None,
+                  uri=None, iso3=None, iso2=None, iso_num=None, id=None, search=None, info=None):
     """
     This function creates new regions and acts as a factory
 
@@ -146,6 +147,8 @@ def create_region(name=None, short_name=None, area=None, countries=[],
         info (list of AreaInfo): List of area info for this area
     """
     region_id = uuid.uuid4().hex[:24]
+    if countries is None: countries = []
+    if info is None: info = []
     event = Region.Created(originator_id=region_id, originator_version=0,
                            name=name, short_name=short_name, area=area,
                            countries=countries, uri=uri, iso3=iso3, iso2=iso2,

@@ -107,7 +107,7 @@ class Country(Area):
 # =======================================================================================
 def create_country(name=None, short_name=None, area=None, income=None,
                    uri=None, iso3=None, iso2=None, iso_num=None, id=None, type=None, search=None,
-                   info=[]):
+                   info=None):
     """
     This function creates new countries and acts as a factory
 
@@ -129,6 +129,7 @@ def create_country(name=None, short_name=None, area=None, income=None,
         Country: Created country
     """
     country_id = uuid.uuid4().hex[:24]
+    if not info: info = []
     event = Country.Created(originator_id=country_id, originator_version=0,
                             name=name, short_name=short_name, area=area,
                             income=income, uri=uri, iso3=iso3, iso2=iso2,

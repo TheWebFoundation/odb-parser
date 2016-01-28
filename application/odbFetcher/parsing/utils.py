@@ -2,6 +2,8 @@ from __future__ import division
 
 import re
 
+from odb.domain.model.area.country import create_country
+from odb.domain.model.area.region import create_region
 from odb.domain.model.indicator.indicator import *
 from odb.domain.model.observation.observation import *
 from odb.domain.model.observation.year import Year
@@ -62,6 +64,7 @@ def excel_indicator_to_dom(excel_indicator):
                                  weight=excel_indicator.weight)
     return indicator
 
+
 def excel_observation_to_dom(excel_observation, area, indicator):
     observation = create_observation(value=excel_observation.value,
                                      republish=indicator.republish,
@@ -75,6 +78,34 @@ def excel_observation_to_dom(excel_observation, area, indicator):
                                      year=Year(2014),
                                      continent=area.area)
     return observation
+
+
+def excel_region_to_dom(excel_region):
+    """Transforms an excel region into a domain entity
+    Args:
+        excel_region (excel_model.ExcelArea): the excel region
+
+    Returns:
+        Region
+
+    """
+    region = create_region(name=excel_region.name, iso2=excel_region.iso2, iso3=excel_region.iso3,
+                           short_name=excel_region.name)
+    return region
+
+
+def excel_country_to_dom(excel_country):
+    """Transforms an excel country into a domain entity
+    Args:
+        excel_country (excel_model.ExcelArea): the excel country
+
+    Returns:
+        Country
+
+    """
+    country = create_country(name=excel_country.name, iso2=excel_country.iso2, iso3=excel_country.iso3,
+                             short_name=excel_country.name, area=excel_country.region)
+    return country
 
 
 def str_to_none(s):
