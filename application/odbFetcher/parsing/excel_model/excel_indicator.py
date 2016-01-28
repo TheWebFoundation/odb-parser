@@ -1,6 +1,3 @@
-
-
-
 class ExcelIndicator(object):
     """
     Auxiliary class for modeling the indicators information retrieved from the Excel structure file. Each field

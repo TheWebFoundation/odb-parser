@@ -1,4 +1,5 @@
 import itertools
+
 from utility.time import utc_now
 
 _now = object()

@@ -1,6 +1,3 @@
-
-
-
 class ExcelObservation(object):
     """
     Auxiliary class for modeling the observations information retrieved from the Excel structure file.

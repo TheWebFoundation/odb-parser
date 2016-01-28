@@ -61,7 +61,7 @@ class AreaRepository(area.Repository):
             AreaRepositoryError: If there is not an area with the given name
         """
 
-        query = "SELECT * FROM area where name=:name"
+        query = "SELECT * FROM area WHERE name=:name"
         area_name = area_name or ''
         r = self._db.execute(query, {'name': area_name}).fetchone()
         if r is None:
@@ -181,7 +181,7 @@ class AreaRepository(area.Repository):
             list of Region: All regions
         """
         order = "name" if order is None else order
-        query = "SELECT * FROM area WHERE area IS NULL ORDER BY :order asc"
+        query = "SELECT * FROM area WHERE area IS NULL ORDER BY :order ASC"
         rows = self._db.execute(query, {'order': order}).fetchall()
 
         regions = []
@@ -206,7 +206,7 @@ class AreaRepository(area.Repository):
             list of Country: All countries
         """
         order = "name" if order is None else order
-        query = "SELECT * FROM area WHERE area IS NOT NULL ORDER BY :order asc"
+        query = "SELECT * FROM area WHERE area IS NOT NULL ORDER BY :order ASC"
         rows = self._db.execute(query, {'order': order}).fetchall()
 
         country_list = []

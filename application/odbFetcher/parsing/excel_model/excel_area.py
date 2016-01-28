@@ -1,6 +1,3 @@
-
-
-
 class ExcelArea(object):
     """
     Auxiliary class for modeling the area information retrieved from the Excel structure file. Each field
