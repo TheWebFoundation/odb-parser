@@ -258,16 +258,16 @@ class Repository(object):
     def find_countries_by_code_or_income(self, area_code_or_income):
         pass
 
-    def find_countries_by_continent_or_income_or_type(self, continent_or_income):
+    def find_countries_by_region_or_income_or_cluster(self, region_or_income_or_cluster):
         pass
 
-    def find_continents(self, order):
+    def find_regions(self, order):
         pass
 
     def find_countries(self, order):
         pass
 
-    def set_continent_countries(self, area):
+    def set_region_countries(self, area):
         pass
 
     def area_uri(self, area):
