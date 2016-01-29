@@ -116,13 +116,13 @@ class AreaParser(Parser):
             iso2 = area_sheet.cell(row_number, iso2_column).value
             iso3 = area_sheet.cell(row_number, iso3_column).value
             name = area_sheet.cell(row_number, name_column).value
-            income = str_to_none(area_sheet.cell(row_number, income_column).value)
+            income = str_to_none(area_sheet.cell(row_number, income_column).value.replace('-', ' '))
             hdi_rank = str_to_none(area_sheet.cell(row_number, hdi_rank_column).value)
             g20 = non_empty_string_to_bool(area_sheet.cell(row_number, g20_column).value)
             g7 = non_empty_string_to_bool(area_sheet.cell(row_number, g7_column).value)
             iodch = non_empty_string_to_bool(area_sheet.cell(row_number, iodch_column).value)
             oecd = non_empty_string_to_bool(area_sheet.cell(row_number, oecd_column).value)
-            cluster_group = str_to_none(area_sheet.cell(row_number, cluster_group_column).value)
+            cluster_group = str_to_none(area_sheet.cell(row_number, cluster_group_column).value.replace('-', ' '))
             country = ExcelArea(iso2=iso2, iso3=iso3, name=name, region=region.iso3, income=income, hdi_rank=hdi_rank,
                                 g20=g20, g7=g7, iodch=iodch, oecd=oecd, cluster_group=cluster_group)
             country_list.append(country)
