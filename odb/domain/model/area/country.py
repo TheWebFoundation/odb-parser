@@ -34,7 +34,12 @@ class Country(Area):
         """
         super(Country, self).__init__(event)
         self._income = event.income
-        self._type = event.type
+        self._cluster_group = event.cluster_group
+        self._hdi_rank = event.hdi_rank
+        self._g20 = event.g20
+        self._g7 = event.g7
+        self._iodch = event.iodch
+        self._oecd = event.oecd
 
     # FIXME: Bad repr
     # def __repr__(self):
@@ -52,13 +57,23 @@ class Country(Area):
         """
         dictionary = super(Country, self).to_dict()
         dictionary['income'] = self.income
-        dictionary['type'] = self.type
+        dictionary['cluster_group'] = self.cluster_group
+        dictionary['oecd'] = self.oecd
+        dictionary['hdi_rank'] = self.hdi_rank
+        dictionary['g20'] = self.g20
+        dictionary['g7'] = self.g7
+        dictionary['iodch'] = self.iodch
         return dictionary
 
     def to_dict_without_info(self):
         dictionary = super(Country, self).to_dict_without_info()
         dictionary['income'] = self.income
-        dictionary['type'] = self.type
+        dictionary['cluster_group'] = self.cluster_group
+        dictionary['oecd'] = self.oecd
+        dictionary['hdi_rank'] = self.hdi_rank
+        dictionary['g20'] = self.g20
+        dictionary['g7'] = self.g7
+        dictionary['iodch'] = self.iodch
         return dictionary
 
     # =======================================================================================
@@ -74,12 +89,57 @@ class Country(Area):
         self.increment_version()
 
     @property
-    def type(self):
-        return self._type
+    def cluster_group(self):
+        return self._cluster_group
 
-    @type.setter
-    def type(self, type):
-        self._type = type
+    @cluster_group.setter
+    def cluster_group(self, cluster_group):
+        self._cluster_group = cluster_group
+        self.increment_version()
+
+    @property
+    def oecd(self):
+        return self._oecd
+
+    @oecd.setter
+    def oecd(self, oecd):
+        self._oecd = oecd
+        self.increment_version()
+
+    @property
+    def hdi_rank(self):
+        return self._hdi_rank
+
+    @hdi_rank.setter
+    def hdi_rank(self, hdi_rank):
+        self._hdi_rank = hdi_rank
+        self.increment_version()
+
+    @property
+    def g20(self):
+        return self._g20
+
+    @g20.setter
+    def g20(self, g20):
+        self._g20 = g20
+        self.increment_version()
+
+    @property
+    def g7(self):
+        return self._g7
+
+    @g7.setter
+    def g7(self, g7):
+        self._g7 = g7
+        self.increment_version()
+
+    @property
+    def iodch(self):
+        return self._iodch
+
+    @iodch.setter
+    def iodch(self, iodch):
+        self._iodch = iodch
         self.increment_version()
 
     # =======================================================================================
@@ -103,8 +163,8 @@ class Country(Area):
 # =======================================================================================
 # Region aggregate root factory
 # =======================================================================================
-def create_country(name=None, short_name=None, area=None, income=None,
-                   uri=None, iso3=None, iso2=None, iso_num=None, id=None, type=None, search=None,
+def create_country(name=None, short_name=None, area=None, income=None, uri=None, iso3=None, iso2=None, iso_num=None,
+                   id=None, cluster_group=None, search=None, hdi_rank=None, g20=None, g7=None, iodch=None, oecd=None,
                    info=None):
     """
     This function creates new countries and acts as a factory
@@ -128,11 +188,10 @@ def create_country(name=None, short_name=None, area=None, income=None,
     """
     country_id = uuid.uuid4().hex[:24]
     if not info: info = []
-    event = Country.Created(originator_id=country_id, originator_version=0,
-                            name=name, short_name=short_name, area=area,
-                            income=income, uri=uri, iso3=iso3, iso2=iso2,
-                            iso_num=iso_num, id=id, type=type, search=search,
-                            info=info)
+    event = Country.Created(originator_id=country_id, originator_version=0, name=name, short_name=short_name, area=area,
+                            income=income, uri=uri, iso3=iso3, iso2=iso2, iso_num=iso_num, id=id,
+                            cluster_group=cluster_group, search=search, g20=g20, g7=g7, hdi_rank=hdi_rank, oecd=oecd,
+                            iodch=iodch, info=info)
     country = when(event)
     publish(event)
     return country
