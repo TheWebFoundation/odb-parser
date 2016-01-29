@@ -1,7 +1,5 @@
-import sqlite3
-
 from infrastructure.errors.errors import AreaRepositoryError
-from infrastructure.sql_repos.utils import create_insert_query
+from infrastructure.sql_repos.utils import create_insert_query, get_db
 from infrastructure.utils import uri
 from odb.domain.model.area import area
 from odb.domain.model.area.area_info import AreaInfo
@@ -27,8 +25,7 @@ class AreaRepository(area.Repository):
         self._db = self._initialize_db(recreate_db)
 
     def _initialize_db(self, recreate_db):
-        db = sqlite3.connect(self._config.get("CONNECTION", "SQLITE_DB"))
-        db.row_factory = sqlite3.Row
+        db = get_db(self._config)
         if recreate_db:
             db.execute('DROP TABLE IF EXISTS area')
             sql = '''
@@ -40,7 +37,14 @@ class AreaRepository(area.Repository):
                     iso2 TEXT,
                     iso3 TEXT,
                     short_name TEXT,
-                    iso_num INTEGER
+                    iso_num INTEGER,
+                    income TEXT,
+                    hdi_rank INTEGER,
+                    g20 BOOLEAN,
+                    g7 BOOLEAN,
+                    iodch BOOLEAN,
+                    oecd BOOLEAN,
+                    cluster_group TEXT
                 );
                 '''
             db.execute(sql)
@@ -357,7 +361,7 @@ class CountryRowAdapter(object):
     @staticmethod
     def country_to_dict(country):
         data = dict((key, value) for key, value in country.to_dict().items() if
-                    key not in ('countries', 'info', 'search', 'uri', 'iso_num', 'type', 'income'))
+                    key not in ('countries', 'info', 'search', 'uri', 'iso_num'))
         return data
 
     @staticmethod

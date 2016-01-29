@@ -18,7 +18,17 @@ is_fraction_pattern = re.compile(ur'^\d+(\.\d*)?(/\d+(\.\d*)?)?$')
 
 
 def string_to_bool(string):
-    return string in ["True", "true"]
+    if not string:
+        return False
+    else:
+        return string.lower().strip() == "true"
+
+
+def non_empty_string_to_bool(string):
+    if not string:
+        return False
+    else:
+        return len(string.lower().strip()) > 0
 
 
 def is_number(s):
@@ -109,14 +119,17 @@ def excel_country_to_dom(excel_country):
 
     """
     country = create_country(name=excel_country.name, iso2=excel_country.iso2, iso3=excel_country.iso3,
-                             short_name=excel_country.name, area=excel_country.region)
+                             short_name=excel_country.name, area=excel_country.region,
+                             cluster_group=excel_country.cluster_group, hdi_rank=excel_country.hdi_rank,
+                             g20=excel_country.g20, g7=excel_country.g7, iodch=excel_country.iodch,
+                             oecd=excel_country.oecd, income=excel_country.income)
     return country
 
 
 def str_to_none(s):
     if s is not None:
         stripped = s.strip()
-        return None if not stripped else stripped
+        return None if stripped == "" else stripped
     else:
         return s
 

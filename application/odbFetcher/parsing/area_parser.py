@@ -1,6 +1,7 @@
 from application.odbFetcher.parsing.excel_model.excel_area import ExcelArea
 from application.odbFetcher.parsing.parser import Parser
-from application.odbFetcher.parsing.utils import excel_region_to_dom, excel_country_to_dom
+from application.odbFetcher.parsing.utils import excel_region_to_dom, excel_country_to_dom, str_to_none, \
+    non_empty_string_to_bool
 
 # FIXME: move to configuration
 # If handcrafted iso codes then we need a matching function between names and codes (or include everything in the sheet)
@@ -86,7 +87,7 @@ class AreaParser(Parser):
             region = area_sheet.cell(row_number, region_column).value
             iso_codes = self._build_fake_iso_code(region)
             if iso_codes is not None:
-                region = ExcelArea(iso_codes['iso2'], iso_codes['iso3'], region, None)
+                region = ExcelArea(iso2=iso_codes['iso2'], iso3=iso_codes['iso3'], name=region, region=None)
                 region_set.add(region)
 
         return region_set
@@ -101,6 +102,13 @@ class AreaParser(Parser):
         iso3_column = self._config.getint("STRUCTURE_ACCESS", "AREA_ISO3_COLUMN")
         name_column = self._config.getint("STRUCTURE_ACCESS", "AREA_NAME_COLUMN")
         region_column = self._config.getint("STRUCTURE_ACCESS", "AREA_REGION_COLUMN")
+        income_column = self._config.getint("STRUCTURE_ACCESS", "AREA_INCOME_COLUMN")
+        hdi_rank_column = self._config.getint("STRUCTURE_ACCESS", "AREA_HDI_RANK_COLUMN")
+        g20_column = self._config.getint("STRUCTURE_ACCESS", "AREA_G20_COLUMN")
+        g7_column = self._config.getint("STRUCTURE_ACCESS", "AREA_G7_COLUMN")
+        iodch_column = self._config.getint("STRUCTURE_ACCESS", "AREA_IODCH_COLUMN")
+        oecd_column = self._config.getint("STRUCTURE_ACCESS", "AREA_OECD_COLUMN")
+        cluster_group_column = self._config.getint("STRUCTURE_ACCESS", "AREA_CLUSTER_GROUP_COLUMN")
         start_row = self._config.getint("STRUCTURE_ACCESS", "AREA_START_ROW")
         for row_number in range(start_row, area_sheet.nrows):
             region_name = area_sheet.cell(row_number, region_column).value
@@ -108,7 +116,15 @@ class AreaParser(Parser):
             iso2 = area_sheet.cell(row_number, iso2_column).value
             iso3 = area_sheet.cell(row_number, iso3_column).value
             name = area_sheet.cell(row_number, name_column).value
-            country = ExcelArea(iso2, iso3, name, region.iso3)
+            income = str_to_none(area_sheet.cell(row_number, income_column).value)
+            hdi_rank = str_to_none(area_sheet.cell(row_number, hdi_rank_column).value)
+            g20 = non_empty_string_to_bool(area_sheet.cell(row_number, g20_column).value)
+            g7 = non_empty_string_to_bool(area_sheet.cell(row_number, g7_column).value)
+            iodch = non_empty_string_to_bool(area_sheet.cell(row_number, iodch_column).value)
+            oecd = non_empty_string_to_bool(area_sheet.cell(row_number, oecd_column).value)
+            cluster_group = str_to_none(area_sheet.cell(row_number, cluster_group_column).value)
+            country = ExcelArea(iso2=iso2, iso3=iso3, name=name, region=region.iso3, income=income, hdi_rank=hdi_rank,
+                                g20=g20, g7=g7, iodch=iodch, oecd=oecd, cluster_group=cluster_group)
             country_list.append(country)
 
         return country_list
@@ -142,16 +158,9 @@ if __name__ == "__main__":
 
     log = logging.getLogger(__name__)
     config = ConfigParser.RawConfigParser()
-    config.add_section("CONNECTION")
+    config.read("../../../configuration.ini")
     config.set("CONNECTION", 'SQLITE_DB', '../../../odb2015.db')
-    config.add_section("STRUCTURE_ACCESS")
     config.set("STRUCTURE_ACCESS", "FILE_NAME", "../../../20160128_data.xlsx")
-    config.set("STRUCTURE_ACCESS", "AREA_SHEET_NUMBER", "2")
-    config.set("STRUCTURE_ACCESS", "AREA_START_ROW", "1")
-    config.set("STRUCTURE_ACCESS", "AREA_ISO2_COLUMN", "0")
-    config.set("STRUCTURE_ACCESS", "AREA_ISO3_COLUMN", "1")
-    config.set("STRUCTURE_ACCESS", "AREA_NAME_COLUMN", "2")
-    config.set("STRUCTURE_ACCESS", "AREA_REGION_COLUMN", "5")
 
     area_repo = AreaRepository(False, log, config)
     parser = AreaParser(log, config, area_repo=area_repo)

@@ -1,10 +1,9 @@
 import ConfigParser
 import logging
 
-# from application.odbFetcher.enrichment.enricher import Enricher
-# from application.odbFetcher.parsing.grouped_observation_parser import GroupedObservationParser
+from application.odbFetcher.parsing.area_parser import AreaParser
 from application.odbFetcher.parsing.indicator_parser import IndicatorParser
-# from application.odbFetcher.parsing.ranker import Ranker
+from infrastructure.sql_repos.area_repository import AreaRepository
 from infrastructure.sql_repos.indicator_repository import IndicatorRepository
 
 
@@ -20,7 +19,7 @@ def run():
     config = ConfigParser.RawConfigParser()
     config.read("configuration.ini")
     indicator_repo = IndicatorRepository(True, log, config)
-    area_repo = None
+    area_repo = AreaRepository(True, log, config)
     observation_repo = None
     parse(log, config, area_repo, indicator_repo, observation_repo)
     # rank(log, config)
@@ -29,6 +28,7 @@ def run():
 
 def parse(log, config, area_repo, indicator_repo, observation_repo):
     IndicatorParser(log, config, area_repo, indicator_repo, observation_repo).run()
+    AreaParser(log, config, area_repo, indicator_repo, observation_repo).run()
     # SecondaryObservationParser(log, config).run()
     # PrimaryObservationParser(log, config).run()
     # GroupedObservationParser(log, config).run()

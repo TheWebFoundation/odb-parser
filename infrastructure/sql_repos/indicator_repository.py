@@ -1,7 +1,5 @@
-import sqlite3
-
 from infrastructure.errors.errors import IndicatorRepositoryError
-from infrastructure.sql_repos.utils import create_insert_query
+from infrastructure.sql_repos.utils import create_insert_query, get_db
 from odb.domain.model.indicator.indicator import Repository, Indicator
 from odb.domain.model.indicator.indicator import create_indicator
 
@@ -30,8 +28,7 @@ class IndicatorRepository(Repository):
         self._db = self._initialize_db(recreate_db)
 
     def _initialize_db(self, recreate_db):
-        db = sqlite3.connect(self._config.get("CONNECTION", "SQLITE_DB"))
-        db.row_factory = sqlite3.Row
+        db = get_db(self._config)
         if recreate_db:
             db.execute('DROP TABLE IF EXISTS indicator')
             sql = '''
@@ -42,7 +39,7 @@ class IndicatorRepository(Repository):
                     description TEXT,
                     format_notes TEXT,
                     index_code TEXT,
-                    indicator TEXT NOT NULL,
+                    indicator TEXT,
                     license TEXT,
                     name TEXT,
                     provider_name TEXT,
