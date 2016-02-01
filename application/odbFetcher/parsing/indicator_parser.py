@@ -15,7 +15,6 @@ class IndicatorParser(Parser):
 
     def run(self):
         self._log.info("Running indicator parser")
-        print("Running indicator parser")
         structure_sheet = self._initialize_structure_sheet()
         indicator_sheet = self._initialize_indicator_sheet()
         self._retrieve_indicators(structure_sheet, indicator_sheet)
@@ -23,7 +22,6 @@ class IndicatorParser(Parser):
 
     def _initialize_indicator_sheet(self):
         self._log.info("\tGetting indicators sheet...")
-        print("\tGetting indicators sheet...")
         structure_file_name = self._config.get("STRUCTURE_ACCESS", "FILE_NAME")
         indicator_sheet_number = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_SHEET_NUMBER")
         indicator_sheet = self._get_sheet(structure_file_name, indicator_sheet_number)
@@ -31,7 +29,6 @@ class IndicatorParser(Parser):
 
     def _initialize_structure_sheet(self):
         self._log.info("\tGetting structure indicators sheet...")
-        print("\tGetting structure indicators sheet...")
         structure_file_name = self._config.get("STRUCTURE_ACCESS", "FILE_NAME")
         indicator_sheet_number = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_SHEET_NUMBER")
         indicator_sheet = self._get_sheet(structure_file_name, indicator_sheet_number)
@@ -43,7 +40,6 @@ class IndicatorParser(Parser):
 
     def _retrieve_structure_indicators(self, indicator_sheet):
         self._log.info("\tRetrieving structure indicators...")
-        print("\tRetrieving structure indicators...")
         code_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_CODE_COLUMN")
         name_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_NAME_COLUMN")
         type_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_TYPE_COLUMN")
@@ -70,7 +66,6 @@ class IndicatorParser(Parser):
     # TODO: too much boilerplate
     def _retrieve_primary_secondary_indicators(self, indicator_sheet):
         self._log.info("\tRetrieving primary & secondary indicators...")
-        print("\tRetrieving primary & secondary indicators...")
         code_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_CODE_COLUMN")
         component_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_COMPONENT_COLUMN")
         description_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_DESCRIPTION_COLUMN")
@@ -124,7 +119,6 @@ class IndicatorParser(Parser):
         :return:
         """
         self._log.info("\tStoring indicators...")
-        print("\tStoring indicators...")
         for excel_indicator in self._excel_indicators:
             indicator = excel_indicator_to_dom(excel_indicator)
             self._indicator_repo.insert_indicator(indicator)

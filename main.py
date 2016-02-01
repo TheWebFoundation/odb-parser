@@ -11,7 +11,11 @@ def configure_log():
     _format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(filename="odbFetcher.log", level=logging.INFO,
                         format=_format)
-
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
+    console.setFormatter(formatter)
+    logging.getLogger('').addHandler(console)
 
 def run():
     configure_log()
