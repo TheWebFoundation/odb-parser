@@ -15,3 +15,11 @@ def get_db(config):
     sqlite3.register_converter("BOOLEAN", lambda v: bool(int(v)))
 
     return db
+
+
+def is_integer(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False

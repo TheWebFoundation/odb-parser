@@ -423,8 +423,8 @@ class Repository(object, metaclass=ABCMeta):
     def get_countries_by_code_name_or_income(self, code):
         pass
 
-    def get_years(self, year):
-        pass
+    # def get_years(self, year):
+    #     pass
 
     def observation_uri(self, observation):
         pass

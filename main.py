@@ -27,7 +27,7 @@ def run():
     config.read("configuration.ini")
     indicator_repo = IndicatorRepository(True, log, config)
     area_repo = AreaRepository(True, log, config)
-    observation_repo = ObservationRepository(True, '', log, config)
+    observation_repo = ObservationRepository(True, area_repo, indicator_repo, log, config)
     parse(log, config, area_repo, indicator_repo, observation_repo)
     # rank(log, config)
     # enrich(log, config)

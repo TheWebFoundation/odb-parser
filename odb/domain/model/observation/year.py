@@ -13,7 +13,7 @@ class Year(object):
         return self._value
 
     def __repr__(self):
-        return "Year(name={n!r}, value={v!r}".format(n=self._name, v=self._value)
+        return "Year(name={n!r}, value={v!r})".format(n=self._name, v=self._value)
 
     def __eq__(self, other):
         if type(self) is not type(other):

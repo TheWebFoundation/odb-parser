@@ -101,7 +101,7 @@ class ObservationParser(Parser):
             area = excel_raw_observation[1]
             indicator = excel_raw_observation[2]
             observation = excel_observation_to_dom(excel_raw_observation[0], area, indicator)
-            self._observation_repo.insert_observation(observation)
+            self._observation_repo.insert_observation(observation, commit=False)
         self._observation_repo.commit_transaction()
 
 

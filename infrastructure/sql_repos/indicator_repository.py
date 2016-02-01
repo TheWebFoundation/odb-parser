@@ -129,7 +129,7 @@ class IndicatorRepository(Repository):
         for indicator in [dict(i) for i in indicators]:
             children = self.find_indicator_children(indicator)
             indicator["children"] = children
-            processed_indicators.append(indicator)
+            processed_indicators.append(IndicatorRowAdapter.dict_to_indicator(indicator))
 
         return processed_indicators
 
@@ -221,7 +221,7 @@ class IndicatorRowAdapter(object):
         Transforms one single indicator
 
         Args:
-            indicator_dict (dict): Indicator dictionary coming from a sqlite row
+            indicator_dict (dict): Indicator dictionary coming from a sqlite row with children already filled
 
         Returns:
             Indicator: Indicator object with the data in indicator_dict
@@ -229,7 +229,6 @@ class IndicatorRowAdapter(object):
         data = dict(indicator_dict)
         data['index'] = data['index_code']
         data.pop('index_code')
-        data['children'] = IndicatorRowAdapter.transform_to_indicator_list(data['children'])
         return create_indicator(**data)
 
     @staticmethod
