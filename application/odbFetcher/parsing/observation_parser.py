@@ -48,6 +48,9 @@ class ObservationParser(Parser):
                     key=lambda x: x[0].value if x[0].value is not None and na_to_none(x[0].value) is not None else 0)
                 # HACK: Curate data by stripping year
                 indicator_code_retrieved = raw_obs_sheet.cell(observation_name_row, column_number).value
+                if len(indicator_code_retrieved.split()) > 1:
+                    self._log.warn('Indicator %s in %s data had to be stripped of year', indicator_code_retrieved,
+                                   raw_obs_sheet.name)
                 indicator_code = indicator_code_retrieved.split()[0]
 
                 try:
