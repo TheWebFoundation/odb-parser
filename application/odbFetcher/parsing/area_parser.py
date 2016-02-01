@@ -56,9 +56,9 @@ class AreaParser(Parser):
 
     def _initialize_area_sheet(self):
         self._log.info("\tGetting area sheet...")
-        structure_file_name = self._config.get("STRUCTURE_ACCESS", "FILE_NAME")
-        indicator_sheet_number = self._config.getint("STRUCTURE_ACCESS", "AREA_SHEET_NUMBER")
-        indicator_sheet = self._get_sheet(structure_file_name, indicator_sheet_number)
+        area_file_name = self._config.get("STRUCTURE_ACCESS", "FILE_NAME")
+        indicator_sheet_number = self._config.getint("AREA_ACCESS", "AREA_SHEET_NUMBER")
+        indicator_sheet = self._get_sheet(area_file_name, indicator_sheet_number)
         return indicator_sheet
 
     def _retrieve_areas(self, area_sheet):
@@ -77,8 +77,8 @@ class AreaParser(Parser):
 
         region_set = set()
 
-        region_column = self._config.getint("STRUCTURE_ACCESS", "AREA_REGION_COLUMN")
-        start_row = self._config.getint("STRUCTURE_ACCESS", "AREA_START_ROW")
+        region_column = self._config.getint("AREA_ACCESS", "AREA_REGION_COLUMN")
+        start_row = self._config.getint("AREA_ACCESS", "AREA_START_ROW")
         for row_number in range(start_row, area_sheet.nrows):
             region = area_sheet.cell(row_number, region_column).value
             iso_codes = self._build_fake_iso_code(region)
@@ -93,18 +93,18 @@ class AreaParser(Parser):
 
         country_list = []
 
-        iso2_column = self._config.getint("STRUCTURE_ACCESS", "AREA_ISO2_COLUMN")
-        iso3_column = self._config.getint("STRUCTURE_ACCESS", "AREA_ISO3_COLUMN")
-        name_column = self._config.getint("STRUCTURE_ACCESS", "AREA_NAME_COLUMN")
-        region_column = self._config.getint("STRUCTURE_ACCESS", "AREA_REGION_COLUMN")
-        income_column = self._config.getint("STRUCTURE_ACCESS", "AREA_INCOME_COLUMN")
-        hdi_rank_column = self._config.getint("STRUCTURE_ACCESS", "AREA_HDI_RANK_COLUMN")
-        g20_column = self._config.getint("STRUCTURE_ACCESS", "AREA_G20_COLUMN")
-        g7_column = self._config.getint("STRUCTURE_ACCESS", "AREA_G7_COLUMN")
-        iodch_column = self._config.getint("STRUCTURE_ACCESS", "AREA_IODCH_COLUMN")
-        oecd_column = self._config.getint("STRUCTURE_ACCESS", "AREA_OECD_COLUMN")
-        cluster_group_column = self._config.getint("STRUCTURE_ACCESS", "AREA_CLUSTER_GROUP_COLUMN")
-        start_row = self._config.getint("STRUCTURE_ACCESS", "AREA_START_ROW")
+        iso2_column = self._config.getint("AREA_ACCESS", "AREA_ISO2_COLUMN")
+        iso3_column = self._config.getint("AREA_ACCESS", "AREA_ISO3_COLUMN")
+        name_column = self._config.getint("AREA_ACCESS", "AREA_NAME_COLUMN")
+        region_column = self._config.getint("AREA_ACCESS", "AREA_REGION_COLUMN")
+        income_column = self._config.getint("AREA_ACCESS", "AREA_INCOME_COLUMN")
+        hdi_rank_column = self._config.getint("AREA_ACCESS", "AREA_HDI_RANK_COLUMN")
+        g20_column = self._config.getint("AREA_ACCESS", "AREA_G20_COLUMN")
+        g7_column = self._config.getint("AREA_ACCESS", "AREA_G7_COLUMN")
+        iodch_column = self._config.getint("AREA_ACCESS", "AREA_IODCH_COLUMN")
+        oecd_column = self._config.getint("AREA_ACCESS", "AREA_OECD_COLUMN")
+        cluster_group_column = self._config.getint("AREA_ACCESS", "AREA_CLUSTER_GROUP_COLUMN")
+        start_row = self._config.getint("AREA_ACCESS", "AREA_START_ROW")
         for row_number in range(start_row, area_sheet.nrows):
             region_name = area_sheet.cell(row_number, region_column).value
             region = next((r for r in regions if region_name.lower() == r.name.lower()), None)
