@@ -61,38 +61,39 @@ class Observation(Entity):
             event: The event with the required attributes
         """
         super(Observation, self).__init__(event.originator_id, event.originator_version)
-        self._provider_url = event.provider_url
+        # self._provider_url = event.provider_url
         self._indicator = event.indicator
-        self._indicator_name = event.indicator_name
-        self._indicator_type = event.indicator_type
-        self._short_name = event.short_name
+        # self._indicator_name = event.indicator_name
+        # self._indicator_type = event.indicator_type
+        # self._short_name = event.short_name
         self._area = event.area
-        self._area_name = event.area_name
-        self._uri = event.uri
+        # self._area_name = event.area_name
+        # self._uri = event.uri
         self._value = event.value
         self._year = event.year
-        self._provider_name = event.provider_name
+        # self._provider_name = event.provider_name
         self._id = event.id
-        self._continent = event.continent
+        # self._continent = event.continent
         self._tendency = event.tendency
-        self._republish = event.republish
-        self._area_type = event.area_type
+        # self._republish = event.republish
+        # self._area_type = event.area_type
         self._ranking = event.ranking
-        self._ranking_type = event.ranking_type
+        # self._ranking_type = event.ranking_type
 
-    def __repr__(self):
-        return "{d}Observation(id={id!r}, " \
-               "issued={issued!r}, " \
-               "publisher={publisher!r}, type={obs_type!r}, label={label!r}, " \
-               "status={status!r}, " \
-               "ref_indicator={ref_indicator!r}, value={value!r}, " \
-               "ref_area={ref_area!r}, ref_year={ref_year!r}) ". \
-            format(d="*Discarded* " if self.discarded else "", id=self._id,
-                   issued=self._issued, publisher=self._publisher,
-                   obs_type=self._type, label=self._label,
-                   status=self._status, ref_indicator=self._ref_indicator_id,
-                   value=self._value, ref_area=self._ref_area_id,
-                   ref_year=self._ref_year)
+    # FIXME: Review
+    # def __repr__(self):
+    #     return "{d}Observation(id={id!r}, " \
+    #            "issued={issued!r}, " \
+    #            "publisher={publisher!r}, type={obs_type!r}, label={label!r}, " \
+    #            "status={status!r}, " \
+    #            "ref_indicator={ref_indicator!r}, value={value!r}, " \
+    #            "ref_area={ref_area!r}, ref_year={ref_year!r}) ". \
+    #         format(d="*Discarded* " if self.discarded else "", id=self._id,
+    #                issued=self._issued, publisher=self._publisher,
+    #                obs_type=self._type, label=self._label,
+    #                status=self._status, ref_indicator=self._ref_indicator_id,
+    #                value=self._value, ref_area=self._ref_area_id,
+    #                ref_year=self._ref_year)
 
     def to_dict(self):
         """
@@ -101,14 +102,9 @@ class Observation(Entity):
         Returns:
             dict: Dictionary representation of self object
         """
-        return {
-            'provider_url': self.provider_url, 'indicator': self.indicator, 'indicator_name': self.indicator_name,
-            'indicator_type': self.indicator_type, 'short_name': self.short_name, 'area': self.area,
-            'area_name': self.area_name, 'uri': self.uri,
-            'value': self.value, 'year': self.year, 'provider_name': self.provider_name, 'id': self.id,
-            'continent': self.continent, 'tendency': self.tendency, 'republish': self.republish,
-            'area_type': self.area_type, 'ranking': self.ranking, 'ranking_type': self.ranking_type
-        }
+        return {'indicator': self.indicator.to_dict(), 'area': self.area.to_dict(), 'value': self.value,
+                'year': self.year, 'id': self.id, 'tendency': self.tendency, 'ranking': self.ranking
+                }
 
     # =======================================================================================
     # Properties
@@ -342,10 +338,7 @@ class Observation(Entity):
 # =======================================================================================
 # Observation aggregate root factory
 # =======================================================================================
-def create_observation(provider_url=None, indicator=None, indicator_name=None, indicator_type=None,
-                       short_name=None, area=None, area_name=None, uri=None, value=0,
-                       year="1970", provider_name=None, id=None, continent=None,
-                       tendency=0, republish=False, area_type=None, ranking=None, ranking_type=None):
+def create_observation(indicator=None, area=None, value=None, year=1970, id=None, tendency=0, ranking=None):
     """
     This function creates new observations and acts as a factory
 
@@ -373,12 +366,8 @@ def create_observation(provider_url=None, indicator=None, indicator_name=None, i
         Observation: Created observation
     """
     obs_id = uuid.uuid4().hex[:24]
-    event = Observation.Created(originator_id=obs_id, originator_version=0,
-                                provider_url=provider_url, indicator=indicator, indicator_name=indicator_name,
-                                indicator_type=indicator_type, short_name=short_name, area=area, area_name=area_name,
-                                uri=uri, value=value, year=year, provider_name=provider_name, id=id,
-                                continent=continent, tendency=tendency, republish=republish, area_type=area_type,
-                                ranking=ranking, ranking_type=ranking_type)
+    event = Observation.Created(originator_id=obs_id, originator_version=0, indicator=indicator,
+                                area=area, value=value, year=year, id=id, tendency=tendency, ranking=ranking)
     obs = when(event)
     publish(event)
     return obs
@@ -443,23 +432,5 @@ class Repository(object, metaclass=ABCMeta):
     def set_observation_country_and_indicator_name(self, observation):
         pass
 
-    def insert_observation(self, observation, observation_uri=None, area_iso3_code=None, indicator_code=None,
-                           year_literal=None, area_name=None, indicator_name=None, previous_value=None,
-                           year_of_previous_value=None, republish=None, provider_name=None, provider_url=None,
-                           tendency=None):
-        """
-        The info related to area, indicator and year could be provided using the observation
-        object internal fields or, in some context, directly using the parameters
-        area_iso3_code, indicator_code and year literal. Each implementation will choose
-        :param observation: observation object of the model
-        :param uri: uri generated according to some parameters that represents the entity
-        :param area_iso3_code:  iso3_code of a country
-        :param indicator_code: code of an indicator (not id)
-        :param year_literal: inst/string year, not an object year of the model
-        :param area_name: String containing the name of the country
-        :param indicator_name: String containing the name of the indicator
-        :param previous_value: numeric value of previous observation in time registered
-        :param year_of_previous_value: year of the previous observation registered
-        :return:
-        """
+    def insert_observation(self, observation):
         pass
