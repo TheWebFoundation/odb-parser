@@ -95,8 +95,6 @@ class ObservationParser(Parser):
         self._log.info("\tStoring raw observations...")
         self._observation_repo.begin_transaction()
         for excel_raw_observation in self._excel_raw_observations:
-            # area = self._area_repo.find_by_iso3(excel_raw_observation.iso3)
-            # indicator = self._indicator_repo.find_indicator_by_code(excel_raw_observation.indicator_code)
             area = excel_raw_observation[1]
             indicator = excel_raw_observation[2]
             observation = excel_observation_to_dom(excel_raw_observation[0], area, indicator)
