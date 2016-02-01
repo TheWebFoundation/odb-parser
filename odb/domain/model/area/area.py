@@ -257,6 +257,12 @@ class Repository(object, metaclass=ABCMeta):
     def find_countries_by_code_or_income(self, area_code_or_income):
         pass
 
+    def find_by_code(self, area_code):
+        pass
+
+    def find_by_name(self, area_name):
+        pass
+
     def find_countries_by_region_or_income_or_cluster(self, region_or_income_or_cluster):
         pass
 

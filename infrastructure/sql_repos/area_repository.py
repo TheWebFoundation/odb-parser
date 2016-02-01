@@ -61,7 +61,7 @@ class AreaRepository(area.Repository):
             AreaRepositoryError: If there is not an area with the given name
         """
 
-        query = "SELECT * FROM area WHERE name=:name"
+        query = "SELECT * FROM area WHERE name LIKE :name"
         area_name = area_name or ''
         r = self._db.execute(query, {'name': area_name}).fetchone()
         if r is None:
@@ -70,8 +70,17 @@ class AreaRepository(area.Repository):
         data = dict(r)
         return AreaRowAdapter().dict_to_area(data)
 
+    def find_by_code(self, area_code):
+        query = "SELECT * FROM area WHERE (iso2 LIKE :code OR iso3 LIKE :code)"
+        area_code = area_code or ''
+        r = self._db.execute(query, {'code': area_code}).fetchone()
+        if r is None:
+            raise AreaRepositoryError("No area with code " + area_code)
+
+        data = dict(r)
+        return AreaRowAdapter().dict_to_area(data)
+
     # FIXME: Review this method signature
-    # - Either return always a list
     def find_countries_by_code_or_income(self, area_code_or_income):
         """
         Finds countries by code or income if no area is found it will search by income
@@ -435,7 +444,11 @@ if __name__ == "__main__":
     print(json.dumps(spain.to_dict()))
 
     regions = repo.find_regions('name')
-    assert len(regions) == 7
+    assert len(regions) > 0
     print(json.dumps([region.to_dict() for region in regions]))
+
+    france = repo.find_by_code('fr')
+    assert france is not None and france.iso2 == 'FR'
+    print(json.dumps(france.to_dict()))
 
     print('OK!')
