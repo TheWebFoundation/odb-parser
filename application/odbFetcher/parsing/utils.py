@@ -132,6 +132,14 @@ def str_to_none(s):
         return s
 
 
+def na_to_none(s):
+    if s is not None:
+        stripped = str(s).strip()
+        return None if stripped == "" or stripped.lower() == "na" or stripped.lower() == "n/a" else s
+    else:
+        return s
+
+
 if __name__ == "__main__":
     assert weight_to_float('0') == 0
     assert weight_to_float('0.') == 0

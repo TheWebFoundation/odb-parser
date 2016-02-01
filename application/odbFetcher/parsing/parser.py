@@ -1,7 +1,7 @@
+import re
+
 import xlrd
-# from infrastructure.mongo_repos.indicator_repository import IndicatorRepository
-# from infrastructure.mongo_repos.observation_repository import ObservationRepository
-# from infrastructure.mongo_repos.area_repository import AreaRepository
+
 from .utils import is_number
 
 
@@ -42,3 +42,11 @@ class Parser(object):
         sheet = book.sheet_by_index(sheet_name_or_index) if is_number(sheet_name_or_index) else book.sheet_by_name(
                 sheet_name_or_index)
         return sheet
+
+    @staticmethod
+    def _get_sheets_by_pattern(file_name, regex_pattern):
+        pattern = re.compile(regex_pattern)
+        book = xlrd.open_workbook(file_name)
+        matching_sheet_names = [sheet_name for sheet_name in book.sheet_names() if pattern.match(sheet_name)]
+        matching_sheets = [book.sheet_by_name(sheet_name) for sheet_name in matching_sheet_names]
+        return matching_sheets
