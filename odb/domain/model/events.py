@@ -30,12 +30,12 @@ class DomainEvent(object):
         return not (self == rhs)
 
     def __hash__(self):
-        return hash(tuple(itertools.chain(self.__dict__.items(),
+        return hash(tuple(itertools.chain(list(self.__dict__.items()),
                                           [type(self)])))
 
     def __repr__(self):
         return self.__class__.__name__ + "(" + ', '.join(
-                "{0}={1!r}".format(*item) for item in self.__dict__.items()) + ')'
+            "{0}={1!r}".format(*item) for item in list(self.__dict__.items())) + ')'
 
 
 _event_handlers = {}
@@ -77,7 +77,7 @@ def publish(event):
         and sent to all matching subscribers.
     """
     matching_handlers = set()
-    for event_predicate, handlers in _event_handlers.items():
+    for event_predicate, handlers in list(_event_handlers.items()):
         if event_predicate(event):
             matching_handlers.update(handlers)
 

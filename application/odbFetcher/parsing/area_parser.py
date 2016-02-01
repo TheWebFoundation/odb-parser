@@ -7,31 +7,31 @@ from application.odbFetcher.parsing.utils import excel_region_to_dom, excel_coun
 # If handcrafted iso codes then we need a matching function between names and codes (or include everything in the sheet)
 # Otherwise we could just auto-increment
 FAKE_ISO = {
-    u'latin america & caribbean': {
+    'latin america & caribbean': {
         'iso2': ':L',
         'iso3': ':LA'
     },
-    u'east asia & pacific': {
+    'east asia & pacific': {
         'iso2': ':P',
         'iso3': ':PA'
     },
-    u'europe & central asia': {
+    'europe & central asia': {
         'iso2': ':E',
         'iso3': ':EU'
     },
-    u'middle east & north africa': {
+    'middle east & north africa': {
         'iso2': ':M',
         'iso3': ':ME'
     },
-    u'south asia': {
+    'south asia': {
         'iso2': ':S',
         'iso3': ':SA'
     },
-    u'sub-saharan africa': {
+    'sub-saharan africa': {
         'iso2': ':A',
         'iso3': ':AF'
     },
-    u'north america': {
+    'north america': {
         'iso2': ':N',
         'iso3': ':NA'
     }
@@ -50,14 +50,14 @@ class AreaParser(Parser):
 
     def run(self):
         self._log.info("Running area parser")
-        print "Running area parser"
+        print("Running area parser")
         area_sheet = self._initialize_area_sheet()
         self._retrieve_areas(area_sheet)
         self._store_areas()
 
     def _initialize_area_sheet(self):
         self._log.info("\tGetting area sheet...")
-        print "\tGetting area sheet..."
+        print("\tGetting area sheet...")
         structure_file_name = self._config.get("STRUCTURE_ACCESS", "FILE_NAME")
         indicator_sheet_number = self._config.getint("STRUCTURE_ACCESS", "AREA_SHEET_NUMBER")
         indicator_sheet = self._get_sheet(structure_file_name, indicator_sheet_number)
@@ -68,16 +68,16 @@ class AreaParser(Parser):
         self._excel_countries = self._retrieve_countries(area_sheet, self._excel_regions)
 
     def _build_fake_iso_code(self, region_name):
-        if not FAKE_ISO.has_key(region_name.lower()):
+        if region_name.lower() not in FAKE_ISO:
             self._log.error("\t%s doesn't have a corresponding ISO", region_name)
-            print "\t", region_name, "doesn't have a corresponding ISO"
+            print("\t", region_name, "doesn't have a corresponding ISO")
             return None
 
         return FAKE_ISO[region_name.lower()]
 
     def _retrieve_regions(self, area_sheet):
         self._log.info("\tRetrieving regions...")
-        print "\tRetrieving regions..."
+        print("\tRetrieving regions...")
 
         region_set = set()
 
@@ -94,7 +94,7 @@ class AreaParser(Parser):
 
     def _retrieve_countries(self, area_sheet, regions):
         self._log.info("\tRetrieving countries...")
-        print "\tRetrieving countries..."
+        print("\tRetrieving countries...")
 
         country_list = []
 
@@ -136,7 +136,7 @@ class AreaParser(Parser):
         :return:
         """
         self._log.info("\tStoring areas...")
-        print "\tStoring areas..."
+        print("\tStoring areas...")
         self._store_regions()
         self._store_countries()
 
@@ -153,11 +153,11 @@ class AreaParser(Parser):
 
 if __name__ == "__main__":
     import logging
-    import ConfigParser
+    import configparser
     from infrastructure.sql_repos.area_repository import AreaRepository
 
     log = logging.getLogger(__name__)
-    config = ConfigParser.RawConfigParser()
+    config = configparser.RawConfigParser()
     config.read("../../../configuration.ini")
     config.set("CONNECTION", 'SQLITE_DB', '../../../odb2015.db')
     config.set("STRUCTURE_ACCESS", "FILE_NAME", "../../../20160128_data.xlsx")
@@ -167,5 +167,5 @@ if __name__ == "__main__":
 
     parser.run()
 
-    print "Regions are:", [str(region) for region in parser._excel_regions]
-    print "Countries are:", [str(country) for country in parser._excel_countries]
+    print("Regions are:", [str(region) for region in parser._excel_regions])
+    print("Countries are:", [str(country) for country in parser._excel_countries])

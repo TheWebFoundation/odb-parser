@@ -14,14 +14,14 @@ class PrimaryObservationParser(Parser):
 
     def run(self):
         self._log.info("Running primary observation parser")
-        print "Running primary observation parser"
+        print("Running primary observation parser")
         primary_obs_sheet = self._initialize_primary_obs_sheet()
         self._retrieve_primary_observations(primary_obs_sheet)
         self._store_primary_observations()
 
     def _initialize_primary_obs_sheet(self):
         self._log.info("\tGetting primary observations sheet...")
-        print "\tGetting primary observations sheet..."
+        print("\tGetting primary observations sheet...")
         data_file_name = self._config.get("DATA_ACCESS", "FILE_NAME")
         primary_sheet_number = self._config.getint("PRIMARY_OBSERVATIONS", "SHEET_NUMBER")
         primary_obs_sheet = self._get_sheet(data_file_name, primary_sheet_number)
@@ -29,7 +29,7 @@ class PrimaryObservationParser(Parser):
 
     def _retrieve_primary_observations(self, primary_obs_sheet):
         self._log.info("\tRetrieving primary observations...")
-        print "\tRetrieving primary observations..."
+        print("\tRetrieving primary observations...")
         country_column = self._config.getint("PRIMARY_OBSERVATIONS", "COUNTRY_COLUMN")
         country_start_row = self._config.getint("PRIMARY_OBSERVATIONS", "COUNTRY_START_ROW")
         indicator_codes_row = self._config.getint("PRIMARY_OBSERVATIONS", "INDICATOR_CODES_ROW")
@@ -49,7 +49,7 @@ class PrimaryObservationParser(Parser):
         :return:
         """
         self._log.info("\tStoring primary observations...")
-        print "\tStoring primary observations..."
+        print("\tStoring primary observations...")
         for excel_observation in self._excel_primary_observations:
             area = self._area_repo.find_by_name(excel_observation.country_name)
             indicator = self._indicator_repo.find_indicator_by_code(excel_observation.indicator_code)

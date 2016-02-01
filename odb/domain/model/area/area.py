@@ -247,13 +247,12 @@ def _(event, region):
 # =======================================================================================
 # Area Repository
 # =======================================================================================
-class Repository(object):
+class Repository(object, metaclass=ABCMeta):
     """
     Abstract implementation of generic queries for managing areas.
     This will be sub-classed with an infrastructure specific implementation
     which will customize all the queries
     """
-    __metaclass__ = ABCMeta
 
     def find_countries_by_code_or_income(self, area_code_or_income):
         pass

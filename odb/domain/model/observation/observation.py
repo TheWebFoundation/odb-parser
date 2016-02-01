@@ -422,9 +422,8 @@ def _(event, obs):
 # =======================================================================================
 # Observations Repository
 # =======================================================================================
-class Repository(object):
+class Repository(object, metaclass=ABCMeta):
     """Abstract implementation of generic queries for managing observations."""
-    __metaclass__ = ABCMeta
 
     def find_observations(self, indicator_code=None, area_code=None, year=None):
         pass

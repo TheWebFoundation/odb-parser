@@ -14,14 +14,14 @@ class GroupedObservationParser(Parser):
 
     def run(self):
         self._log.info("Running grouped observation parser")
-        print "Running grouped observation parser"
+        print("Running grouped observation parser")
         grouped_obs_sheet = self._initialize_grouped_obs_sheet()
         self._retrieve_grouped_observations(grouped_obs_sheet)
         self._store_grouped_observations()
 
     def _initialize_grouped_obs_sheet(self):
         self._log.info("\tGetting grouped observations sheet...")
-        print "\tGetting grouped observations sheet..."
+        print("\tGetting grouped observations sheet...")
         data_file_name = self._config.get("DATA_ACCESS", "FILE_NAME")
         grouped_sheet_number = self._config.getint("GROUPED_OBSERVATIONS", "SHEET_NUMBER")
         grouped_obs_sheet = self._get_sheet(data_file_name, grouped_sheet_number)
@@ -29,7 +29,7 @@ class GroupedObservationParser(Parser):
 
     def _retrieve_grouped_observations(self, grouped_obs_sheet):
         self._log.info("\tRetrieving grouped observations sheet...")
-        print "\tRetrieving grouped observations sheet..."
+        print("\tRetrieving grouped observations sheet...")
         countries_column = self._config.getint("GROUPED_OBSERVATIONS", "COUNTRY_COLUMN")
         indicator_columns_range = self._config.get("GROUPED_OBSERVATIONS", "INDICATOR_COLUMN_RANGE").split(", ")
         indicator_names_row = self._config.getint("GROUPED_OBSERVATIONS", "INDICATOR_NAMES_ROW")
@@ -49,7 +49,7 @@ class GroupedObservationParser(Parser):
         :return:
         """
         self._log.info("\tStoring grouped observations sheet...")
-        print "\tStoring grouped observations sheet..."
+        print("\tStoring grouped observations sheet...")
         for excel_observation in self._excel_grouped_observations:
             area = self._area_repo.find_by_name(excel_observation.country_name)
             indicator = self._indicator_repo.find_indicator_by_code(excel_observation.indicator_code)

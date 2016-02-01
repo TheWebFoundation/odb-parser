@@ -200,7 +200,8 @@ class IndicatorRowAdapter(object):
             dict: Dictionary with keys and values mapped to the sqlite table
         """
         # Strip unwanted values
-        data = dict((key, value) for key, value in indicator.to_dict().items() if key not in ('parent', 'children'))
+        data = dict(
+            (key, value) for key, value in list(indicator.to_dict().items()) if key not in ('parent', 'children'))
         # Replace keys
         data['index_code'] = data['index']
         data.pop('index')
@@ -239,11 +240,11 @@ class IndicatorRowAdapter(object):
 
 if __name__ == "__main__":
     import logging
-    import ConfigParser
+    import configparser
     import json
 
     logger = logging.getLogger(__name__)
-    config = ConfigParser.RawConfigParser()
+    config = configparser.RawConfigParser()
     config.add_section('CONNECTION')
     config.set('CONNECTION', 'SQLITE_DB', '../../odb2015.db')
 
@@ -268,6 +269,6 @@ if __name__ == "__main__":
     readiness = repo.find_indicator_by_code('readiness')
     indicators = repo.find_indicators_by_level('component', parent=readiness)
     assert len(indicators) > 0 and len(indicators) < 10
-    print json.dumps([i.to_dict() for i in indicators])
+    print(json.dumps([i.to_dict() for i in indicators]))
 
-    print 'OK!'
+    print('OK!')

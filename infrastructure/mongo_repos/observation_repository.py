@@ -3,11 +3,11 @@ from a4ai.domain.model.observation.observation import Repository, create_observa
 from a4ai.domain.model.observation.statistics import Statistics
 from a4ai.domain.model.observation.visualisation import Visualisation
 from a4ai.domain.model.observation.year import Year
-
-from config import port, db_name, host
-from infrastructure.errors.errors import IndicatorRepositoryError, AreaRepositoryError
 from utils import success
+
+from infrastructure.errors.errors import IndicatorRepositoryError, AreaRepositoryError
 from .area_repository import AreaRepository
+from .config import port, db_name, host
 from .indicator_repository import IndicatorRepository
 from .mongo_connection import connect_to_db
 

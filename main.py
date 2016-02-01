@@ -1,4 +1,4 @@
-import ConfigParser
+import configparser
 import logging
 
 from application.odbFetcher.parsing.area_parser import AreaParser
@@ -16,7 +16,7 @@ def configure_log():
 def run():
     configure_log()
     log = logging.getLogger("odbFetcher")
-    config = ConfigParser.RawConfigParser()
+    config = configparser.RawConfigParser()
     config.read("configuration.ini")
     indicator_repo = IndicatorRepository(True, log, config)
     area_repo = AreaRepository(True, log, config)
@@ -43,4 +43,4 @@ def parse(log, config, area_repo, indicator_repo, observation_repo):
 
 if __name__ == "__main__":
     run()
-    print "Done! :)"
+    print("Done! :)")

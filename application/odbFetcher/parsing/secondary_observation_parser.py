@@ -14,14 +14,14 @@ class SecondaryObservationParser(Parser):
 
     def run(self):
         self._log.info("Running secondary observation parser")
-        print "Running secondary observation parser"
+        print("Running secondary observation parser")
         secondary_obs_sheet = self._initialize_secondary_obs_sheet()
         self._retrieve_secondary_observations(secondary_obs_sheet)
         self._store_secondary_observations()
 
     def _initialize_secondary_obs_sheet(self):
         self._log.info("\tGetting secondary observations sheet...")
-        print "\tGetting secondary observations sheet..."
+        print("\tGetting secondary observations sheet...")
         data_file_name = self._config.get("DATA_ACCESS", "FILE_NAME")
         secondary_sheet_number = self._config.getint("SECONDARY_OBSERVATIONS", "SHEET_NUMBER")
         secondary_obs_sheet = self._get_sheet(data_file_name, secondary_sheet_number)
@@ -29,7 +29,7 @@ class SecondaryObservationParser(Parser):
 
     def _retrieve_secondary_observations(self, secondary_obs_sheet):
         self._log.info("\tRetrieving secondary observations...")
-        print "\tRetrieving secondary observations..."
+        print("\tRetrieving secondary observations...")
         country_column = self._config.getint("SECONDARY_OBSERVATIONS", "COUNTRY_COLUMN")
         country_start_row = self._config.getint("SECONDARY_OBSERVATIONS", "COUNTRY_START_ROW")
         indicator_codes_row = self._config.getint("SECONDARY_OBSERVATIONS", "INDICATOR_CODES_ROW")
@@ -49,7 +49,7 @@ class SecondaryObservationParser(Parser):
         :return:
         """
         self._log.info("\tStoring secondary observations...")
-        print "\tStoring secondary observations..."
+        print("\tStoring secondary observations...")
         for excel_observation in self._excel_secondary_observations:
             area = self._area_repo.find_by_name(excel_observation.country_name)
             indicator = self._indicator_repo.find_indicator_by_code(excel_observation.indicator_code)

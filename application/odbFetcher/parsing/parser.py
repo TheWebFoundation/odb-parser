@@ -2,7 +2,7 @@ import xlrd
 # from infrastructure.mongo_repos.indicator_repository import IndicatorRepository
 # from infrastructure.mongo_repos.observation_repository import ObservationRepository
 # from infrastructure.mongo_repos.area_repository import AreaRepository
-from utils import is_number
+from .utils import is_number
 
 
 class Parser(object):

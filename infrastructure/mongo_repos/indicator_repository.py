@@ -1,9 +1,9 @@
-from config import port, db_name, host
 from infrastructure.errors.errors import IndicatorRepositoryError
 from infrastructure.utils import normalize_group_name
-from mongo_connection import connect_to_db
 from odb.domain.model.indicator.indicator import Repository, Indicator
 from odb.domain.model.indicator.indicator import create_indicator
+from .config import port, db_name, host
+from .mongo_connection import connect_to_db
 
 
 class IndicatorRepository(Repository):

@@ -2,8 +2,8 @@ import sqlite3
 
 
 def create_insert_query(table, data):
-    columns = ', '.join(data.keys())
-    placeholders = ':' + ', :'.join(data.keys())
+    columns = ', '.join(list(data.keys()))
+    placeholders = ':' + ', :'.join(list(data.keys()))
     query = 'INSERT INTO %s (%s) VALUES (%s)' % (table, columns, placeholders)
     return query
 

@@ -1,4 +1,3 @@
-from config import port, db_name, host
 from infrastructure.errors.errors import AreaRepositoryError
 from infrastructure.utils import uri
 from odb.domain.model.area import area
@@ -7,6 +6,7 @@ from odb.domain.model.area.area_short_info import AreaShortInfo
 from odb.domain.model.area.country import create_country
 from odb.domain.model.area.indicator_info import IndicatorInfo, IndicatorInfoList
 from odb.domain.model.area.region import create_region
+from .config import port, db_name, host
 from .mongo_connection import connect_to_db
 
 
@@ -383,4 +383,4 @@ class AreaInfoDocumentAdapter(object):
                          provider_url=area_info_document_dict[area_info_key]['provider']['url'],
                          value=area_info_document_dict[area_info_key]['value'],
                          year=area_info_document_dict[area_info_key]['year'])
-                for area_info_key in area_info_document_dict.keys()]
+                for area_info_key in list(area_info_document_dict.keys())]

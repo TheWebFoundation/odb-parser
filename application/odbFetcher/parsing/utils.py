@@ -1,5 +1,3 @@
-from __future__ import division
-
 import re
 
 from odb.domain.model.area.country import create_country
@@ -14,7 +12,7 @@ for transforming the elements retrieved from the Excel files from their auxiliar
 domain model classes.
 """
 
-is_fraction_pattern = re.compile(ur'^\d+(\.\d*)?(/\d+(\.\d*)?)?$')
+is_fraction_pattern = re.compile(r'^\d+(\.\d*)?(/\d+(\.\d*)?)?$')
 
 
 def string_to_bool(string):
@@ -142,4 +140,4 @@ if __name__ == "__main__":
     assert weight_to_float('1/3') == 1 / 3
     assert weight_to_float('') is None
     assert weight_to_float(None) is None
-    print 'OK!'
+    print('OK!')

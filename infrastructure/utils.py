@@ -39,4 +39,4 @@ def random_float(first, last):
 
 if __name__ == "__main__":
     assert normalize_group_name("index") == "INDEX"
-    print "OK!"
+    print("OK!")

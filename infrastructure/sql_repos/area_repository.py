@@ -329,7 +329,7 @@ class RegionRowAdapter(object):
         """
         # FIXME: Check if is needed to parse countries or area info
         # TODO: we could avoid the need to be explicit with the fields if we just used **kwargs in create_region to swallow all the unwanted fields
-        data = dict((key, value) for key, value in region_dict.items() if
+        data = dict((key, value) for key, value in list(region_dict.items()) if
                     key in ['name', 'short_name', 'area', 'iso3', 'iso2', 'iso_num', 'id', 'search', 'info', 'uri'])
         data['countries'] = CountryRowAdapter.transform_to_country_list(region_dict['countries'])
         return create_region(**data)
@@ -337,7 +337,7 @@ class RegionRowAdapter(object):
     @staticmethod
     def region_to_dict(region):
         # FIXME: Review fields
-        data = dict((key, value) for key, value in region.to_dict().items() if
+        data = dict((key, value) for key, value in list(region.to_dict().items()) if
                     key not in ('countries', 'info', 'search', 'uri', 'iso_num'))
         return data
 
@@ -363,7 +363,7 @@ class CountryRowAdapter(object):
 
     @staticmethod
     def country_to_dict(country):
-        data = dict((key, value) for key, value in country.to_dict().items() if
+        data = dict((key, value) for key, value in list(country.to_dict().items()) if
                     key not in ('countries', 'info', 'search', 'uri', 'iso_num'))
         return data
 
@@ -405,11 +405,11 @@ class CountryRowAdapter(object):
 
 if __name__ == "__main__":
     import logging
-    import ConfigParser
+    import configparser
     import json
 
     logger = logging.getLogger(__name__)
-    config = ConfigParser.RawConfigParser()
+    config = configparser.RawConfigParser()
     config.add_section('CONNECTION')
     config.set('CONNECTION', 'SQLITE_DB', '../../odb2015.db')
 
@@ -418,24 +418,24 @@ if __name__ == "__main__":
     high_income_countries = repo.find_countries_by_code_or_income('High income')
     assert len(high_income_countries) > 0 and all(
         [country.income.lower() == 'high income' for country in high_income_countries])
-    print json.dumps([i.to_dict() for i in high_income_countries])
+    print(json.dumps([i.to_dict() for i in high_income_countries]))
 
     europe = repo.find_countries_by_code_or_income(':EU')
     assert europe is not None and len(europe.countries) > 0 and all(
         [country.area == ':EU' for country in europe.countries])
-    print json.dumps(europe.to_dict())
+    print(json.dumps(europe.to_dict()))
 
     emerging_countries = repo.find_countries_by_region_or_income_or_cluster('Emerging and advancing')
     assert len(emerging_countries) > 0 and all(
         [country.cluster_group.lower() == 'emerging and advancing' for country in emerging_countries])
-    print json.dumps([i.to_dict() for i in emerging_countries])
+    print(json.dumps([i.to_dict() for i in emerging_countries]))
 
     spain = repo.find_countries_by_code_or_income('es')
     assert spain is not None and spain.iso3 == 'ESP'
-    print json.dumps(spain.to_dict())
+    print(json.dumps(spain.to_dict()))
 
     regions = repo.find_regions('name')
     assert len(regions) == 7
-    print json.dumps([region.to_dict() for region in regions])
+    print(json.dumps([region.to_dict() for region in regions]))
 
-    print 'OK!'
+    print('OK!')

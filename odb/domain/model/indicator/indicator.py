@@ -409,9 +409,8 @@ def _(event, indicator):
 # =======================================================================================
 # Indicator Repository
 # =======================================================================================
-class Repository(object):
+class Repository(object, metaclass=ABCMeta):
     """Abstract implementation of generic queries for managing indicators."""
-    __metaclass__ = ABCMeta
 
     def find_indicator_by_code(self, indicator_code):
         pass
