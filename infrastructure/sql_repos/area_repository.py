@@ -30,8 +30,8 @@ class AreaRepository(area.Repository):
                     id INTEGER PRIMARY KEY,
                     name TEXT,
                     area TEXT,
-                    iso2 TEXT,
-                    iso3 TEXT,
+                    iso2 TEXT COLLATE NOCASE,
+                    iso3 TEXT COLLATE NOCASE,
                     short_name TEXT,
                     iso_num INTEGER,
                     income TEXT,
@@ -44,8 +44,15 @@ class AreaRepository(area.Repository):
                 );
                 '''
             db.execute(sql)
+            db.execute("CREATE INDEX area_iso3_iso2_index ON area(iso3  COLLATE NOCASE,iso2 COLLATE NOCASE)")
             db.commit()
         return db
+
+    def begin_transaction(self):
+        self._db.execute("BEGIN TRANSACTION")
+
+    def commit_transaction(self):
+        self._db.commit()
 
     def find_by_name(self, area_name):
         """
@@ -71,11 +78,21 @@ class AreaRepository(area.Repository):
         return AreaRowAdapter().dict_to_area(data)
 
     def find_by_code(self, area_code):
-        query = "SELECT * FROM area WHERE (iso2 LIKE :code OR iso3 LIKE :code)"
+        query = "SELECT * FROM area WHERE (iso3 LIKE :code OR iso2 LIKE :code)"
         area_code = area_code or ''
         r = self._db.execute(query, {'code': area_code}).fetchone()
         if r is None:
             raise AreaRepositoryError("No area with code " + area_code)
+
+        data = dict(r)
+        return AreaRowAdapter().dict_to_area(data)
+
+    def find_by_iso3(self, iso3_code):
+        query = "SELECT * FROM area WHERE (iso3 LIKE :iso3_code)"
+        iso3_code = iso3_code or ''
+        r = self._db.execute(query, {'iso3_code': iso3_code}).fetchone()
+        if r is None:
+            raise AreaRepositoryError("No area with code " + iso3_code)
 
         data = dict(r)
         return AreaRowAdapter().dict_to_area(data)
@@ -145,17 +162,19 @@ class AreaRepository(area.Repository):
 
         return CountryRowAdapter().transform_to_country_list(country_list)
 
-    def insert_region(self, region):
+    def insert_region(self, region, commit=True):
         data = RegionRowAdapter().region_to_dict(region)
         query = create_insert_query('area', data)
         self._db.execute(query, data)
-        self._db.commit()
+        if commit:
+            self._db.commit()
 
-    def insert_country(self, country):
+    def insert_country(self, country, commit=True):
         data = CountryRowAdapter().country_to_dict(country)
         query = create_insert_query('area', data)
         self._db.execute(query, data)
-        self._db.commit()
+        if commit:
+            self._db.commit()
 
     def find_areas(self, order):
         """

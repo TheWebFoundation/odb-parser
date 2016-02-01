@@ -39,7 +39,7 @@ class IndicatorRepository(Repository):
                     description TEXT,
                     format_notes TEXT,
                     index_code TEXT,
-                    indicator TEXT,
+                    indicator TEXT COLLATE NOCASE,
                     license TEXT,
                     name TEXT,
                     provider_name TEXT,
@@ -57,17 +57,25 @@ class IndicatorRepository(Repository):
                 );
                 '''
             db.execute(sql)
+            db.execute("CREATE INDEX indicator_indicator_index ON indicator (indicator COLLATE NOCASE)")
             db.commit()
         return db
+
+    def begin_transaction(self):
+        self._db.execute("BEGIN TRANSACTION")
+
+    def commit_transaction(self):
+        self._db.commit()
 
     # FIXME: Why the extra parameters?
     def insert_indicator(self, indicator, indicator_uri=None, component_name=None, subindex_name=None, index_name=None,
                          weight=None, source_name=None, provider_name=None, provider_url=None, is_percentage=None,
-                         scale=None, tags=None):
+                         scale=None, tags=None, commit=True):
         data = IndicatorRowAdapter().indicator_to_dict(indicator)
         query = create_insert_query('indicator', data)
         self._db.execute(query, data)
-        self._db.commit()
+        if commit:
+            self._db.commit()
 
     def find_indicator_by_code(self, indicator_code):
         query = "SELECT * FROM indicator WHERE indicator=:indicator"

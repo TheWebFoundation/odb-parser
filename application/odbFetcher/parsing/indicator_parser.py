@@ -119,6 +119,8 @@ class IndicatorParser(Parser):
         :return:
         """
         self._log.info("\tStoring indicators...")
+        self._indicator_repo.begin_transaction()
         for excel_indicator in self._excel_indicators:
             indicator = excel_indicator_to_dom(excel_indicator)
-            self._indicator_repo.insert_indicator(indicator)
+            self._indicator_repo.insert_indicator(indicator, commit=False)
+        self._indicator_repo.commit_transaction()

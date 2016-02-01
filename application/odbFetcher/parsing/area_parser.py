@@ -131,18 +131,20 @@ class AreaParser(Parser):
         :return:
         """
         self._log.info("\tStoring areas...")
+        self._area_repo.begin_transaction()
         self._store_regions()
         self._store_countries()
+        self._area_repo.commit_transaction()
 
     def _store_regions(self):
         for excel_region in self._excel_regions:
             region = excel_region_to_dom(excel_region)
-            self._area_repo.insert_region(region)
+            self._area_repo.insert_region(region, commit=False)
 
     def _store_countries(self):
         for excel_country in self._excel_countries:
             country = excel_country_to_dom(excel_country)
-            self._area_repo.insert_country(country)
+            self._area_repo.insert_country(country, commit=False)
 
 
 if __name__ == "__main__":
