@@ -22,7 +22,7 @@ def string_to_bool(string):
         return string.lower().strip() == "true"
 
 
-def non_empty_string_to_bool(string):
+def is_not_empty(string):
     if not string:
         return False
     else:

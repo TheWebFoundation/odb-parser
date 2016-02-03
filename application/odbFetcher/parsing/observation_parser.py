@@ -18,6 +18,7 @@ class ObservationParser(Parser):
     def __init__(self, log, config, area_repo=None, indicator_repo=None, observation_repo=None):
         super(ObservationParser, self).__init__(log, config, area_repo, indicator_repo, observation_repo)
         self._excel_raw_observations = []
+        self._excel_scaled_observations = []
 
     def run(self):
         self._log.info("Running observation parser")
@@ -91,8 +92,49 @@ class ObservationParser(Parser):
     def _retrieve_scaled_observations(self, scaled_obs_sheets):
         self._log.info("\tRetrieving scaled observations...")
 
+        for scaled_obs_sheet in scaled_obs_sheets:  # Per year
+            # HACK: INDEX first because the columns are not ordered (simplify this if the column order gets fixed)
+            self._retrieve_index_scaled_observations(scaled_obs_sheet)
+
+    def _retrieve_index_scaled_observations(self, scaled_obs_sheet):
+        year_column = self._config.getint("SCALED_OBSERVATIONS", "OBSERVATION_YEAR_COLUMN")
+        iso3_column = self._config.getint("SCALED_OBSERVATIONS", "OBSERVATION_ISO3_COLUMN")
+        observation_start_row = self._config.getint("SCALED_OBSERVATIONS", "OBSERVATION_START_ROW")
+
+        index_score_column = self._config.getint("SCALED_OBSERVATIONS", "OBSERVATION_INDEX_VALUE_COLUMN")
+        index_rank_column = self._config.getint("SCALED_OBSERVATIONS", "OBSERVATION_INDEX_RANK_COLUMN")
+
+        try:
+            indicator = self._indicator_repo.find_indicators_index()[0]
+            for row_number in range(observation_start_row, scaled_obs_sheet.nrows):  # Per country
+                year = int(scaled_obs_sheet.cell(row_number, year_column).value)
+                iso3 = scaled_obs_sheet.cell(row_number, iso3_column).value
+
+                try:
+                    area = self._area_repo.find_by_iso3(iso3)
+                    value = scaled_obs_sheet.cell(row_number, index_score_column).value
+                    ranking = scaled_obs_sheet.cell(row_number, index_rank_column).value
+                    excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, value=value,
+                                                         year=year, ranking=ranking)
+                    self._excel_scaled_observations.append((excel_observation, area, indicator))
+                except AreaRepositoryError:
+                    self._log.error("No area with code %s for indicator %s(%s) while parsing %s" % (
+                        iso3, indicator.indicator, year, scaled_obs_sheet.name))
+        except IndexError:
+            self._log.error("No INDEX indicator found while parsing %s" % (scaled_obs_sheet,))
+
     def _store_scaled_observations(self):
         self._log.info("\tStoring scaled observations...")
+        self._store_excel_observation_array(self._excel_scaled_observations)
+
+    def _store_excel_observation_array(self, observation_tuple_list):
+        self._observation_repo.begin_transaction()
+        for excel_observation_tuple in observation_tuple_list:
+            area = excel_observation_tuple[1]
+            indicator = excel_observation_tuple[2]
+            observation = excel_observation_to_dom(excel_observation_tuple[0], area, indicator)
+            self._observation_repo.insert_observation(observation, commit=False)
+        self._observation_repo.commit_transaction()
 
     @staticmethod
     def _update_observation_ranking(sorted_observations, order='asc', observation_getter=lambda x: x,
@@ -127,13 +169,7 @@ class ObservationParser(Parser):
 
     def _store_raw_observations(self):
         self._log.info("\tStoring raw observations...")
-        self._observation_repo.begin_transaction()
-        for excel_raw_observation in self._excel_raw_observations:
-            area = excel_raw_observation[1]
-            indicator = excel_raw_observation[2]
-            observation = excel_observation_to_dom(excel_raw_observation[0], area, indicator)
-            self._observation_repo.insert_observation(observation, commit=False)
-        self._observation_repo.commit_transaction()
+        self._store_excel_observation_array(self._excel_raw_observations)
 
 
 if __name__ == "__main__":

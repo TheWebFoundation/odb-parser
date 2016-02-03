@@ -1,7 +1,7 @@
 from application.odbFetcher.parsing.excel_model.excel_area import ExcelArea
 from application.odbFetcher.parsing.parser import Parser
 from application.odbFetcher.parsing.utils import excel_region_to_dom, excel_country_to_dom, str_to_none, \
-    non_empty_string_to_bool
+    is_not_empty
 
 # FIXME: move to configuration
 # If handcrafted iso codes then we need a matching function between names and codes (or include everything in the sheet)
@@ -113,10 +113,10 @@ class AreaParser(Parser):
             name = area_sheet.cell(row_number, name_column).value
             income = str_to_none(area_sheet.cell(row_number, income_column).value.replace('-', ' '))
             hdi_rank = str_to_none(area_sheet.cell(row_number, hdi_rank_column).value)
-            g20 = non_empty_string_to_bool(area_sheet.cell(row_number, g20_column).value)
-            g7 = non_empty_string_to_bool(area_sheet.cell(row_number, g7_column).value)
-            iodch = non_empty_string_to_bool(area_sheet.cell(row_number, iodch_column).value)
-            oecd = non_empty_string_to_bool(area_sheet.cell(row_number, oecd_column).value)
+            g20 = is_not_empty(area_sheet.cell(row_number, g20_column).value)
+            g7 = is_not_empty(area_sheet.cell(row_number, g7_column).value)
+            iodch = is_not_empty(area_sheet.cell(row_number, iodch_column).value)
+            oecd = is_not_empty(area_sheet.cell(row_number, oecd_column).value)
             cluster_group = str_to_none(area_sheet.cell(row_number, cluster_group_column).value.replace('-', ' '))
             country = ExcelArea(iso2=iso2, iso3=iso3, name=name, region=region.iso3, income=income, hdi_rank=hdi_rank,
                                 g20=g20, g7=g7, iodch=iodch, oecd=oecd, cluster_group=cluster_group)
