@@ -21,18 +21,28 @@ class ObservationParser(Parser):
 
     def run(self):
         self._log.info("Running observation parser")
-        raw_obs_sheets = self._initialize_raw_obs_sheets()
+        raw_obs_sheets = self._get_raw_obs_sheets()
         self._retrieve_raw_observations(raw_obs_sheets)
         self._store_raw_observations()
+        scaled_obs_sheets = self._get_scaled_obs_sheets()
+        self._retrieve_scaled_observations(scaled_obs_sheets)
+        self._store_scaled_observations()
         # self._retrieve_secondary_observations(secondary_obs_sheet)
         # self._store_secondary_observations()
 
-    def _initialize_raw_obs_sheets(self):
+    def _get_raw_obs_sheets(self):
         self._log.info("\tGetting raw observations sheets...")
         data_file_name = self._config.get("DATA_ACCESS", "FILE_NAME")
         raw_obs_pattern = self._config.get("RAW_OBSERVATIONS", "SHEET_NAME_PATTERN")
         raw_obs_sheets = self._get_sheets_by_pattern(data_file_name, raw_obs_pattern)
         return raw_obs_sheets
+
+    def _get_scaled_obs_sheets(self):
+        self._log.info("\tGetting scaled observations sheets...")
+        data_file_name = self._config.get("DATA_ACCESS", "FILE_NAME")
+        scaled_obs_pattern = self._config.get("SCALED_OBSERVATIONS", "SHEET_NAME_PATTERN")
+        scaled_obs_sheets = self._get_sheets_by_pattern(data_file_name, scaled_obs_pattern)
+        return scaled_obs_sheets
 
     def _retrieve_raw_observations(self, raw_obs_sheets):
         self._log.info("\tRetrieving raw observations...")
@@ -77,6 +87,12 @@ class ObservationParser(Parser):
 
                 self._update_observation_ranking(per_indicator_observations, observation_getter=lambda x: x[0])
                 self._excel_raw_observations.extend(per_indicator_observations)
+
+    def _retrieve_scaled_observations(self, scaled_obs_sheets):
+        self._log.info("\tRetrieving scaled observations...")
+
+    def _store_scaled_observations(self):
+        self._log.info("\tStoring scaled observations...")
 
     @staticmethod
     def _update_observation_ranking(sorted_observations, order='asc', observation_getter=lambda x: x,
