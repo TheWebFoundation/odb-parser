@@ -1,3 +1,5 @@
+from operator import attrgetter
+
 from sortedcontainers import SortedListWithKey
 
 from application.odbFetcher.parsing.excel_model.excel_observation import ExcelObservation
@@ -73,32 +75,39 @@ class ObservationParser(Parser):
                         "No indicator with code %s in %s data, indicator and year will be skipped for all countries" % (
                             indicator_code, raw_obs_sheet.name))
 
-                self._update_observation_ranking(per_indicator_observations)
+                self._update_observation_ranking(per_indicator_observations, observation_getter=lambda x: x[0])
                 self._excel_raw_observations.extend(per_indicator_observations)
 
     @staticmethod
-    def _update_observation_ranking(sorted_observations):
+    def _update_observation_ranking(sorted_observations, order='asc', observation_getter=lambda x: x,
+                                    attribute_getter=attrgetter('value')):
         """
-        Updates the list of excel observations with the rank.
+        Updates a list of excel observations with the rank.
         The list must contain scores related to an indicator and a year
 
         Note: tied scores get the same position in the ranking
         Args:
-            sorted_observations: a list of tuples with the observations sorted by value in ascending order (obs, area, indicator)
+            sorted_observations (list): a list of tuples with the observations sorted by value in ascending order (obs, area, indicator)
+            order (str): order of the scores in the list, either 'asc' for ascending order or 'desc' for descending order
+            observation_getter (func): function to extract an observation from the list (i.e. in the case the observation is stored in a tuple or a dict)
+            attribute_getter (func): function to extract the attribute from the observation
 
         Returns:
-            the sorted_observations list passed as argument with the elements updated
+            list: the resulting list with the elements updated
         """
+        assert order and (order.lower() == 'asc' or order.lower() == 'desc')
+
         latest_observation = None
-        for idx, obs_tuple in enumerate(reversed(sorted_observations)):
-            current_observation = obs_tuple[0]
-            if latest_observation and latest_observation.value == current_observation.value:
+        observation_list = reversed(sorted_observations) if order.lower() == 'asc' else sorted_observations
+        for idx, data in enumerate(observation_list):
+            current_observation = observation_getter(data)
+            if latest_observation and attribute_getter(latest_observation) == attribute_getter(current_observation):
                 current_observation.ranking = latest_observation.ranking
             else:
-                current_observation.ranking = idx +1
+                current_observation.ranking = idx + 1
             latest_observation = current_observation
 
-        return sorted_observations
+        return observation_list
 
     def _store_raw_observations(self):
         self._log.info("\tStoring raw observations...")
