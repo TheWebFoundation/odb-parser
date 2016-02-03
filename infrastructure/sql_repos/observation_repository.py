@@ -39,6 +39,7 @@ class ObservationRepository(Repository):
                     id INTEGER PRIMARY KEY,
                     tendency INTEGER,
                     value REAL,
+                    scaled REAL,
                     area TEXT,
                     ranking INTEGER,
                     year INTEGER,
@@ -156,83 +157,82 @@ class ObservationRepository(Repository):
     #     """
 
 
-    def get_indicators_by_code(self, code):
-        """
-        Returns an indicator mongodb filter to use in other queries
+        # def get_indicators_by_code(self, code):
+        #     """
+        #     Returns an indicator mongodb filter to use in other queries
+        #
+        #     Args:
+        #         code (str): Indicator code or codes, for many indicator codes, divide them using a ','
+        #
+        #     Returns:
+        #         dict: The filter for mongodb queries
+        #     """
+        #     if code.lower() == 'ALL'.lower():  # case does not matter
+        #         return {}
+        #
+        #     codes = code.upper().strip().split(",")
+        #
+        #     for code in codes:
+        #         # Check that the indicator exists
+        #         indicator = self._db['indicators'].find_one({"indicator": code})
+        #
+        #         if indicator is None:
+        #             return None
+        #
+        #     return {"indicator": {"$in": codes}}
 
-        Args:
-            code (str): Indicator code or codes, for many indicator codes, divide them using a ','
-
-        Returns:
-            dict: The filter for mongodb queries
-        """
-        if code.lower() == 'ALL'.lower():  # case does not matter
-            return {}
-
-        codes = code.upper().strip().split(",")
-
-        for code in codes:
-            # Check that the indicator exists
-            indicator = self._db['indicators'].find_one({"indicator": code})
-
-            if indicator is None:
-                return None
-
-        return {"indicator": {"$in": codes}}
-
-
-def get_countries_by_code_name_or_income(self, code):
-    """
-    Returns an area mongodb filter to use in other queries
-
-    Args:
-        code (str): Area code or area codes, divide them using a ','
-
-    Returns:
-        dict: The filter for mongodb queries
-    """
-    codes = code.split(",")
-
-    country_codes = []
-    areas = []
-
-    for code in codes:
-        code_upper = code.upper()
-
-        # by ISO3
-        countries = self._db["areas"].find({"$and": [{"iso3": code_upper}, {"area": {"$ne": None}}]})
-
-        # by ISO2
-        if countries is None or countries.count() == 0:
-            countries = self._db["areas"].find({"iso2": code_upper})
-
-        # by name
-        if countries is None or countries.count() == 0:
-            countries = self._db["areas"].find({"name": code})
-
-        # by Continent
-
-        if countries is None or countries.count() == 0:
-            countries = self._db["areas"].find({"area": code})
-
-        # by Income
-        if countries is None or countries.count() == 0:
-            countries = self._db["areas"].find({"income": code_upper})
-
-        if countries is None or countries.count() == 0:
-            return None
-
-        for country in countries:
-            iso3 = country["iso3"]
-            country_codes.append(iso3)
-            area = country["area"]
-            areas.append(area)
-
-    return {
-        "area_filter": {"area": {"$in": country_codes}},
-        "areas": areas,
-        "countries": country_codes
-    }
+    # def get_countries_by_code_name_or_income(self, code):
+    #     """
+    #     Returns an area mongodb filter to use in other queries
+    #
+    #     Args:
+    #         code (str): Area code or area codes, divide them using a ','
+    #
+    #     Returns:
+    #         dict: The filter for mongodb queries
+    #     """
+    #     codes = code.split(",")
+    #
+    #     country_codes = []
+    #     areas = []
+    #
+    #     for code in codes:
+    #         code_upper = code.upper()
+    #
+    #         # by ISO3
+    #         countries = self._db["areas"].find({"$and": [{"iso3": code_upper}, {"area": {"$ne": None}}]})
+    #
+    #         # by ISO2
+    #         if countries is None or countries.count() == 0:
+    #             countries = self._db["areas"].find({"iso2": code_upper})
+    #
+    #         # by name
+    #         if countries is None or countries.count() == 0:
+    #             countries = self._db["areas"].find({"name": code})
+    #
+    #         # by Continent
+    #
+    #         if countries is None or countries.count() == 0:
+    #             countries = self._db["areas"].find({"area": code})
+    #
+    #         # by Income
+    #         if countries is None or countries.count() == 0:
+    #             countries = self._db["areas"].find({"income": code_upper})
+    #
+    #         if countries is None or countries.count() == 0:
+    #             return None
+    #
+    #         for country in countries:
+    #             iso3 = country["iso3"]
+    #             country_codes.append(iso3)
+    #             area = country["area"]
+    #             areas.append(area)
+    #
+    #     return {
+    #         "area_filter": {"area": {"$in": country_codes}},
+    #         "areas": areas,
+    #         "countries": country_codes
+    #     }
 
 
     # @staticmethod

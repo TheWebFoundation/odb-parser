@@ -80,10 +80,11 @@ def excel_indicator_to_dom(excel_indicator):
 
 def excel_observation_to_dom(excel_observation, area, indicator):
     observation = create_observation(value=excel_observation.value,
-                                     indicator=indicator,
                                      year=Year(excel_observation.year),
-                                     area=area,
-                                     ranking=excel_observation.ranking)
+                                     scaled=excel_observation.scaled,
+                                     ranking=excel_observation.ranking,
+                                     indicator=indicator,
+                                     area=area)
     return observation
 
 

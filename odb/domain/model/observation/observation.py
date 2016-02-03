@@ -77,6 +77,7 @@ class Observation(Entity):
         self._tendency = event.tendency
         # self._republish = event.republish
         # self._area_type = event.area_type
+        self._scaled = event.scaled
         self._ranking = event.ranking
         # self._ranking_type = event.ranking_type
 
@@ -103,8 +104,8 @@ class Observation(Entity):
             dict: Dictionary representation of self object
         """
         return {'indicator': self.indicator.to_dict(), 'area': self.area.to_dict(), 'value': self.value,
-                'year': self.year, 'id': self.id, 'tendency': self.tendency, 'ranking': self.ranking
-                }
+                'year': self.year, 'id': self.id, 'tendency': self.tendency, 'ranking': self.ranking,
+                'scaled': self.scaled}
 
     # =======================================================================================
     # Properties
@@ -128,32 +129,32 @@ class Observation(Entity):
         self._indicator = indicator
         self.increment_version()
 
-    @property
-    def indicator_name(self):
-        return self._indicator_name
+    # @property
+    # def indicator_name(self):
+    #     return self._indicator_name
 
-    @indicator_name.setter
-    def indicator_name(self, indicator_name):
-        self._indicator_name = indicator_name
-        self.increment_version()
+    # @indicator_name.setter
+    # def indicator_name(self, indicator_name):
+    #     self._indicator_name = indicator_name
+    #     self.increment_version()
 
-    @property
-    def indicator_type(self):
-        return self._indicator_type
+    # @property
+    # def indicator_type(self):
+    #     return self._indicator_type
 
-    @indicator_type.setter
-    def indicator_type(self, indicator_type):
-        self._indicator_type = indicator_type
-        self.increment_version()
+    # @indicator_type.setter
+    # def indicator_type(self, indicator_type):
+    #     self._indicator_type = indicator_type
+    #     self.increment_version()
 
-    @property
-    def short_name(self):
-        return self._short_name
+    # @property
+    # def short_name(self):
+    #     return self._short_name
 
-    @short_name.setter
-    def short_name(self, short_name):
-        self._short_name = short_name
-        self.increment_version()
+    # @short_name.setter
+    # def short_name(self, short_name):
+    #     self._short_name = short_name
+    #     self.increment_version()
 
     @property
     def area(self):
@@ -164,14 +165,14 @@ class Observation(Entity):
         self._area = area
         self.increment_version()
 
-    @property
-    def area_name(self):
-        return self._area_name
+    # @property
+    # def area_name(self):
+    #     return self._area_name
 
-    @area_name.setter
-    def area_name(self, area_name):
-        self._area_name = area_name
-        self.increment_version()
+    # @area_name.setter
+    # def area_name(self, area_name):
+    #     self._area_name = area_name
+    #     self.increment_version()
 
     @property
     def uri(self):
@@ -192,6 +193,15 @@ class Observation(Entity):
         self.increment_version()
 
     @property
+    def scaled(self):
+        return self._scaled
+
+    @scaled.setter
+    def scaled(self, scaled):
+        self._scaled = scaled
+        self.increment_version()
+
+    @property
     def value(self):
         return self._value
 
@@ -209,27 +219,27 @@ class Observation(Entity):
         self._year = year
         self.increment_version()
 
-    @property
-    def provider_name(self):
-        return self._provider_name
-
-    @provider_name.setter
-    def provider_name(self, provider_name):
-        self._provider_name = provider_name
-        self.increment_version()
+    # @property
+    # def provider_name(self):
+    #     return self._provider_name
+    #
+    # @provider_name.setter
+    # def provider_name(self, provider_name):
+    #     self._provider_name = provider_name
+    #     self.increment_version()
 
     @property
     def id(self):
         return self._id
 
-    @property
-    def continent(self):
-        return self._continent
-
-    @continent.setter
-    def continent(self, continent):
-        self._continent = continent
-        self.increment_version()
+    # @property
+    # def continent(self):
+    #     return self._continent
+    #
+    # @continent.setter
+    # def continent(self, continent):
+    #     self._continent = continent
+    #     self.increment_version()
 
     @property
     def tendency(self):
@@ -240,23 +250,23 @@ class Observation(Entity):
         self._tendency = tendency
         self.increment_version()
 
-    @property
-    def republish(self):
-        return self._republish
+    # @property
+    # def republish(self):
+    #     return self._republish
+    #
+    # @republish.setter
+    # def republish(self, republish):
+    #     self._republish = republish
+    #     self.increment_version()
 
-    @republish.setter
-    def republish(self, republish):
-        self._republish = republish
-        self.increment_version()
-
-    @property
-    def area_type(self):
-        return self._area_type
-
-    @area_type.setter
-    def area_type(self, area_type):
-        self._area_type = area_type
-        self.increment_version()
+    # @property
+    # def area_type(self):
+    #     return self._area_type
+    #
+    # @area_type.setter
+    # def area_type(self, area_type):
+    #     self._area_type = area_type
+    #     self.increment_version()
 
     @property
     def ranking(self):
@@ -267,14 +277,14 @@ class Observation(Entity):
         self._ranking = ranking
         self.increment_version()
 
-    @property
-    def ranking_type(self):
-        return self._ranking_type
-
-    @ranking_type.setter
-    def ranking_type(self, ranking_type):
-        self._ranking_type = ranking_type
-        self.increment_version()
+    # @property
+    # def ranking_type(self):
+    #     return self._ranking_type
+    #
+    # @ranking_type.setter
+    # def ranking_type(self, ranking_type):
+    #     self._ranking_type = ranking_type
+    #     self.increment_version()
 
     # =======================================================================================
     # Commands
@@ -338,7 +348,8 @@ class Observation(Entity):
 # =======================================================================================
 # Observation aggregate root factory
 # =======================================================================================
-def create_observation(indicator=None, area=None, value=None, year=1970, id=None, tendency=0, ranking=None):
+def create_observation(indicator=None, area=None, value=None, year=1970, id=None, tendency=0, ranking=None,
+                       scaled=None):
     """
     This function creates new observations and acts as a factory
 
@@ -367,7 +378,8 @@ def create_observation(indicator=None, area=None, value=None, year=1970, id=None
     """
     obs_id = uuid.uuid4().hex[:24]
     event = Observation.Created(originator_id=obs_id, originator_version=0, indicator=indicator,
-                                area=area, value=value, year=year, id=id, tendency=tendency, ranking=ranking)
+                                area=area, value=value, year=year, id=id, tendency=tendency, ranking=ranking,
+                                scaled=scaled)
     obs = when(event)
     publish(event)
     return obs
