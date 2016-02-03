@@ -79,18 +79,24 @@ class ObservationParser(Parser):
     @staticmethod
     def _update_observation_ranking(sorted_observations):
         """
-        Updates the list of observations with the rank in the list.
+        Updates the list of excel observations with the rank.
+        The list must contain scores related to an indicator and a year
 
-        Note the ranking is absolute and does not consider draws
+        Note: tied scores get the same position in the ranking
         Args:
             sorted_observations: a list of tuples with the observations sorted by value in ascending order (obs, area, indicator)
 
         Returns:
             the sorted_observations list passed as argument with the elements updated
         """
-
+        latest_observation = None
         for idx, obs_tuple in enumerate(reversed(sorted_observations)):
-            obs_tuple[0].ranking = idx + 1
+            current_observation = obs_tuple[0]
+            if latest_observation and latest_observation.value == current_observation.value:
+                current_observation.ranking = latest_observation.ranking
+            else:
+                current_observation.ranking = idx +1
+            latest_observation = current_observation
 
         return sorted_observations
 
