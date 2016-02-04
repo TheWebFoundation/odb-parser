@@ -40,12 +40,17 @@ class IndicatorParser(Parser):
 
     def _retrieve_structure_indicators(self, indicator_sheet):
         self._log.info("\tRetrieving structure indicators...")
-        code_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_CODE_COLUMN")
-        name_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_NAME_COLUMN")
-        type_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_TYPE_COLUMN")
-        weight_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_WEIGHT_COLUMN")
+        code_column = get_column_number(
+            self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_CODE_COLUMN"))
+        name_column = get_column_number(
+            self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_NAME_COLUMN"))
+        type_column = get_column_number(
+            self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_TYPE_COLUMN"))
+        weight_column = get_column_number(
+            self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_WEIGHT_COLUMN"))
+        range_column = get_column_number(
+            self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_RANGE_COLUMN"))
         start_row = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_START_ROW")
-        range_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_RANGE_COLUMN")
         last_subindex_code = None
         for row_number in range(start_row, indicator_sheet.nrows):
             retrieved_code = indicator_sheet.cell(row_number, code_column).value
@@ -66,22 +71,22 @@ class IndicatorParser(Parser):
     # TODO: too much boilerplate
     def _retrieve_primary_secondary_indicators(self, indicator_sheet):
         self._log.info("\tRetrieving primary & secondary indicators...")
-        code_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_CODE_COLUMN")
-        component_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_COMPONENT_COLUMN")
-        description_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_DESCRIPTION_COLUMN")
-        format_notes_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_FORMAT_NOTES_COLUMN")
-        license_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_LICENSE_COLUMN")
-        name_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_NAME_COLUMN")
-        provider_name_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_PROVIDER_NAME_COLUMN")
-        provider_url_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_PROVIDER_URL_COLUMN")
-        range_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_RANGE_COLUMN")
-        source_data_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_SOURCE_DATA_COLUMN")
-        source_name_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_SOURCE_NAME_COLUMN")
-        source_url_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_SOURCE_URL_COLUMN")
-        subindex_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COLUMN")
-        tags_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_TAGS_COLUMN")
-        type_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_TYPE_COLUMN")
-        units_column = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_UNITS_COLUMN")
+        code_column = get_column_number(self._config.get("STRUCTURE_ACCESS", "INDICATOR_CODE_COLUMN"))
+        component_column = get_column_number(self._config.get("STRUCTURE_ACCESS", "INDICATOR_COMPONENT_COLUMN"))
+        description_column = get_column_number(self._config.get("STRUCTURE_ACCESS", "INDICATOR_DESCRIPTION_COLUMN"))
+        format_notes_column = get_column_number(self._config.get("STRUCTURE_ACCESS", "INDICATOR_FORMAT_NOTES_COLUMN"))
+        license_column = get_column_number(self._config.get("STRUCTURE_ACCESS", "INDICATOR_LICENSE_COLUMN"))
+        name_column = get_column_number(self._config.get("STRUCTURE_ACCESS", "INDICATOR_NAME_COLUMN"))
+        provider_name_column = get_column_number(self._config.get("STRUCTURE_ACCESS", "INDICATOR_PROVIDER_NAME_COLUMN"))
+        provider_url_column = get_column_number(self._config.get("STRUCTURE_ACCESS", "INDICATOR_PROVIDER_URL_COLUMN"))
+        range_column = get_column_number(self._config.get("STRUCTURE_ACCESS", "INDICATOR_RANGE_COLUMN"))
+        source_data_column = get_column_number(self._config.get("STRUCTURE_ACCESS", "INDICATOR_SOURCE_DATA_COLUMN"))
+        source_name_column = get_column_number(self._config.get("STRUCTURE_ACCESS", "INDICATOR_SOURCE_NAME_COLUMN"))
+        source_url_column = get_column_number(self._config.get("STRUCTURE_ACCESS", "INDICATOR_SOURCE_URL_COLUMN"))
+        subindex_column = get_column_number(self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COLUMN"))
+        tags_column = get_column_number(self._config.get("STRUCTURE_ACCESS", "INDICATOR_TAGS_COLUMN"))
+        type_column = get_column_number(self._config.get("STRUCTURE_ACCESS", "INDICATOR_TYPE_COLUMN"))
+        units_column = get_column_number(self._config.get("STRUCTURE_ACCESS", "INDICATOR_UNITS_COLUMN"))
         start_row = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_START_ROW")
         for row_number in range(start_row, indicator_sheet.nrows):
             retrieved_code = indicator_sheet.cell(row_number, code_column).value

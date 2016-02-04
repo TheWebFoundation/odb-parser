@@ -46,6 +46,25 @@ def is_number(s):
     return False
 
 
+def colx_from_colname(colname):
+    colx = 0
+    for ch in colname:
+        colx = colx * 26 + ord(ch) - ord('A') + 1
+    return colx - 1
+
+
+def get_column_number(colname):
+    """
+
+    Args:
+        colname (str): a colname that can either be an identifier 'A', 'B', 'AF', etc. or a number '0', '1', '127'
+
+    Returns:
+        (int): the column number as an integer ready to be passed to xlrd functions
+    """
+    return colx_from_colname(colname) if colname.isalpha() else int(colname)
+
+
 def weight_to_float(s):
     if s is not None and is_fraction_pattern.match(s):
         try:

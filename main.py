@@ -11,7 +11,7 @@ from infrastructure.sql_repos.observation_repository import ObservationRepositor
 
 def configure_log():
     _format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(filename="odbFetcher.log", level=logging.INFO,
+    logging.basicConfig(filename="odbFetcher.log", level=logging.DEBUG,
                         format=_format)
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
