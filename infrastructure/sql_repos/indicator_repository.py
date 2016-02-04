@@ -77,12 +77,21 @@ class IndicatorRepository(Repository):
         if commit:
             self._db.commit()
 
-    def find_indicator_by_code(self, indicator_code):
-        query = "SELECT * FROM indicator WHERE indicator=:indicator"
-        indicator_code = indicator_code or ''
-        r = self._db.execute(query, {'indicator': indicator_code.upper()}).fetchone()
-        if r is None:
-            raise IndicatorRepositoryError("No indicator with code " + indicator_code)
+    def find_indicator_by_code(self, indicator_code, _type=None):
+        query = "SELECT * FROM indicator WHERE indicator LIKE :indicator"
+        data = {'indicator': indicator_code.upper()}
+        if not indicator_code:
+            raise IndicatorRepositoryError("Indicator name must not be empty")
+        if _type:
+            query += " AND type LIKE :_type"
+            data['_type'] = _type
+
+        r = self._db.execute(query, data).fetchone()
+        if r is None and _type is None:
+            raise IndicatorRepositoryError("No indicator with code %s found" % (indicator_code,))
+        elif r is None and _type is not None:
+            raise IndicatorRepositoryError(
+                "No indicator with code %s and type %s found" % (indicator_code, _type))
 
         data = dict(r)
         children = self.find_indicator_children(data)

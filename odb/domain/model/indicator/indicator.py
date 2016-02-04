@@ -412,7 +412,7 @@ def _(event, indicator):
 class Repository(object, metaclass=ABCMeta):
     """Abstract implementation of generic queries for managing indicators."""
 
-    def find_indicator_by_code(self, indicator_code):
+    def find_indicator_by_code(self, indicator_code, _type=None):
         pass
 
     def find_indicators_index(self):
