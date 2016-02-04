@@ -324,7 +324,7 @@ class ObservationRowAdapter(object):
             (key, value) for key, value in list(observation.to_dict().items()) if
             key not in ('indicator', 'year', 'area'))
         # Replace keys
-        data['indicator'] = observation.indicator.indicator
+        data['indicator'] = observation.indicator.indicator if observation.indicator else None
         data['year'] = observation.year.value
         data['area'] = observation.area.iso3
         return data

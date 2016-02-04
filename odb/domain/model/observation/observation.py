@@ -104,7 +104,9 @@ class Observation(Entity):
         Returns:
             dict: Dictionary representation of self object
         """
-        return {'indicator': self.indicator.to_dict(), 'area': self.area.to_dict(), 'value': self.value,
+        # There could be data without an indicator associated
+        indicator_dict = self.indicator.to_dict() if self.indicator else None
+        return {'indicator': indicator_dict, 'area': self.area.to_dict(), 'value': self.value,
                 'year': self.year, 'id': self.id, 'tendency': self.tendency, 'rank': self.rank,
                 'rank_change': self.rank_change, 'scaled': self.scaled}
 
