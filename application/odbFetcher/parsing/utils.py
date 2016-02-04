@@ -132,8 +132,7 @@ def excel_country_to_dom(excel_country):
 
     """
     country = create_country(name=excel_country.name, iso2=excel_country.iso2, iso3=excel_country.iso3,
-                             short_name=excel_country.name, area=excel_country.region,
-                             cluster_group=excel_country.cluster_group, hdi_rank=excel_country.hdi_rank,
+                             short_name=excel_country.name, area=excel_country.region, hdi_rank=excel_country.hdi_rank,
                              g20=excel_country.g20, g7=excel_country.g7, iodch=excel_country.iodch,
                              oecd=excel_country.oecd, income=excel_country.income)
     return country

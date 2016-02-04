@@ -263,7 +263,7 @@ class Repository(object, metaclass=ABCMeta):
     def find_by_name(self, area_name):
         pass
 
-    def find_countries_by_region_or_income_or_cluster(self, region_or_income_or_cluster):
+    def find_countries_by_region_or_income(self, region_or_income):
         pass
 
     def find_regions(self, order):

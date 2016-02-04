@@ -39,8 +39,7 @@ class AreaRepository(area.Repository):
                     g20 BOOLEAN,
                     g7 BOOLEAN,
                     iodch BOOLEAN,
-                    oecd BOOLEAN,
-                    cluster_group TEXT
+                    oecd BOOLEAN
                 );
                 '''
             db.execute(sql)
@@ -118,7 +117,7 @@ class AreaRepository(area.Repository):
 
         if r is None:
             # FIXME: Review (old comment was: This is not working, order by is needed on method call)
-            countries = self.find_countries_by_region_or_income_or_cluster(area_code_or_income)
+            countries = self.find_countries_by_region_or_income(area_code_or_income)
             if not countries:
                 raise AreaRepositoryError("No countries for code %s" % (area_code_or_income,))
             else:
@@ -130,28 +129,28 @@ class AreaRepository(area.Repository):
 
         return AreaRowAdapter().dict_to_area(area)
 
-    def find_countries_by_region_or_income_or_cluster(self, region_or_income_or_cluster, order="iso3"):
+    def find_countries_by_region_or_income(self, region_or_income, order="iso3"):
         """
         Finds a list of countries by its region, income or type
 
         Args:
-            region_or_income_or_cluster (str): Code for region, income or type
+            region_or_income (str): Code for region or income
             order (str, optional): Attribute key to sort, default to iso3
 
         Returns:
-            list of Country: countries with the given continent, income or type
+            list of Country: countries with the given region or income
 
         Raises:
             AreaRepositoryCountry: If no countries are found
         """
         order = "name" if order is None else order
-        query = "SELECT * FROM area WHERE (area LIKE :area OR income LIKE :income OR cluster_group LIKE :cluster_group) ORDER BY :order ASC"
-        params = dict.fromkeys(['area', 'income', 'cluster_group'], region_or_income_or_cluster)
+        query = "SELECT * FROM area WHERE (area LIKE :area OR income LIKE :income) ORDER BY :order ASC"
+        params = dict.fromkeys(['area', 'income'], region_or_income)
         params['order'] = order
         rows = self._db.execute(query, params).fetchall()
 
         if not rows:
-            raise AreaRepositoryError("No countries for code %s" % (region_or_income_or_cluster,))
+            raise AreaRepositoryError("No countries for code %s" % (region_or_income,))
 
         country_list = []
 
@@ -452,11 +451,6 @@ if __name__ == "__main__":
     assert europe is not None and len(europe.countries) > 0 and all(
         [country.area == ':EU' for country in europe.countries])
     print(json.dumps(europe.to_dict()))
-
-    emerging_countries = repo.find_countries_by_region_or_income_or_cluster('Emerging and advancing')
-    assert len(emerging_countries) > 0 and all(
-        [country.cluster_group.lower() == 'emerging and advancing' for country in emerging_countries])
-    print(json.dumps([i.to_dict() for i in emerging_countries]))
 
     spain = repo.find_countries_by_code_or_income('es')
     assert spain is not None and spain.iso3 == 'ESP'

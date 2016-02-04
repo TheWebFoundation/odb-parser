@@ -34,7 +34,6 @@ class Country(Area):
         """
         super(Country, self).__init__(event)
         self._income = event.income
-        self._cluster_group = event.cluster_group
         self._hdi_rank = event.hdi_rank
         self._g20 = event.g20
         self._g7 = event.g7
@@ -57,7 +56,6 @@ class Country(Area):
         """
         dictionary = super(Country, self).to_dict()
         dictionary['income'] = self.income
-        dictionary['cluster_group'] = self.cluster_group
         dictionary['oecd'] = self.oecd
         dictionary['hdi_rank'] = self.hdi_rank
         dictionary['g20'] = self.g20
@@ -68,7 +66,6 @@ class Country(Area):
     def to_dict_without_info(self):
         dictionary = super(Country, self).to_dict_without_info()
         dictionary['income'] = self.income
-        dictionary['cluster_group'] = self.cluster_group
         dictionary['oecd'] = self.oecd
         dictionary['hdi_rank'] = self.hdi_rank
         dictionary['g20'] = self.g20
@@ -86,15 +83,6 @@ class Country(Area):
     @income.setter
     def income(self, income):
         self._income = income
-        self.increment_version()
-
-    @property
-    def cluster_group(self):
-        return self._cluster_group
-
-    @cluster_group.setter
-    def cluster_group(self, cluster_group):
-        self._cluster_group = cluster_group
         self.increment_version()
 
     @property
@@ -164,7 +152,7 @@ class Country(Area):
 # Region aggregate root factory
 # =======================================================================================
 def create_country(name=None, short_name=None, area=None, income=None, uri=None, iso3=None, iso2=None, iso_num=None,
-                   id=None, cluster_group=None, search=None, hdi_rank=None, g20=None, g7=None, iodch=None, oecd=None,
+                   id=None, search=None, hdi_rank=None, g20=None, g7=None, iodch=None, oecd=None,
                    info=None):
     """
     This function creates new countries and acts as a factory
@@ -189,9 +177,8 @@ def create_country(name=None, short_name=None, area=None, income=None, uri=None,
     country_id = uuid.uuid4().hex[:24]
     if not info: info = []
     event = Country.Created(originator_id=country_id, originator_version=0, name=name, short_name=short_name, area=area,
-                            income=income, uri=uri, iso3=iso3, iso2=iso2, iso_num=iso_num, id=id,
-                            cluster_group=cluster_group, search=search, g20=g20, g7=g7, hdi_rank=hdi_rank, oecd=oecd,
-                            iodch=iodch, info=info)
+                            income=income, uri=uri, iso3=iso3, iso2=iso2, iso_num=iso_num, id=id, search=search,
+                            g20=g20, g7=g7, hdi_rank=hdi_rank, oecd=oecd, iodch=iodch, info=info)
     country = when(event)
     publish(event)
     return country

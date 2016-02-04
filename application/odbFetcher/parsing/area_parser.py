@@ -103,7 +103,6 @@ class AreaParser(Parser):
         g7_column = get_column_number(self._config.get("AREA_ACCESS", "AREA_G7_COLUMN"))
         iodch_column = get_column_number(self._config.get("AREA_ACCESS", "AREA_IODCH_COLUMN"))
         oecd_column = get_column_number(self._config.get("AREA_ACCESS", "AREA_OECD_COLUMN"))
-        cluster_group_column = get_column_number(self._config.get("AREA_ACCESS", "AREA_CLUSTER_GROUP_COLUMN"))
         start_row = self._config.getint("AREA_ACCESS", "AREA_START_ROW")
         for row_number in range(start_row, area_sheet.nrows):
             region_name = area_sheet.cell(row_number, region_column).value
@@ -117,10 +116,8 @@ class AreaParser(Parser):
             g7 = is_not_empty(area_sheet.cell(row_number, g7_column).value)
             iodch = is_not_empty(area_sheet.cell(row_number, iodch_column).value)
             oecd = is_not_empty(area_sheet.cell(row_number, oecd_column).value)
-            # FIXME: Parse cluster group
-            cluster_group = None  # str_to_none(area_sheet.cell(row_number, cluster_group_column).value.replace('-', ' '))
             country = ExcelArea(iso2=iso2, iso3=iso3, name=name, region=region.iso3, income=income, hdi_rank=hdi_rank,
-                                g20=g20, g7=g7, iodch=iodch, oecd=oecd, cluster_group=cluster_group)
+                                g20=g20, g7=g7, iodch=iodch, oecd=oecd)
             country_list.append(country)
 
         return country_list
