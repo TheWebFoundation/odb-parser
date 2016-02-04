@@ -41,7 +41,8 @@ class ObservationRepository(Repository):
                     value REAL,
                     scaled REAL,
                     area TEXT,
-                    ranking INTEGER,
+                    rank INTEGER,
+                    rank_change INTEGER,
                     year INTEGER,
                     indicator TEXT
                 );
@@ -144,17 +145,17 @@ class ObservationRepository(Repository):
 
         return "(year IN (%s))" % (' UNION '.join(year_list),) if year_list else None
 
-    # def find_linked_observations(self):
-    #     return success([obs for obs in self._db['linked_observations'].find()])
+        # def find_linked_observations(self):
+        #     return success([obs for obs in self._db['linked_observations'].find()])
 
 
-    # def get_all_indicators(self):
-    #     """
-    #     Returns all indicators mongodb filter to use in other queries
-    #
-    #     Returns:
-    #         dict: The filter for mongodb queries
-    #     """
+        # def get_all_indicators(self):
+        #     """
+        #     Returns all indicators mongodb filter to use in other queries
+        #
+        #     Returns:
+        #         dict: The filter for mongodb queries
+        #     """
 
 
         # def get_indicators_by_code(self, code):
@@ -181,125 +182,125 @@ class ObservationRepository(Repository):
         #
         #     return {"indicator": {"$in": codes}}
 
-    # def get_countries_by_code_name_or_income(self, code):
-    #     """
-    #     Returns an area mongodb filter to use in other queries
-    #
-    #     Args:
-    #         code (str): Area code or area codes, divide them using a ','
-    #
-    #     Returns:
-    #         dict: The filter for mongodb queries
-    #     """
-    #     codes = code.split(",")
-    #
-    #     country_codes = []
-    #     areas = []
-    #
-    #     for code in codes:
-    #         code_upper = code.upper()
-    #
-    #         # by ISO3
-    #         countries = self._db["areas"].find({"$and": [{"iso3": code_upper}, {"area": {"$ne": None}}]})
-    #
-    #         # by ISO2
-    #         if countries is None or countries.count() == 0:
-    #             countries = self._db["areas"].find({"iso2": code_upper})
-    #
-    #         # by name
-    #         if countries is None or countries.count() == 0:
-    #             countries = self._db["areas"].find({"name": code})
-    #
-    #         # by Continent
-    #
-    #         if countries is None or countries.count() == 0:
-    #             countries = self._db["areas"].find({"area": code})
-    #
-    #         # by Income
-    #         if countries is None or countries.count() == 0:
-    #             countries = self._db["areas"].find({"income": code_upper})
-    #
-    #         if countries is None or countries.count() == 0:
-    #             return None
-    #
-    #         for country in countries:
-    #             iso3 = country["iso3"]
-    #             country_codes.append(iso3)
-    #             area = country["area"]
-    #             areas.append(area)
-    #
-    #     return {
-    #         "area_filter": {"area": {"$in": country_codes}},
-    #         "areas": areas,
-    #         "countries": country_codes
-    #     }
+        # def get_countries_by_code_name_or_income(self, code):
+        #     """
+        #     Returns an area mongodb filter to use in other queries
+        #
+        #     Args:
+        #         code (str): Area code or area codes, divide them using a ','
+        #
+        #     Returns:
+        #         dict: The filter for mongodb queries
+        #     """
+        #     codes = code.split(",")
+        #
+        #     country_codes = []
+        #     areas = []
+        #
+        #     for code in codes:
+        #         code_upper = code.upper()
+        #
+        #         # by ISO3
+        #         countries = self._db["areas"].find({"$and": [{"iso3": code_upper}, {"area": {"$ne": None}}]})
+        #
+        #         # by ISO2
+        #         if countries is None or countries.count() == 0:
+        #             countries = self._db["areas"].find({"iso2": code_upper})
+        #
+        #         # by name
+        #         if countries is None or countries.count() == 0:
+        #             countries = self._db["areas"].find({"name": code})
+        #
+        #         # by Continent
+        #
+        #         if countries is None or countries.count() == 0:
+        #             countries = self._db["areas"].find({"area": code})
+        #
+        #         # by Income
+        #         if countries is None or countries.count() == 0:
+        #             countries = self._db["areas"].find({"income": code_upper})
+        #
+        #         if countries is None or countries.count() == 0:
+        #             return None
+        #
+        #         for country in countries:
+        #             iso3 = country["iso3"]
+        #             country_codes.append(iso3)
+        #             area = country["area"]
+        #             areas.append(area)
+        #
+        #     return {
+        #         "area_filter": {"area": {"$in": country_codes}},
+        #         "areas": areas,
+        #         "countries": country_codes
+        #     }
 
 
-    # @staticmethod
-    # def _look_for_computation(comp_type, observation):
-    #     if observation.obs_type == comp_type:
-    #         return observation.value
-    #     for comp in observation.computations:
-    #         if comp.comp_type == comp_type:
-    #             return comp.value
-    #     return None
-    #
-    #
-    # def find_observations_statistics(self, indicator_code=None, area_code=None, year=None):
-    #     """
-    #     Returns statitics for observations that satisfy the given filters
-    #
-    #     Args:
-    #         indicator_code (str, optional): The indicator code (indicator attribute in Indicator)
-    #         area_code (str, optional): The area code for the observation
-    #         year (str, optional): The year when observation was observed
-    #     Returns:
-    #         list of Statistics: Observations statistics that satisfy the filters
-    #     """
-    #     return StatisticsDocumentAdapter().transform_to_statistics(
-    #         self.find_observations(indicator_code=indicator_code, area_code=area_code, year=year))
-    #
-    #
-    # def find_observations_visualisation(self, indicator_code=None, area_code=None, year=None):
-    #     """
-    #     Returns visualisation for observations that satisfy the given filters
-    #
-    #     Args:
-    #         indicator_code (str, optional): The indicator code (indicator attribute in Indicator)
-    #         area_code (str, optional): The area code for the observation
-    #         year (str, optional): The year when observation was observed
-    #     Returns:
-    #         Visualisation: Observations visualisation that satisfy the filters
-    #     """
-    #     observations = self.find_observations(indicator_code=indicator_code, area_code=area_code, year=year)
-    #     observations_all_areas = self.find_observations(indicator_code=indicator_code, area_code='ALL', year=year)
-    #
-    #     return VisualisationDocumentAdapter().transform_to_visualisation(observations, observations_all_areas)
-    #
-    #
-    # def find_observations_grouped_by_area_visualisation(self, indicator_code=None, area_code=None, year=None):
-    #     """
-    #     Returns grouped by area visualisation for observations that satisfy the given filters
-    #
-    #     Args:
-    #         indicator_code (str, optional): The indicator code (indicator attribute in Indicator)
-    #         area_code (str, optional): The area code for the observation
-    #         year (str, optional): The year when observation was observed
-    #     Returns:
-    #         GroupedByAreaVisualisation: Observations grouped by area visualisation that satisfy the filters
-    #     """
-    #     area_code_splitted = area_code.split(',') if area_code is not None else None
-    #     observations = self.find_observations(indicator_code=indicator_code, area_code=area_code, year=year)
-    #     observations_all_areas = self.find_observations(indicator_code=indicator_code, area_code='ALL', year=year)
-    #     if area_code_splitted is None or len(area_code_splitted) == 0 or area_code == 'ALL':
-    #         areas = AreaRepository(url_root=self._url_root).find_countries(order="iso3")
-    #         area_code_splitted = [area.iso3 for area in areas]
-    #
-    #     return GroupedByAreaVisualisationDocumentAdapter().transform_to_grouped_by_area_visualisation(
-    #         area_codes=area_code_splitted,
-    #         observations=observations,
-    #         observations_all_areas=observations_all_areas
-    #     )
+        # @staticmethod
+        # def _look_for_computation(comp_type, observation):
+        #     if observation.obs_type == comp_type:
+        #         return observation.value
+        #     for comp in observation.computations:
+        #         if comp.comp_type == comp_type:
+        #             return comp.value
+        #     return None
+        #
+        #
+        # def find_observations_statistics(self, indicator_code=None, area_code=None, year=None):
+        #     """
+        #     Returns statitics for observations that satisfy the given filters
+        #
+        #     Args:
+        #         indicator_code (str, optional): The indicator code (indicator attribute in Indicator)
+        #         area_code (str, optional): The area code for the observation
+        #         year (str, optional): The year when observation was observed
+        #     Returns:
+        #         list of Statistics: Observations statistics that satisfy the filters
+        #     """
+        #     return StatisticsDocumentAdapter().transform_to_statistics(
+        #         self.find_observations(indicator_code=indicator_code, area_code=area_code, year=year))
+        #
+        #
+        # def find_observations_visualisation(self, indicator_code=None, area_code=None, year=None):
+        #     """
+        #     Returns visualisation for observations that satisfy the given filters
+        #
+        #     Args:
+        #         indicator_code (str, optional): The indicator code (indicator attribute in Indicator)
+        #         area_code (str, optional): The area code for the observation
+        #         year (str, optional): The year when observation was observed
+        #     Returns:
+        #         Visualisation: Observations visualisation that satisfy the filters
+        #     """
+        #     observations = self.find_observations(indicator_code=indicator_code, area_code=area_code, year=year)
+        #     observations_all_areas = self.find_observations(indicator_code=indicator_code, area_code='ALL', year=year)
+        #
+        #     return VisualisationDocumentAdapter().transform_to_visualisation(observations, observations_all_areas)
+        #
+        #
+        # def find_observations_grouped_by_area_visualisation(self, indicator_code=None, area_code=None, year=None):
+        #     """
+        #     Returns grouped by area visualisation for observations that satisfy the given filters
+        #
+        #     Args:
+        #         indicator_code (str, optional): The indicator code (indicator attribute in Indicator)
+        #         area_code (str, optional): The area code for the observation
+        #         year (str, optional): The year when observation was observed
+        #     Returns:
+        #         GroupedByAreaVisualisation: Observations grouped by area visualisation that satisfy the filters
+        #     """
+        #     area_code_splitted = area_code.split(',') if area_code is not None else None
+        #     observations = self.find_observations(indicator_code=indicator_code, area_code=area_code, year=year)
+        #     observations_all_areas = self.find_observations(indicator_code=indicator_code, area_code='ALL', year=year)
+        #     if area_code_splitted is None or len(area_code_splitted) == 0 or area_code == 'ALL':
+        #         areas = AreaRepository(url_root=self._url_root).find_countries(order="iso3")
+        #         area_code_splitted = [area.iso3 for area in areas]
+        #
+        #     return GroupedByAreaVisualisationDocumentAdapter().transform_to_grouped_by_area_visualisation(
+        #         area_codes=area_code_splitted,
+        #         observations=observations,
+        #         observations_all_areas=observations_all_areas
+        #     )
 
 
 class ObservationRowAdapter(object):
