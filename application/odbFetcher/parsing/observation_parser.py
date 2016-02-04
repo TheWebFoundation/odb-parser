@@ -39,8 +39,8 @@ class ObservationParser(Parser):
         self._log.info("\tGetting structure observation sheets...")
         data_file_name = self._config.get("STRUCTURE_OBSERVATIONS", "FILE_NAME")
         scaled_obs_pattern = self._config.get("STRUCTURE_OBSERVATIONS", "SHEET_NAME_PATTERN")
-        scaled_obs_sheets = self._get_sheets_by_pattern(data_file_name, scaled_obs_pattern)
-        return scaled_obs_sheets
+        structure_obs_sheets = self._get_sheets_by_pattern(data_file_name, scaled_obs_pattern)
+        return structure_obs_sheets
 
     def _retrieve_raw_observations(self):
         self._log.info("\tRetrieving raw observations...")
@@ -91,16 +91,15 @@ class ObservationParser(Parser):
     def _retrieve_structure_observations(self):
         self._log.info("\tRetrieving structure observation...")
 
-        scaled_obs_sheets = self._get_structure_obs_sheets()
-        for scaled_obs_sheet in scaled_obs_sheets:  # Per year
+        structure_obs_sheets = self._get_structure_obs_sheets()
+        for structure_obs_sheet in structure_obs_sheets:  # Per year
             # INDEX explicit because the columns are not ordered (simplify this if the column order gets fixed)
-            self._retrieve_index_observations(scaled_obs_sheet)
-            self._retrieve_subindex_and_component_observations(scaled_obs_sheet)
+            self._retrieve_index_observations(structure_obs_sheet)
+            self._retrieve_subindex_and_component_observations(structure_obs_sheet)
 
     def _parse_index_scaled_column_name(self, column_name):
         return re.match(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_INDEX_SCALED_COLUMN_PATTERN"),
-                        column_name,
-                        re.IGNORECASE)
+                        column_name, re.IGNORECASE)
 
     def _parse_subindex_scaled_column_name(self, column_name):
         return re.match(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_SCALED_COLUMN_PATTERN"),
@@ -167,48 +166,50 @@ class ObservationParser(Parser):
 
         return None
 
-    def _retrieve_subindex_observations(self, scaled_obs_sheet, subindex_name, subindex_scaled_column):
+    def _retrieve_subindex_observations(self, structure_obs_sheet, subindex_name, subindex_scaled_column):
         self._log.debug(
-            "\t\tRetrieving subindex %s observations in sheet %s..." % (subindex_name, scaled_obs_sheet.name))
+            "\t\tRetrieving subindex %s observations in sheet %s..." % (subindex_name, structure_obs_sheet.name))
         year_column = get_column_number(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_YEAR_COLUMN"))
         iso3_column = get_column_number(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_ISO3_COLUMN"))
         observation_start_row = self._config.getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_START_ROW")
 
         try:
-            subindex_rank_column = self._find_rank_column(scaled_obs_sheet, subindex_name)
+            subindex_rank_column = self._find_rank_column(structure_obs_sheet, subindex_name)
             if not subindex_rank_column:
                 raise ParserError(
-                    "No rank column found for SUBINDEX '%s' while parsing %s" % (subindex_name, scaled_obs_sheet.name))
-            subindex_value_column = self._find_subindex_value_column(scaled_obs_sheet, subindex_name)
+                    "No rank column found for SUBINDEX '%s' while parsing %s" % (
+                        subindex_name, structure_obs_sheet.name))
+            subindex_value_column = self._find_subindex_value_column(structure_obs_sheet, subindex_name)
             if not subindex_value_column:
                 raise ParserError(
-                    "No value column found for SUBINDEX '%s' while parsing %s" % (subindex_name, scaled_obs_sheet.name))
+                    "No value column found for SUBINDEX '%s' while parsing %s" % (
+                        subindex_name, structure_obs_sheet.name))
             indicator = self._indicator_repo.find_indicator_by_code(subindex_name, 'SUBINDEX')
-            for row_number in range(observation_start_row, scaled_obs_sheet.nrows):  # Per country
-                year = int(scaled_obs_sheet.cell(row_number, year_column).value)
-                iso3 = scaled_obs_sheet.cell(row_number, iso3_column).value
+            for row_number in range(observation_start_row, structure_obs_sheet.nrows):  # Per country
+                year = int(structure_obs_sheet.cell(row_number, year_column).value)
+                iso3 = structure_obs_sheet.cell(row_number, iso3_column).value
 
                 try:
                     area = self._area_repo.find_by_iso3(iso3)
-                    scaled = scaled_obs_sheet.cell(row_number, subindex_scaled_column).value
-                    value = scaled_obs_sheet.cell(row_number, subindex_value_column).value
-                    ranking = scaled_obs_sheet.cell(row_number, subindex_rank_column).value
+                    scaled = structure_obs_sheet.cell(row_number, subindex_scaled_column).value
+                    value = structure_obs_sheet.cell(row_number, subindex_value_column).value
+                    rank = structure_obs_sheet.cell(row_number, subindex_rank_column).value
                     excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, scaled=scaled,
-                                                         year=year, ranking=ranking, value=value)
+                                                         year=year, rank=rank, value=value)
                     self._excel_structure_observations.append((excel_observation, area, indicator))
                 except AreaRepositoryError:
                     self._log.error("No area with code %s for indicator %s(%s) while parsing %s" % (
-                        iso3, indicator.indicator, year, scaled_obs_sheet.name))
+                        iso3, indicator.indicator, year, structure_obs_sheet.name))
 
         except IndicatorRepositoryError:
             self._log.error(
-                "No SUBINDEX '%s' indicator found while parsing %s" % (subindex_name, scaled_obs_sheet.name))
+                "No SUBINDEX '%s' indicator found while parsing %s" % (subindex_name, structure_obs_sheet.name))
         except ParserError as pe:
             self._log.error(pe)
 
-    def _retrieve_component_observations(self, scaled_obs_sheet, component_name, component_scaled_column):
+    def _retrieve_component_observations(self, structure_obs_sheet, component_name, component_scaled_column):
         self._log.debug(
-            "\t\tRetrieving component %s observations in sheet %s..." % (component_name, scaled_obs_sheet.name))
+            "\t\tRetrieving component %s observations in sheet %s..." % (component_name, structure_obs_sheet.name))
         year_column = get_column_number(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_YEAR_COLUMN"))
         iso3_column = get_column_number(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_ISO3_COLUMN"))
         observation_start_row = self._config.getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_START_ROW")
@@ -218,31 +219,31 @@ class ObservationParser(Parser):
             key=lambda x: x[0].value if x[0].value is not None and na_to_none(x[0].value) is not None else 0)
 
         try:
-            component_value_column = self._find_component_value_column(scaled_obs_sheet, component_name)
+            component_value_column = self._find_component_value_column(structure_obs_sheet, component_name)
             if not component_value_column:
                 raise ParserError(
                     "No value column found for COMPONENT '%s' while parsing %s" % (
-                        component_name, scaled_obs_sheet.name))
+                        component_name, structure_obs_sheet.name))
 
             indicator = self._indicator_repo.find_indicator_by_code(component_name, 'COMPONENT')
-            for row_number in range(observation_start_row, scaled_obs_sheet.nrows):  # Per country
-                year = int(scaled_obs_sheet.cell(row_number, year_column).value)
-                iso3 = scaled_obs_sheet.cell(row_number, iso3_column).value
+            for row_number in range(observation_start_row, structure_obs_sheet.nrows):  # Per country
+                year = int(structure_obs_sheet.cell(row_number, year_column).value)
+                iso3 = structure_obs_sheet.cell(row_number, iso3_column).value
 
                 try:
                     area = self._area_repo.find_by_iso3(iso3)
-                    scaled = scaled_obs_sheet.cell(row_number, component_scaled_column).value
-                    value = scaled_obs_sheet.cell(row_number, component_value_column).value
+                    scaled = structure_obs_sheet.cell(row_number, component_scaled_column).value
+                    value = structure_obs_sheet.cell(row_number, component_value_column).value
                     excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, scaled=scaled,
                                                          year=year, value=value)
                     sorted_observations.add((excel_observation, area, indicator))
                 except AreaRepositoryError:
                     self._log.error("No area with code %s for indicator %s(%s) while parsing %s" % (
-                        iso3, indicator.indicator, year, scaled_obs_sheet.name))
+                        iso3, indicator.indicator, year, structure_obs_sheet.name))
 
         except IndicatorRepositoryError:
             self._log.error(
-                "No SUBINDEX '%s' indicator found while parsing %s" % (component_name, scaled_obs_sheet.name))
+                "No SUBINDEX '%s' indicator found while parsing %s" % (component_name, structure_obs_sheet.name))
         except ParserError as pe:
             self._log.error(pe)
 
@@ -251,30 +252,30 @@ class ObservationParser(Parser):
                                          attribute_getter=attrgetter('scaled'))
         self._excel_raw_observations.extend(sorted_observations)
 
-    def _retrieve_subindex_and_component_observations(self, scaled_obs_sheet):
+    def _retrieve_subindex_and_component_observations(self, structure_obs_sheet):
         self._log.info("\t\tRetrieving subindex and component observations...")
         observation_name_row = self._config.getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_NAME_ROW")
         observation_start_column = get_column_number(
             self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_START_COLUMN"))
 
-        for column_number in range(observation_start_column, scaled_obs_sheet.ncols):  # Per indicator
-            column_name = scaled_obs_sheet.cell(observation_name_row, column_number).value
+        for column_number in range(observation_start_column, structure_obs_sheet.ncols):  # Per indicator
+            column_name = structure_obs_sheet.cell(observation_name_row, column_number).value
             parsed_column = self._parse_subindex_scaled_column_name(column_name)
             if parsed_column:
                 # Retrieve a subindex
-                self._retrieve_subindex_observations(scaled_obs_sheet, parsed_column.group('subindex'),
+                self._retrieve_subindex_observations(structure_obs_sheet, parsed_column.group('subindex'),
                                                      column_number)
             else:
                 parsed_column = self._parse_component_scaled_column_name(column_name)
                 if parsed_column:
                     # Retrieve a component
-                    self._retrieve_component_observations(scaled_obs_sheet, parsed_column.group('component'),
+                    self._retrieve_component_observations(structure_obs_sheet, parsed_column.group('component'),
                                                           column_number)
                 else:
                     self._log.warn('Ignoring column %s while parsing %s (did not detect subindex or component data)' % (
-                        column_name, scaled_obs_sheet.name))
+                        column_name, structure_obs_sheet.name))
 
-    def _retrieve_index_observations(self, scaled_obs_sheet):
+    def _retrieve_index_observations(self, structure_obs_sheet):
         self._log.info("\t\tRetrieving index observations...")
         year_column = get_column_number(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_YEAR_COLUMN"))
         iso3_column = get_column_number(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_ISO3_COLUMN"))
@@ -287,31 +288,34 @@ class ObservationParser(Parser):
             self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_INDEX_VALUE_COLUMN"))
         index_rank_column = get_column_number(
             self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_INDEX_RANK_COLUMN"))
+        index_rank_change_column = get_column_number(
+            self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_INDEX_RANK_CHANGE_COLUMN"))
 
         try:
-            column_name = scaled_obs_sheet.cell(observation_name_row, index_scaled_column).value
+            column_name = structure_obs_sheet.cell(observation_name_row, index_scaled_column).value
             parsed_column = self._parse_index_scaled_column_name(column_name)
             if not parsed_column:
                 raise ParserError("Column name '%s' does not match INDEX pattern while parsing %s" % (
-                    column_name, scaled_obs_sheet.name))
+                    column_name, structure_obs_sheet.name))
             indicator = self._indicator_repo.find_indicator_by_code(parsed_column.group('index'))
-            for row_number in range(observation_start_row, scaled_obs_sheet.nrows):  # Per country
-                year = int(scaled_obs_sheet.cell(row_number, year_column).value)
-                iso3 = scaled_obs_sheet.cell(row_number, iso3_column).value
+            for row_number in range(observation_start_row, structure_obs_sheet.nrows):  # Per country
+                year = int(structure_obs_sheet.cell(row_number, year_column).value)
+                iso3 = structure_obs_sheet.cell(row_number, iso3_column).value
 
                 try:
                     area = self._area_repo.find_by_iso3(iso3)
-                    scaled = scaled_obs_sheet.cell(row_number, index_scaled_column).value
-                    value = scaled_obs_sheet.cell(row_number, index_value_column).value
-                    ranking = scaled_obs_sheet.cell(row_number, index_rank_column).value
+                    scaled = structure_obs_sheet.cell(row_number, index_scaled_column).value
+                    value = structure_obs_sheet.cell(row_number, index_value_column).value
+                    rank = structure_obs_sheet.cell(row_number, index_rank_column).value
+                    rank_change = structure_obs_sheet.cell(row_number, index_rank_change_column).value
                     excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, scaled=scaled,
-                                                         year=year, ranking=ranking, value=value)
+                                                         year=year, rank=rank, value=value, rank_change=rank_change)
                     self._excel_structure_observations.append((excel_observation, area, indicator))
                 except AreaRepositoryError:
                     self._log.error("No area with code %s for indicator %s(%s) while parsing %s" % (
-                        iso3, indicator.indicator, year, scaled_obs_sheet.name))
+                        iso3, indicator.indicator, year, structure_obs_sheet.name))
         except IndicatorRepositoryError:
-            self._log.error("No INDEX indicator found while parsing %s" % (scaled_obs_sheet.name,))
+            self._log.error("No INDEX indicator found while parsing %s" % (structure_obs_sheet.name,))
         except ParserError as pe:
             self._log.error(pe)
 
@@ -352,9 +356,9 @@ class ObservationParser(Parser):
         for idx, data in enumerate(observation_list):
             current_observation = observation_getter(data)
             if latest_observation and attribute_getter(latest_observation) == attribute_getter(current_observation):
-                current_observation.ranking = latest_observation.ranking
+                current_observation.rank = latest_observation.rank
             else:
-                current_observation.ranking = idx + 1
+                current_observation.rank = idx + 1
             latest_observation = current_observation
 
         return observation_list
