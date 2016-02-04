@@ -99,8 +99,7 @@ class ObservationParser(Parser):
 
     def _parse_index_scaled_column_name(self, column_name):
         return re.match(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_INDEX_SCALED_COLUMN_PATTERN"),
-                        column_name,
-                        re.IGNORECASE)
+                        column_name, re.IGNORECASE)
 
     def _parse_subindex_scaled_column_name(self, column_name):
         return re.match(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_SCALED_COLUMN_PATTERN"),
@@ -178,11 +177,13 @@ class ObservationParser(Parser):
             subindex_rank_column = self._find_rank_column(structure_obs_sheet, subindex_name)
             if not subindex_rank_column:
                 raise ParserError(
-                    "No rank column found for SUBINDEX '%s' while parsing %s" % (subindex_name, structure_obs_sheet.name))
+                    "No rank column found for SUBINDEX '%s' while parsing %s" % (
+                        subindex_name, structure_obs_sheet.name))
             subindex_value_column = self._find_subindex_value_column(structure_obs_sheet, subindex_name)
             if not subindex_value_column:
                 raise ParserError(
-                    "No value column found for SUBINDEX '%s' while parsing %s" % (subindex_name, structure_obs_sheet.name))
+                    "No value column found for SUBINDEX '%s' while parsing %s" % (
+                        subindex_name, structure_obs_sheet.name))
             indicator = self._indicator_repo.find_indicator_by_code(subindex_name, 'SUBINDEX')
             for row_number in range(observation_start_row, structure_obs_sheet.nrows):  # Per country
                 year = int(structure_obs_sheet.cell(row_number, year_column).value)
