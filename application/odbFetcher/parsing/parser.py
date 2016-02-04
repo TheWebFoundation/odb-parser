@@ -40,7 +40,7 @@ class Parser(object):
         """
         book = xlrd.open_workbook(file_name)
         sheet = book.sheet_by_index(sheet_name_or_index) if is_number(sheet_name_or_index) else book.sheet_by_name(
-                sheet_name_or_index)
+            sheet_name_or_index)
         return sheet
 
     @staticmethod
@@ -50,3 +50,27 @@ class Parser(object):
         matching_sheet_names = [sheet_name for sheet_name in book.sheet_names() if pattern.match(sheet_name)]
         matching_sheets = [book.sheet_by_name(sheet_name) for sheet_name in matching_sheet_names]
         return matching_sheets
+
+
+class ParserError(Exception):
+    """
+    Exception parent class for all parsers, this class could be subclassed for custom behaviour
+
+    Attributes:
+        message (str): Error message for this exception
+    """
+
+    def __init__(self, message, custom_header=""):
+        """
+        Constructor for ParserError
+
+        Args:
+            message (str): Error message for this exception
+            custom_header (str): Title to introduce the error message
+        """
+        self._message = message
+        self._custom_header = custom_header
+
+    @property
+    def message(self):
+        return self._custom_header + " " + self._message

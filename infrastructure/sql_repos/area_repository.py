@@ -92,7 +92,7 @@ class AreaRepository(area.Repository):
         iso3_code = iso3_code or ''
         r = self._db.execute(query, {'iso3_code': iso3_code}).fetchone()
         if r is None:
-            raise AreaRepositoryError("No area with code " + iso3_code)
+            raise AreaRepositoryError("No area with code %s" % (iso3_code,))
 
         data = dict(r)
         return AreaRowAdapter().dict_to_area(data)

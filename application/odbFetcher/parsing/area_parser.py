@@ -1,7 +1,7 @@
 from application.odbFetcher.parsing.excel_model.excel_area import ExcelArea
 from application.odbFetcher.parsing.parser import Parser
 from application.odbFetcher.parsing.utils import excel_region_to_dom, excel_country_to_dom, str_to_none, \
-    non_empty_string_to_bool
+    is_not_empty, get_column_number
 
 # FIXME: move to configuration
 # If handcrafted iso codes then we need a matching function between names and codes (or include everything in the sheet)
@@ -50,18 +50,18 @@ class AreaParser(Parser):
 
     def run(self):
         self._log.info("Running area parser")
-        area_sheet = self._initialize_area_sheet()
-        self._retrieve_areas(area_sheet)
+        self._retrieve_areas()
         self._store_areas()
 
     def _initialize_area_sheet(self):
         self._log.info("\tGetting area sheet...")
-        area_file_name = self._config.get("STRUCTURE_ACCESS", "FILE_NAME")
+        area_file_name = self._config.get("AREA_ACCESS", "FILE_NAME")
         indicator_sheet_number = self._config.getint("AREA_ACCESS", "AREA_SHEET_NUMBER")
         indicator_sheet = self._get_sheet(area_file_name, indicator_sheet_number)
         return indicator_sheet
 
-    def _retrieve_areas(self, area_sheet):
+    def _retrieve_areas(self):
+        area_sheet = self._initialize_area_sheet()
         self._excel_regions = self._retrieve_regions(area_sheet)
         self._excel_countries = self._retrieve_countries(area_sheet, self._excel_regions)
 
@@ -93,17 +93,17 @@ class AreaParser(Parser):
 
         country_list = []
 
-        iso2_column = self._config.getint("AREA_ACCESS", "AREA_ISO2_COLUMN")
-        iso3_column = self._config.getint("AREA_ACCESS", "AREA_ISO3_COLUMN")
-        name_column = self._config.getint("AREA_ACCESS", "AREA_NAME_COLUMN")
-        region_column = self._config.getint("AREA_ACCESS", "AREA_REGION_COLUMN")
-        income_column = self._config.getint("AREA_ACCESS", "AREA_INCOME_COLUMN")
-        hdi_rank_column = self._config.getint("AREA_ACCESS", "AREA_HDI_RANK_COLUMN")
-        g20_column = self._config.getint("AREA_ACCESS", "AREA_G20_COLUMN")
-        g7_column = self._config.getint("AREA_ACCESS", "AREA_G7_COLUMN")
-        iodch_column = self._config.getint("AREA_ACCESS", "AREA_IODCH_COLUMN")
-        oecd_column = self._config.getint("AREA_ACCESS", "AREA_OECD_COLUMN")
-        cluster_group_column = self._config.getint("AREA_ACCESS", "AREA_CLUSTER_GROUP_COLUMN")
+        iso2_column = get_column_number(self._config.get("AREA_ACCESS", "AREA_ISO2_COLUMN"))
+        iso3_column = get_column_number(self._config.get("AREA_ACCESS", "AREA_ISO3_COLUMN"))
+        name_column = get_column_number(self._config.get("AREA_ACCESS", "AREA_NAME_COLUMN"))
+        region_column = get_column_number(self._config.get("AREA_ACCESS", "AREA_REGION_COLUMN"))
+        income_column = get_column_number(self._config.get("AREA_ACCESS", "AREA_INCOME_COLUMN"))
+        hdi_rank_column = get_column_number(self._config.get("AREA_ACCESS", "AREA_HDI_RANK_COLUMN"))
+        g20_column = get_column_number(self._config.get("AREA_ACCESS", "AREA_G20_COLUMN"))
+        g7_column = get_column_number(self._config.get("AREA_ACCESS", "AREA_G7_COLUMN"))
+        iodch_column = get_column_number(self._config.get("AREA_ACCESS", "AREA_IODCH_COLUMN"))
+        oecd_column = get_column_number(self._config.get("AREA_ACCESS", "AREA_OECD_COLUMN"))
+        cluster_group_column = get_column_number(self._config.get("AREA_ACCESS", "AREA_CLUSTER_GROUP_COLUMN"))
         start_row = self._config.getint("AREA_ACCESS", "AREA_START_ROW")
         for row_number in range(start_row, area_sheet.nrows):
             region_name = area_sheet.cell(row_number, region_column).value
@@ -113,11 +113,12 @@ class AreaParser(Parser):
             name = area_sheet.cell(row_number, name_column).value
             income = str_to_none(area_sheet.cell(row_number, income_column).value.replace('-', ' '))
             hdi_rank = str_to_none(area_sheet.cell(row_number, hdi_rank_column).value)
-            g20 = non_empty_string_to_bool(area_sheet.cell(row_number, g20_column).value)
-            g7 = non_empty_string_to_bool(area_sheet.cell(row_number, g7_column).value)
-            iodch = non_empty_string_to_bool(area_sheet.cell(row_number, iodch_column).value)
-            oecd = non_empty_string_to_bool(area_sheet.cell(row_number, oecd_column).value)
-            cluster_group = str_to_none(area_sheet.cell(row_number, cluster_group_column).value.replace('-', ' '))
+            g20 = is_not_empty(area_sheet.cell(row_number, g20_column).value)
+            g7 = is_not_empty(area_sheet.cell(row_number, g7_column).value)
+            iodch = is_not_empty(area_sheet.cell(row_number, iodch_column).value)
+            oecd = is_not_empty(area_sheet.cell(row_number, oecd_column).value)
+            # FIXME: Parse cluster group
+            cluster_group = None  # str_to_none(area_sheet.cell(row_number, cluster_group_column).value.replace('-', ' '))
             country = ExcelArea(iso2=iso2, iso3=iso3, name=name, region=region.iso3, income=income, hdi_rank=hdi_rank,
                                 g20=g20, g7=g7, iodch=iodch, oecd=oecd, cluster_group=cluster_group)
             country_list.append(country)
