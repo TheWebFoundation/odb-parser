@@ -1,9 +1,6 @@
-
-
-
 class AreaInfo(object):
     """
-    Area info entity
+    Area info entity, provides meta-indicators for an area
 
     Attributes:
         indicator_code (str): Indicator code for this area info
