@@ -1,5 +1,6 @@
 import re
 
+from odb.domain.model.area.area_info import AreaInfo
 from odb.domain.model.area.country import create_country
 from odb.domain.model.area.region import create_region
 from odb.domain.model.indicator.indicator import *
@@ -106,6 +107,20 @@ def excel_observation_to_dom(excel_observation, area, indicator):
                                      indicator=indicator,
                                      area=area)
     return observation
+
+
+def excel_area_info_to_dom(excel_area_info):
+    """
+
+    Args:
+        excel_area_info (ExcelAreaInfo):
+
+    Returns:
+
+    """
+    area_info = AreaInfo(indicator_code=excel_area_info.indicator_code, value=excel_area_info.value,
+                         year=excel_area_info.year)
+    return area_info
 
 
 def excel_region_to_dom(excel_region):

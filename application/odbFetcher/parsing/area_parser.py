@@ -1,7 +1,10 @@
+import re
+
 from application.odbFetcher.parsing.excel_model.excel_area import ExcelArea
+from application.odbFetcher.parsing.excel_model.excel_area_info import ExcelAreaInfo
 from application.odbFetcher.parsing.parser import Parser
 from application.odbFetcher.parsing.utils import excel_region_to_dom, excel_country_to_dom, str_to_none, \
-    is_not_empty, get_column_number
+    is_not_empty, get_column_number, excel_area_info_to_dom
 
 # FIXME: move to configuration
 # If handcrafted iso codes then we need a matching function between names and codes (or include everything in the sheet)
@@ -47,11 +50,14 @@ class AreaParser(Parser):
         super(AreaParser, self).__init__(log, config, area_repo, indicator_repo, observation_repo)
         self._excel_countries = None
         self._excel_regions = None
+        self._excel_area_infos = {}  # Will hold a dict indexed by country iso3 with area infos
 
     def run(self):
         self._log.info("Running area parser")
         self._retrieve_areas()
         self._store_areas()
+        self._retrieve_area_infos()
+        self._store_area_infos()
 
     def _initialize_area_sheet(self):
         self._log.info("\tGetting area sheet...")
@@ -59,6 +65,69 @@ class AreaParser(Parser):
         indicator_sheet_number = self._config.getint("AREA_ACCESS", "AREA_SHEET_NUMBER")
         indicator_sheet = self._get_sheet(area_file_name, indicator_sheet_number)
         return indicator_sheet
+
+    def _initialize_area_info_sheets(self):
+        self._log.info("\tGetting area info sheets")
+        data_file_name = self._config.get("AREA_INFO", "FILE_NAME")
+        area_info_pattern = self._config.get("AREA_INFO", "SHEET_NAME_PATTERN")
+        area_info_sheets = self._get_sheets_by_pattern(data_file_name, area_info_pattern)
+        return area_info_sheets
+
+    def _parse_cluster_column(self, column_name):
+        return re.match(self._config.get("AREA_INFO", "AREA_INFO_CLUSTER_GROUP_COLUMN_PATTERN"),
+                        column_name, re.IGNORECASE)
+
+    def _find_cluster_column(self, sheet):
+        area_info_name_row = self._config.getint("AREA_INFO", "AREA_INFO_NAME_ROW")
+
+        for column_number in range(0, sheet.ncols):
+            column = sheet.cell(area_info_name_row, column_number).value
+            parsed_column = self._parse_cluster_column(column)
+            if parsed_column:
+                return column_number
+
+        return None
+
+    def _retrieve_area_infos(self):
+        self._log.info("\tRetrieving area information...")
+        area_info_sheets = self._initialize_area_info_sheets()
+        area_info_name_row = self._config.getint("AREA_INFO", "AREA_INFO_NAME_ROW")
+        area_info_start_row = self._config.getint("AREA_INFO", "AREA_INFO_START_ROW")
+        year_column = get_column_number(self._config.get("AREA_INFO", "AREA_INFO_YEAR_COLUMN"))
+        iso3_column = get_column_number(self._config.get("AREA_INFO", "AREA_INFO_ISO3_COLUMN"))
+
+        for area_info_sheet in area_info_sheets:  # Per year
+            cluster_column = self._find_cluster_column(area_info_sheet)
+            if not cluster_column:
+                self._log.warn("No cluster-group found while parsing %s" % (area_info_sheet.name,))
+                continue
+            for row_number in range(area_info_start_row, area_info_sheet.nrows):  # Per country
+                # For the time being we just need to parse the cluster column
+                iso3 = area_info_sheet.cell(row_number, iso3_column).value
+                year = area_info_sheet.cell(row_number, year_column).value
+                # FIXME: How to format properly? and do we need to add long name?
+                indicator_code = area_info_sheet.cell(area_info_name_row, cluster_column).value
+                # FIXME: Need to sanitize?
+                value = str_to_none(area_info_sheet.cell(row_number, cluster_column).value)
+
+                if iso3 not in self._excel_area_infos:
+                    self._excel_area_infos[iso3] = []
+                area_info = ExcelAreaInfo(iso3, indicator_code, value, year)
+                self._excel_area_infos[iso3].append(area_info)
+
+    def _store_area_infos(self):
+        self._log.info("\tStoring area infos...")
+        self._area_repo.begin_transaction()
+
+        provider_url = self._config.get("ENRICHMENT", "WF_PROVIDER_URL")
+        provider_name = self._config.get("ENRICHMENT", "WF_PROVIDER_NAME")
+        for iso3, area_info_list in self._excel_area_infos.items():
+            for excel_area_info in area_info_list:
+                area_info = excel_area_info_to_dom(excel_area_info)
+                area_info.provider_url = provider_url
+                area_info.provider_name = provider_name
+                self._area_repo.upsert_area_info(iso3, area_info, commit=False)
+        self._area_repo.commit_transaction()
 
     def _retrieve_areas(self):
         area_sheet = self._initialize_area_sheet()

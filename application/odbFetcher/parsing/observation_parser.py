@@ -293,6 +293,7 @@ class ObservationParser(Parser):
         try:
             column_name = structure_obs_sheet.cell(observation_name_row, index_scaled_column).value
             parsed_column = self._parse_index_scaled_column_name(column_name)
+            # Sanity check useful if there could be more than one INDEX, otherwise this check could be relaxed
             if not parsed_column:
                 raise ParserError("Column name '%s' does not match INDEX pattern while parsing %s" % (
                     column_name, structure_obs_sheet.name))
