@@ -277,3 +277,6 @@ class Repository(object, metaclass=ABCMeta):
 
     def area_uri(self, area):
         pass
+
+    def upsert_area_info(self, area, area_info, commit=True):
+        pass

@@ -10,7 +10,7 @@ class AreaInfo(object):
         year (str): Year when value was observed
     """
 
-    def __init__(self, indicator_code, provider_name, provider_url, value, year):
+    def __init__(self, indicator_code, value, year, provider_name=None, provider_url=None):
         """
         Constructor for AreaInfo
 

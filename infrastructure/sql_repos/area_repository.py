@@ -1,6 +1,6 @@
 from infrastructure.errors.errors import AreaRepositoryError
 from infrastructure.sql_repos.utils import create_insert_query, get_db, create_replace_query
-from odb.domain.model.area.area import Repository
+from odb.domain.model.area.area import Repository, Area
 from odb.domain.model.area.area_info import AreaInfo
 from odb.domain.model.area.country import create_country
 from odb.domain.model.area.region import create_region
@@ -198,8 +198,9 @@ class AreaRepository(Repository):
         if commit:
             self._db.commit()
 
-    def upsert_area_info(self, area, area_info, commit=True):
-        data = AreaInfoRowAdapter().info_to_dict(area, area_info)
+    def upsert_area_info(self, area_or_iso3, area_info, commit=True):
+        iso3 = area_or_iso3.iso3 if isinstance(area_or_iso3, Area) else area_or_iso3
+        data = AreaInfoRowAdapter().info_to_dict(iso3, area_info)
         query = create_replace_query('area_info', data)
         self._db.execute(query, data)
         if commit:
@@ -472,7 +473,7 @@ class CountryRowAdapter(object):
 
 class AreaInfoRowAdapter(object):
     @staticmethod
-    def info_to_dict(area, area_info):
+    def info_to_dict(iso3, area_info):
         """
         Args:
             area (Area):
@@ -481,8 +482,8 @@ class AreaInfoRowAdapter(object):
         Returns:
             dict: dictionary to be inserted in SQlite
         """
-        data = area_info.to_dict()
-        data['area'] = area.iso3
+        data = {'area': iso3, 'value': area_info.value, 'year': area_info.year, 'provider_url': area_info.provider_url,
+                'provider_name': area_info.provider_name, 'indicator_code': area_info.indicator_code}
         return data
 
     @staticmethod

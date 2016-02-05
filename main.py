@@ -43,12 +43,13 @@ def parse(log, config, area_repo, indicator_repo, observation_repo):
     # GroupedObservationParser(log, config).run()
 
 
+def enrich(log, config):
+    Enricher(log, config).run()
+
+
 # def rank(log, config):
 #     Ranker(log, config).run()
-#
-#
-# def enrich(log, config):
-#     Enricher(log, config).run()
+
 
 if __name__ == "__main__":
     run()
