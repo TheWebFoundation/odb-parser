@@ -1,6 +1,3 @@
-
-
-
 class AreaShortInfo(object):
     def __init__(self, area_code, value, year):
         self._area_code = area_code

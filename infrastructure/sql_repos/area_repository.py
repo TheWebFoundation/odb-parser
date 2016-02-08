@@ -2,7 +2,9 @@ from infrastructure.errors.errors import AreaRepositoryError
 from infrastructure.sql_repos.utils import create_insert_query, get_db, create_replace_query
 from odb.domain.model.area.area import Repository, Area
 from odb.domain.model.area.area_info import AreaInfo
+from odb.domain.model.area.area_short_info import AreaShortInfo
 from odb.domain.model.area.country import create_country
+from odb.domain.model.area.indicator_info import IndicatorInfoList, IndicatorInfo
 from odb.domain.model.area.region import create_region
 
 
@@ -236,7 +238,7 @@ class AreaRepository(Repository):
 
         return regions + countries
 
-    def find_regions(self, order):
+    def find_regions(self, order="name"):
         """
         Finds all regions in the repository
 
@@ -246,7 +248,6 @@ class AreaRepository(Repository):
         Returns:
             list of Region: All regions
         """
-        order = "name" if order is None else order
         query = "SELECT * FROM area WHERE area IS NULL ORDER BY :order ASC"
         rows = self._db.execute(query, {'order': order}).fetchall()
 
@@ -262,7 +263,7 @@ class AreaRepository(Repository):
 
         return RegionRowAdapter().transform_to_region_list(regions)
 
-    def find_countries(self, order):
+    def find_countries(self, order="name"):
         """
         Finds all countries in the repository
 
@@ -272,7 +273,6 @@ class AreaRepository(Repository):
         Returns:
             list of Country: All countries
         """
-        order = "name" if order is None else order
         query = "SELECT * FROM area WHERE area IS NOT NULL ORDER BY :order ASC"
         rows = self._db.execute(query, {'order': order}).fetchall()
 
@@ -360,22 +360,22 @@ class AreaRepository(Repository):
 #
 #     self._db["areas"].update({"iso3": iso3}, {"$set": {"info": info_dict}})
 
-# def get_areas_info(self):
-#     all_countries = self.find_countries(None)
-#     indicator_codes = set([info.indicator_code for country in all_countries for info in country.info])
-#     indicators_info_list = IndicatorInfoList()
-#     for indicator_code in indicator_codes:
-#         areas = []
-#         provider_name, provider_url = ('', '')
-#         for area in all_countries:
-#             for info_of_area in area.info:
-#                 if info_of_area.indicator_code == indicator_code:
-#                     areas.append(AreaShortInfo(area.iso3, info_of_area.value, info_of_area.year))
-#                     provider_name, provider_url = (info_of_area.provider_name, info_of_area.provider_url)
-#         indicator_info = IndicatorInfo(indicator_code, provider_name, provider_url)
-#         indicator_info.values = areas
-#         indicators_info_list.add_indicator_info(indicator_info)
-#     return indicators_info_list
+    def get_areas_info(self):
+        all_countries = self.find_countries()
+        indicator_codes = set([info.indicator_code for country in all_countries for info in country.info])
+        indicators_info_list = IndicatorInfoList()
+        for indicator_code in indicator_codes:
+            areas = []
+            provider_name, provider_url = ('', '')
+            for area in all_countries:
+                for info_of_area in area.info:
+                    if info_of_area.indicator_code == indicator_code:
+                        areas.append(AreaShortInfo(area.iso3, info_of_area.value, info_of_area.year))
+                        provider_name, provider_url = (info_of_area.provider_name, info_of_area.provider_url)
+            indicator_info = IndicatorInfo(indicator_code, provider_name, provider_url)
+            indicator_info.values = areas
+            indicators_info_list.add_indicator_info(indicator_info)
+        return indicators_info_list
 
 
 class AreaRowAdapter(object):
@@ -549,6 +549,8 @@ if __name__ == "__main__":
     assert france is not None and france.iso2 == 'FR'
     print(json.dumps(france.to_dict()))
 
-    areas = repo.find_areas()
+    all_areas = repo.find_areas()
+    assert all_areas
+    print(json.dumps([area.to_dict() for area in all_areas]))
 
     print('OK!')
