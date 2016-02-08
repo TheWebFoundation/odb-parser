@@ -71,9 +71,9 @@ class IndicatorRepository(Repository):
 
     def find_indicator_by_code(self, indicator_code, _type=None):
         query = "SELECT * FROM indicator WHERE indicator LIKE :indicator"
-        data = {'indicator': indicator_code.upper()}
         if not indicator_code:
             raise IndicatorRepositoryError("Indicator name must not be empty")
+        data = {'indicator': indicator_code.upper()}
         if _type:
             query += " AND type LIKE :_type"
             data['_type'] = _type
