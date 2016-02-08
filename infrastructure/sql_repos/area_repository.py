@@ -221,7 +221,7 @@ class AreaRepository(Repository):
 
         return [dict(r) for r in rows]
 
-    def find_areas(self, order):
+    def find_areas(self, order="name"):
         """
         Finds all areas in the repository
 
@@ -231,7 +231,6 @@ class AreaRepository(Repository):
         Returns:
             list of Area: All regions and countries
         """
-        order = "name" if order is None else order
         regions = self.find_regions(order)
         countries = self.find_countries(order)
 
@@ -282,6 +281,7 @@ class AreaRepository(Repository):
         for country in [dict(r) for r in rows]:
             # FIXME: review
             # self.area_uri(country)
+            self.set_area_info(country)
             country_list.append(country)
 
         return CountryRowAdapter().transform_to_country_list(country_list)
@@ -523,8 +523,8 @@ if __name__ == "__main__":
     import json
 
     sqlite_config = configparser.RawConfigParser()
-    sqlite_config.set("CONNECTION", 'SQLITE_DB', '../../../odb2015.db')
-    sqlite_config.read("sqlite_config.ini")
+    sqlite_config.add_section("CONNECTION")
+    sqlite_config.set("CONNECTION", 'SQLITE_DB', '../../odb2015.db')
     repo = AreaRepository(False, sqlite_config)
 
     high_income_countries = repo.find_countries_by_code_or_income('High income')
@@ -548,5 +548,7 @@ if __name__ == "__main__":
     france = repo.find_by_code('fr')
     assert france is not None and france.iso2 == 'FR'
     print(json.dumps(france.to_dict()))
+
+    areas = repo.find_areas()
 
     print('OK!')
