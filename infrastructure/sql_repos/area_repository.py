@@ -46,7 +46,7 @@ class AreaRepository(Repository):
                 );
                 """
             db.execute(sql)
-            db.execute("CREATE INDEX area_iso3_iso2_index ON area(iso3 COLLATE NOCASE, iso2 COLLATE NOCASE)")
+            db.execute("CREATE UNIQUE INDEX area_iso3_iso2_index ON area(iso3 COLLATE NOCASE, iso2 COLLATE NOCASE)")
             db.execute('DROP TABLE IF EXISTS area_info')
             sql = """
                 CREATE TABLE area_info
@@ -325,40 +325,40 @@ class AreaRepository(Repository):
             region["countries"] = country_list
 
 
-# def area_uri(self, area):
-#     """
-#     Sets the URI to the given area
-#
-#     Args:
-#         area (Area): Area to set the URI
-#     """
-#     field = "iso3" if area["iso3"] is not None else "name"
-#     uri(url_root=self._url_root, element=area, element_code=field,
-#         level="areas")
+        # def area_uri(self, area):
+        #     """
+        #     Sets the URI to the given area
+        #
+        #     Args:
+        #         area (Area): Area to set the URI
+        #     """
+        #     field = "iso3" if area["iso3"] is not None else "name"
+        #     uri(url_root=self._url_root, element=area, element_code=field,
+        #         level="areas")
 
-# def enrich_country(self, iso3, indicator_list):
-#     """
-#     Enriches country data with indicator info
-#
-#     Note:
-#         The input indicator_list must contain the following attributes: indicator_code, year, value,
-#         provider_name and provider_value
-#     Args:
-#         iso3 (str): Iso3 of the country for which data is going to be appended.
-#         indicator_list (list of Indicator): Indicator list with the attributes in the note.
-#     """
-#     info_dict = {}
-#     for indicator in indicator_list:
-#         info_dict[indicator.indicator_code] = {
-#             "year": indicator.year,
-#             "value": indicator.value,
-#             "provider": {
-#                 "name": indicator.provider_name,
-#                 "url": indicator.provider_url
-#             }
-#         }
-#
-#     self._db["areas"].update({"iso3": iso3}, {"$set": {"info": info_dict}})
+        # def enrich_country(self, iso3, indicator_list):
+        #     """
+        #     Enriches country data with indicator info
+        #
+        #     Note:
+        #         The input indicator_list must contain the following attributes: indicator_code, year, value,
+        #         provider_name and provider_value
+        #     Args:
+        #         iso3 (str): Iso3 of the country for which data is going to be appended.
+        #         indicator_list (list of Indicator): Indicator list with the attributes in the note.
+        #     """
+        #     info_dict = {}
+        #     for indicator in indicator_list:
+        #         info_dict[indicator.indicator_code] = {
+        #             "year": indicator.year,
+        #             "value": indicator.value,
+        #             "provider": {
+        #                 "name": indicator.provider_name,
+        #                 "url": indicator.provider_url
+        #             }
+        #         }
+        #
+        #     self._db["areas"].update({"iso3": iso3}, {"$set": {"info": info_dict}})
 
     def get_areas_info(self):
         all_countries = self.find_countries()

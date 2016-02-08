@@ -1,4 +1,6 @@
-from infrastructure.errors.errors import IndicatorRepositoryError
+from sqlite3 import IntegrityError
+
+from infrastructure.errors.errors import IndicatorRepositoryError, ObservationRepositoryError
 from infrastructure.sql_repos.area_repository import AreaRepository
 from infrastructure.sql_repos.indicator_repository import IndicatorRepository
 from infrastructure.sql_repos.utils import get_db, create_insert_query, is_integer
@@ -47,7 +49,8 @@ class ObservationRepository(Repository):
                     rank INTEGER,
                     rank_change INTEGER,
                     year INTEGER,
-                    indicator TEXT
+                    indicator TEXT,
+                    CONSTRAINT observation_indicator_area_year_uniq UNIQUE (indicator, area, year)
                 );
                 '''
             db.execute(sql)
@@ -63,7 +66,10 @@ class ObservationRepository(Repository):
     def insert_observation(self, observation, commit=True):
         data = ObservationRowAdapter().observation_to_dict(observation)
         query = create_insert_query('observation', data)
-        self._db.execute(query, data)
+        try:
+            self._db.execute(query, data)
+        except IntegrityError:
+            raise ObservationRepositoryError("Unique constraint failed for observation (data:%s)" % (data,))
         if commit:
             self._db.commit()
 

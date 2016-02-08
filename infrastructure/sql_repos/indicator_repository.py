@@ -49,7 +49,7 @@ class IndicatorRepository(Repository):
                 );
                 '''
             db.execute(sql)
-            db.execute("CREATE INDEX indicator_indicator_index ON indicator (indicator COLLATE NOCASE)")
+            db.execute("CREATE UNIQUE INDEX indicator_indicator_index ON indicator (indicator COLLATE NOCASE)")
             db.commit()
         return db
 
