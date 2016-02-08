@@ -1,6 +1,7 @@
 import re
 from operator import attrgetter
 
+import xlrd
 from sortedcontainers import SortedListWithKey
 
 from application.odbFetcher.parsing.excel_model.excel_observation import ExcelObservation
@@ -9,6 +10,7 @@ from application.odbFetcher.parsing.utils import excel_observation_to_dom, na_to
 from infrastructure.errors.errors import IndicatorRepositoryError, AreaRepositoryError
 from infrastructure.sql_repos.area_repository import AreaRepository
 from infrastructure.sql_repos.indicator_repository import IndicatorRepository
+from odb.domain.model.indicator.indicator import create_indicator
 
 
 class ObservationParser(Parser):
@@ -71,6 +73,7 @@ class ObservationParser(Parser):
                 except IndicatorRepositoryError:
                     self._log.warn(
                         "No indicator with code %s found while parsing %s" % (indicator_code, raw_obs_sheet.name))
+                    indicator = create_indicator(indicator=indicator_code)  # Orphan indicator
 
                 for row_number in range(observation_start_row, raw_obs_sheet.nrows):  # Per country
                     year = int(raw_obs_sheet.cell(row_number, year_column).value)
@@ -205,7 +208,8 @@ class ObservationParser(Parser):
 
         except IndicatorRepositoryError:
             self._log.error(
-                "No SUBINDEX '%s' indicator found while parsing %s" % (subindex_name, structure_obs_sheet.name))
+                "No SUBINDEX '%s' indicator found while parsing %s [%s]" % (
+                    subindex_name, structure_obs_sheet.name, xlrd.cellname(0, subindex_scaled_column)))
 
     def _retrieve_component_observations(self, structure_obs_sheet, component_name, component_scaled_column):
         self._log.debug(
@@ -243,12 +247,13 @@ class ObservationParser(Parser):
 
         except IndicatorRepositoryError:
             self._log.error(
-                "No COMPONENT '%s' indicator found while parsing %s" % (component_name, structure_obs_sheet.name))
+                "No COMPONENT '%s' indicator found while parsing %s [%s]" % (
+                    component_name, structure_obs_sheet.name, xlrd.cellname(0, component_scaled_column)))
 
         # Rank them based on their scaled score
         self._update_observation_ranking(sorted_observations, observation_getter=lambda x: x[0],
                                          attribute_getter=attrgetter('scaled'))
-        self._excel_raw_observations.extend(sorted_observations)
+        self._excel_structure_observations.extend(sorted_observations)
 
     def _retrieve_subindex_and_component_observations(self, structure_obs_sheet):
         self._log.info("\t\tRetrieving subindex and component observations...")
@@ -378,7 +383,6 @@ if __name__ == "__main__":
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
     console.setFormatter(formatter)
     log.addHandler(console)
-
 
     obs_repo = None
     sqlite_config = configparser.RawConfigParser()
