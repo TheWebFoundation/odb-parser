@@ -201,7 +201,13 @@ class ObservationParser(Parser):
                                                     subindex_rank_column).value if subindex_rank_column else None
                     excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, scaled=scaled,
                                                          year=year, rank=rank, value=value)
-                    self._excel_structure_observations.append((excel_observation, area, indicator))
+                    if [t for t in self._excel_structure_observations if
+                        t[0].year == year and t[1].iso3 == iso3 and t[2].indicator == indicator.indicator]:
+                        self._log.warn("Ignoring duplicate observation for SUBINDEX %s while parsing %s [%s]" % (
+                            indicator.indicator, structure_obs_sheet.name,
+                            xlrd.cellname(row_number, subindex_scaled_column)))
+                    else:
+                        self._excel_structure_observations.append((excel_observation, area, indicator))
                 except AreaRepositoryError:
                     self._log.error("No area with code %s for indicator %s while parsing %s" % (
                         iso3, indicator.indicator, structure_obs_sheet.name))
@@ -240,7 +246,13 @@ class ObservationParser(Parser):
                                                      component_value_column).value if component_value_column else None
                     excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, scaled=scaled,
                                                          year=year, value=value)
-                    sorted_observations.add((excel_observation, area, indicator))
+                    if [t for t in sorted_observations if
+                        t[0].year == year and t[1].iso3 == iso3 and t[2].indicator == indicator.indicator]:
+                        self._log.warn("Ignoring duplicate observation for COMPONENT %s while parsing %s [%s]" % (
+                            indicator.indicator, structure_obs_sheet.name,
+                            xlrd.cellname(row_number, component_scaled_column)))
+                    else:
+                        sorted_observations.add((excel_observation, area, indicator))
                 except AreaRepositoryError:
                     self._log.error("No area with code %s for indicator %s while parsing %s" % (
                         iso3, indicator.indicator, structure_obs_sheet.name))
