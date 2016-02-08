@@ -101,7 +101,7 @@ class ObservationRepository(Repository):
         # NOTE: Original a4ai project raised error if no indicator or area were found
         if indicator_code is not None:
             self._indicator_repo.find_indicator_by_code(indicator_code)
-        if area_code is not None:
+        if area_code is not None and area_code != "ALL":
             self._area_repo.find_by_code(area_code)
 
         data = {}
