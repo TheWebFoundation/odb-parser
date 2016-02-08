@@ -137,13 +137,13 @@ class IndicatorRepository(Repository):
         """
         # We could get everything in one query, but it is easier to read this way
         if indicator_dict['type'].upper() == 'INDEX':
-            query = "SELECT * FROM indicator WHERE (type LIKE 'SUBINDEX' AND index_code=:index_code)"
+            query = "SELECT * FROM indicator WHERE (type = 'SUBINDEX' AND index_code=:index_code)"
             indicators = self._db.execute(query, {'index_code': indicator_dict['indicator']}).fetchall()
         elif indicator_dict['type'].upper() == 'SUBINDEX':
-            query = "SELECT * FROM indicator WHERE (type LIKE 'COMPONENT' AND subindex=:subindex)"
+            query = "SELECT * FROM indicator WHERE (type = 'COMPONENT' AND subindex=:subindex)"
             indicators = self._db.execute(query, {'subindex': indicator_dict['indicator']}).fetchall()
         elif indicator_dict['type'].upper() == 'COMPONENT':
-            query = "SELECT * FROM indicator WHERE ((type LIKE 'PRIMARY' OR type LIKE 'SECONDARY') AND component LIKE :component)"
+            query = "SELECT * FROM indicator WHERE ((type = 'PRIMARY' OR type = 'SECONDARY') AND component = :component)"
             indicators = self._db.execute(query, {'component': indicator_dict['indicator']}).fetchall()
         else:
             return []
@@ -197,11 +197,11 @@ class IndicatorRepository(Repository):
             # We filter by matching the parent_type to the column, in the future we may want to change this if there is
             # not a clear mapping or we are using relations (e.g. foreign keys)
             parent_column = "index_code" if parent.type == "INDEX" else parent.type
-            where_clause = "WHERE (type LIKE :type AND %s LIKE :parent_code)" % (parent_column,)
+            where_clause = "WHERE (type = :type AND %s = :parent_code)" % (parent_column,)
             query = "SELECT * FROM indicator %s" % (where_clause,)
             rows = self._db.execute(query, {'type': level, 'parent_code': parent.indicator}).fetchall()
         else:
-            where_clause = "WHERE (type LIKE :type)"
+            where_clause = "WHERE (type = :type)"
             query = "SELECT * FROM indicator %s" % (where_clause,)
             rows = self._db.execute(query, {'type': level}).fetchall()
 

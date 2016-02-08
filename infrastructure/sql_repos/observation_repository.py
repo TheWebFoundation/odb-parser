@@ -99,10 +99,10 @@ class ObservationRepository(Repository):
             self._area_repo.find_by_code(area_code)
 
         data = {}
-        indicator_query_filter = "indicator LIKE :indicator" if indicator_code else None
+        indicator_query_filter = "indicator = :indicator" if indicator_code else None
         if indicator_query_filter:
             data['indicator'] = indicator_code
-        area_query_filter = "area LIKE :area" if area_code and area_code.upper() != 'ALL' else None
+        area_query_filter = "area = :area" if area_code and area_code.upper() != 'ALL' else None
         if area_query_filter:
             data['area'] = area_code
         year_query_filter = self._build_year_query_filter(year)

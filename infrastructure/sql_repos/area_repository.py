@@ -84,7 +84,7 @@ class AreaRepository(Repository):
             AreaRepositoryError: If there is not an area with the given name
         """
 
-        query = "SELECT * FROM area WHERE name LIKE :name"
+        query = "SELECT * FROM area WHERE name = :name"
         area_name = area_name or ''
         r = self._db.execute(query, {'name': area_name}).fetchone()
         if r is None:
@@ -96,7 +96,7 @@ class AreaRepository(Repository):
         return AreaRowAdapter().dict_to_area(data)
 
     def find_by_code(self, area_code):
-        query = "SELECT * FROM area WHERE (iso3 LIKE :code OR iso2 LIKE :code)"
+        query = "SELECT * FROM area WHERE (iso3 = :code OR iso2 = :code)"
         area_code = area_code or ''
         r = self._db.execute(query, {'code': area_code}).fetchone()
         if r is None:
@@ -108,7 +108,7 @@ class AreaRepository(Repository):
         return AreaRowAdapter().dict_to_area(data)
 
     def find_by_iso3(self, iso3_code):
-        query = "SELECT * FROM area WHERE (iso3 LIKE :iso3_code)"
+        query = "SELECT * FROM area WHERE (iso3 = :iso3_code)"
         iso3_code = iso3_code or ''
         r = self._db.execute(query, {'iso3_code': iso3_code}).fetchone()
         if r is None:
@@ -135,7 +135,7 @@ class AreaRepository(Repository):
 
         """
 
-        query = "SELECT * FROM area WHERE (iso3 LIKE :iso3 OR iso2 LIKE :iso2 OR name LIKE :name)"
+        query = "SELECT * FROM area WHERE (iso3 = :iso3 OR iso2 = :iso2 OR name = :name)"
         r = self._db.execute(query, dict.fromkeys(['iso2', 'iso3', 'name'], area_code_or_income)).fetchone()
 
         if r is None:
@@ -168,7 +168,7 @@ class AreaRepository(Repository):
             AreaRepositoryCountry: If no countries are found
         """
         order = "name" if order is None else order
-        query = "SELECT * FROM area WHERE (area LIKE :area OR income LIKE :income) ORDER BY :order ASC"
+        query = "SELECT * FROM area WHERE (area = :area OR income = :income) ORDER BY :order ASC"
         params = dict.fromkeys(['area', 'income'], region_or_income)
         params['order'] = order
         rows = self._db.execute(query, params).fetchall()
@@ -218,7 +218,7 @@ class AreaRepository(Repository):
             list of AreaInfo: The list of AreaInfo objects
 
         """
-        query = "SELECT * FROM area_info WHERE area LIKE :iso3 ORDER BY year DESC"
+        query = "SELECT * FROM area_info WHERE area = :iso3 ORDER BY year DESC"
         rows = self._db.execute(query, {"iso3": iso3}).fetchall()
 
         return [dict(r) for r in rows]
@@ -310,7 +310,7 @@ class AreaRepository(Repository):
 
         """
         iso3 = region["iso3"]
-        query = "SELECT * FROM area WHERE area LIKE :iso3 ORDER BY name ASC"
+        query = "SELECT * FROM area WHERE area = :iso3 ORDER BY name ASC"
         rows = self._db.execute(query, {'iso3': iso3}).fetchall()
 
         country_list = []
