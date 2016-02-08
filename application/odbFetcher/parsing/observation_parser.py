@@ -379,14 +379,17 @@ if __name__ == "__main__":
     console.setFormatter(formatter)
     log.addHandler(console)
 
-    config = configparser.RawConfigParser()
-    config.read("../../../configuration.ini")
-    config.set("CONNECTION", 'SQLITE_DB', '../../../odb2015.db')
-    config.set("DATA_ACCESS", "FILE_NAME", "../../../20160128_data.xlsx")
 
     obs_repo = None
-    indicator_repo = IndicatorRepository(False, log, config)
-    area_repo = AreaRepository(False, log, config)
+    sqlite_config = configparser.RawConfigParser()
+    sqlite_config.set("CONNECTION", 'SQLITE_DB', '../../../odb2015.db')
+    sqlite_config.read("sqlite_config.ini")
+    indicator_repo = IndicatorRepository(False, log, sqlite_config)
+    area_repo = AreaRepository(False, log, sqlite_config)
+
+    config = configparser.RawConfigParser()
+    config.read("../../../parse_config.ini")
+    config.set("DATA_ACCESS", "FILE_NAME", "../../../20160128_data.xlsx")
     parser = ObservationParser(log, config, observation_repo=obs_repo, indicator_repo=indicator_repo,
                                area_repo=area_repo)
 

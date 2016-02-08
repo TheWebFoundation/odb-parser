@@ -3,28 +3,19 @@ from infrastructure.sql_repos.utils import create_insert_query, get_db
 from odb.domain.model.indicator.indicator import Repository, Indicator
 from odb.domain.model.indicator.indicator import create_indicator
 
-
-class _MockDB(object):
-    def __init__(self, log):
-        self._log = log
-
-    def insert(self, table, indicator):
-        self._log.info("\tStoring %s in %s", indicator.__dict__, table)
-
-
 class IndicatorRepository(Repository):
     """
     Concrete sqlite repository for Indicators.
     """
 
-    def __init__(self, recreate_db, log, config):
+    def __init__(self, recreate_db, config, url_root=""):
         """
         Constructor for IndicatorRepository
 
         Args:
         """
         self._config = config
-        self._log = log
+        self._url_root = url_root
         self._db = self._initialize_db(recreate_db)
 
     def _initialize_db(self, recreate_db):
@@ -255,16 +246,14 @@ class IndicatorRowAdapter(object):
 
 
 if __name__ == "__main__":
-    import logging
     import configparser
     import json
 
-    logger = logging.getLogger(__name__)
-    config = configparser.RawConfigParser()
-    config.add_section('CONNECTION')
-    config.set('CONNECTION', 'SQLITE_DB', '../../odb2015.db')
+    sqlite_config = configparser.RawConfigParser()
+    sqlite_config.add_section('CONNECTION')
+    sqlite_config.set('CONNECTION', 'SQLITE_DB', '../../odb2015.db')
 
-    repo = IndicatorRepository(False, logger, config)
+    repo = IndicatorRepository(False, sqlite_config)
 
     indicator = repo.find_indicator_by_code('ODB.2015.C.MANAG')
     assert indicator.indicator == 'ODB.2015.C.MANAG'

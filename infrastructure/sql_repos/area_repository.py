@@ -11,14 +11,14 @@ class AreaRepository(Repository):
     Concrete sqlite repository for Areas.
     """
 
-    def __init__(self, recreate_db, log, config):
+    def __init__(self, recreate_db, config, url_root=""):
         """
         Constructor for AreaRepository
 
         Args:
         """
         self._config = config
-        self._log = log
+        self._url_root = url_root
         self._db = self._initialize_db(recreate_db)
 
     def _initialize_db(self, recreate_db):
@@ -519,16 +519,13 @@ class AreaInfoRowAdapter(object):
 #                 for area_info_key in area_info_document_dict.keys()]
 
 if __name__ == "__main__":
-    import logging
     import configparser
     import json
 
-    logger = logging.getLogger(__name__)
-    config_mock = configparser.RawConfigParser()
-    config_mock.add_section('CONNECTION')
-    config_mock.set('CONNECTION', 'SQLITE_DB', '../../odb2015.db')
-
-    repo = AreaRepository(False, logger, config_mock)
+    sqlite_config = configparser.RawConfigParser()
+    sqlite_config.set("CONNECTION", 'SQLITE_DB', '../../../odb2015.db')
+    sqlite_config.read("sqlite_config.ini")
+    repo = AreaRepository(False, sqlite_config)
 
     high_income_countries = repo.find_countries_by_code_or_income('High income')
     assert len(high_income_countries) > 0 and all(

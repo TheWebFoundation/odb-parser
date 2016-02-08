@@ -23,11 +23,14 @@ def configure_log():
 def run():
     configure_log()
     log = logging.getLogger("odbFetcher")
+    sqlite_config = configparser.RawConfigParser()
+    sqlite_config.read("sqlite_config.ini")
+    indicator_repo = IndicatorRepository(True, sqlite_config)
+    area_repo = AreaRepository(True, sqlite_config)
+    observation_repo = ObservationRepository(True, area_repo, indicator_repo, sqlite_config)
+
     config = configparser.RawConfigParser()
-    config.read("configuration.ini")
-    indicator_repo = IndicatorRepository(True, log, config)
-    area_repo = AreaRepository(True, log, config)
-    observation_repo = ObservationRepository(True, area_repo, indicator_repo, log, config)
+    config.read("parse_config.ini")
     parse(log, config, area_repo, indicator_repo, observation_repo)
     # rank(log, config)
     # enrich(log, config)

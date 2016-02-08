@@ -10,7 +10,7 @@ class ObservationRepository(Repository):
     Concrete mongodb repository for Observations.
     """
 
-    def __init__(self, recreate_db, area_repo, indicator_repo, log, config, url_root=''):
+    def __init__(self, recreate_db, area_repo, indicator_repo, config, url_root=""):
         """
         Constructor for ObservationRepository
 
@@ -22,7 +22,6 @@ class ObservationRepository(Repository):
         """
 
         self._config = config
-        self._log = log
         self._db = self._initialize_db(recreate_db)
         self._url_root = url_root
         # Maybe the repos could be used in a higher level context to set areas and indicators of observations
@@ -448,18 +447,16 @@ class YearRowAdapter(object):
 
 
 if __name__ == "__main__":
-    import logging
     import configparser
     import json
 
-    logger = logging.getLogger(__name__)
-    config = configparser.RawConfigParser()
-    config.add_section('CONNECTION')
-    config.set('CONNECTION', 'SQLITE_DB', '../../odb2015.db')
+    sqlite_config = configparser.RawConfigParser()
+    sqlite_config.add_section('CONNECTION')
+    sqlite_config.set('CONNECTION', 'SQLITE_DB', '../../odb2015.db')
 
-    area_repo = AreaRepository(False, logger, config)
-    indicator_repo = IndicatorRepository(False, logger, config)
-    obs_repo = ObservationRepository(False, area_repo, indicator_repo, logger, config)
+    area_repo = AreaRepository(False, sqlite_config)
+    indicator_repo = IndicatorRepository(False, sqlite_config)
+    obs_repo = ObservationRepository(False, area_repo, indicator_repo, sqlite_config)
 
     print(obs_repo.get_year_list())
     print(json.dumps([o.to_dict() for o in obs_repo.find_observations(area_code="FRA", year='2014-2015')]))

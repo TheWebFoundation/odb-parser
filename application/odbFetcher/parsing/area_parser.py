@@ -220,12 +220,15 @@ if __name__ == "__main__":
     from infrastructure.sql_repos.area_repository import AreaRepository
 
     log = logging.getLogger(__name__)
-    config = configparser.RawConfigParser()
-    config.read("../../../configuration.ini")
-    config.set("CONNECTION", 'SQLITE_DB', '../../../odb2015.db')
-    config.set("STRUCTURE_ACCESS", "FILE_NAME", "../../../20160128_data.xlsx")
 
-    area_repo = AreaRepository(False, log, config)
+    sqlite_config = configparser.RawConfigParser()
+    sqlite_config.set("CONNECTION", 'SQLITE_DB', '../../../odb2015.db')
+    sqlite_config.read("sqlite_config.ini")
+    area_repo = AreaRepository(False, log, sqlite_config)
+
+    config = configparser.RawConfigParser()
+    config.read("../../../parse_config.ini")
+    config.set("STRUCTURE_ACCESS", "FILE_NAME", "../../../20160128_data.xlsx")
     parser = AreaParser(log, config, area_repo=area_repo)
 
     parser.run()
