@@ -26,6 +26,9 @@ class ExcelIndicator(object):
         self._units = units
         self._weight = weight
 
+    def is_index(self):
+        return self._type == "INDEX"
+
     @property
     def code(self):
         return self._code
