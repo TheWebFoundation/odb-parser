@@ -3,6 +3,7 @@ from infrastructure.sql_repos.utils import create_insert_query, get_db
 from odb.domain.model.indicator.indicator import Repository, Indicator
 from odb.domain.model.indicator.indicator import create_indicator
 
+
 class IndicatorRepository(Repository):
     """
     Concrete sqlite repository for Indicators.
