@@ -1,8 +1,8 @@
 import re
 from operator import attrgetter
 
-import xlrd
 from sortedcontainers import SortedListWithKey
+from xlrd import cellname
 
 from application.odbFetcher.parsing.excel_model.excel_observation import ExcelObservation
 from application.odbFetcher.parsing.parser import Parser, ParserError
@@ -205,7 +205,7 @@ class ObservationParser(Parser):
                         t[0].year == year and t[1].iso3 == iso3 and t[2].indicator == indicator.indicator]:
                         self._log.warn("Ignoring duplicate observation for SUBINDEX %s while parsing %s [%s]" % (
                             indicator.indicator, structure_obs_sheet.name,
-                            xlrd.cellname(row_number, subindex_scaled_column)))
+                            cellname(row_number, subindex_scaled_column)))
                     else:
                         self._excel_structure_observations.append((excel_observation, area, indicator))
                 except AreaRepositoryError:
@@ -215,7 +215,7 @@ class ObservationParser(Parser):
         except IndicatorRepositoryError:
             self._log.error(
                 "No SUBINDEX '%s' indicator found while parsing %s [%s]" % (
-                    subindex_name, structure_obs_sheet.name, xlrd.cellname(0, subindex_scaled_column)))
+                    subindex_name, structure_obs_sheet.name, cellname(0, subindex_scaled_column)))
 
     def _retrieve_component_observations(self, structure_obs_sheet, component_name, component_scaled_column):
         self._log.debug(
@@ -250,7 +250,7 @@ class ObservationParser(Parser):
                         t[0].year == year and t[1].iso3 == iso3 and t[2].indicator == indicator.indicator]:
                         self._log.warn("Ignoring duplicate observation for COMPONENT %s while parsing %s [%s]" % (
                             indicator.indicator, structure_obs_sheet.name,
-                            xlrd.cellname(row_number, component_scaled_column)))
+                            cellname(row_number, component_scaled_column)))
                     else:
                         sorted_observations.add((excel_observation, area, indicator))
                 except AreaRepositoryError:
@@ -260,7 +260,7 @@ class ObservationParser(Parser):
         except IndicatorRepositoryError:
             self._log.error(
                 "No COMPONENT '%s' indicator found while parsing %s [%s]" % (
-                    component_name, structure_obs_sheet.name, xlrd.cellname(0, component_scaled_column)))
+                    component_name, structure_obs_sheet.name, cellname(0, component_scaled_column)))
 
         # Rank them based on their scaled score
         self._update_observation_ranking(sorted_observations, observation_getter=lambda x: x[0],
