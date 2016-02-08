@@ -90,6 +90,20 @@ class IndicatorRepository(Repository):
 
         return IndicatorRowAdapter().dict_to_indicator(data)
 
+    def find_indicators(self):
+        """
+        Finds all indicators
+
+        Returns:
+            list of Indicator: All the indicators stored
+        """
+        _index = self.find_indicators_index()
+        subindices = self.find_indicators_sub_indexes()
+        indicators = self.find_indicators_indicators()
+
+        result = (_index + subindices + indicators)
+        return result
+
     def find_indicators_index(self):
         """
         Finds all indicators whose type is Index
@@ -100,6 +114,14 @@ class IndicatorRepository(Repository):
         return self.find_indicators_by_level("INDEX")
 
     def find_indicators_components(self, parent=None):
+        """
+
+        Args:
+            parent (Indicator, optional):
+
+        Returns:
+
+        """
         return self.find_indicators_by_level("COMPONENT", parent)
 
     def find_indicator_children(self, indicator_dict):
@@ -173,7 +195,8 @@ class IndicatorRepository(Repository):
         if parent is not None:
             # We filter by matching the parent_type to the column, in the future we may want to change this if there is
             # not a clear mapping or we are using relations (e.g. foreign keys)
-            where_clause = "WHERE (type LIKE :type AND %s LIKE :parent_code)" % (parent.type,)
+            parent_column = "index_code" if parent.type == "INDEX" else parent.type
+            where_clause = "WHERE (type LIKE :type AND %s LIKE :parent_code)" % (parent_column,)
             query = "SELECT * FROM indicator %s" % (where_clause,)
             rows = self._db.execute(query, {'type': level, 'parent_code': parent.indicator}).fetchall()
         else:
