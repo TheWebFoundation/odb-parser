@@ -1,7 +1,11 @@
+from infrastructure.errors.errors import IndicatorRepositoryError
 from infrastructure.sql_repos.area_repository import AreaRepository
 from infrastructure.sql_repos.indicator_repository import IndicatorRepository
 from infrastructure.sql_repos.utils import get_db, create_insert_query, is_integer
+from odb.domain.model.observation.grouped_by_area_visualisation import GroupedByAreaVisualisation
 from odb.domain.model.observation.observation import Repository, create_observation
+from odb.domain.model.observation.statistics import Statistics
+from odb.domain.model.observation.visualisation import Visualisation
 from odb.domain.model.observation.year import Year
 
 
@@ -75,6 +79,7 @@ class ObservationRepository(Repository):
 
         return YearRowAdapter().transform_to_year_list([dict(r) for r in rows])
 
+    # FIXME: Review area_type subquery
     def find_observations(self, indicator_code=None, area_code=None, year=None, area_type=None):
         """
         Returns all observations that satisfy the given filters
@@ -87,7 +92,12 @@ class ObservationRepository(Repository):
         Returns:
             list of Observation: Observation that satisfy the given filters
         """
-        # FIXME: Original repository raised error if no indicator or area were found
+        # NOTE: Original a4ai project raised error if no indicator or area were found
+        if indicator_code is not None:
+            self._indicator_repo.find_indicator_by_code(indicator_code)
+        if area_code is not None:
+            self._area_repo.find_by_code(area_code)
+
         data = {}
         indicator_query_filter = "indicator LIKE :indicator" if indicator_code else None
         if indicator_query_filter:
@@ -96,8 +106,6 @@ class ObservationRepository(Repository):
         if area_query_filter:
             data['area'] = area_code
         year_query_filter = self._build_year_query_filter(year)
-        # FIXME: Review area_type subquery
-        # area_type
 
         query_filter = " AND ".join(filter(None, [indicator_query_filter, area_query_filter, year_query_filter]))
         query = "SELECT * FROM observation WHERE " + query_filter if query_filter else "SELECT * FROM observation"
@@ -106,7 +114,11 @@ class ObservationRepository(Repository):
         processed_observation_list = []
         for observation in [dict(r) for r in rows]:
             area = self._area_repo.find_by_iso3(observation['area'])
-            indicator = self._indicator_repo.find_indicator_by_code(observation['indicator'])
+            # Filter out orphan observations
+            try:
+                indicator = self._indicator_repo.find_indicator_by_code(observation['indicator'])
+            except IndicatorRepositoryError:
+                continue
             observation['area'] = area
             observation['indicator'] = indicator
             processed_observation_list.append(observation)
@@ -245,61 +257,60 @@ class ObservationRepository(Repository):
         #     return None
         #
         #
-        # def find_observations_statistics(self, indicator_code=None, area_code=None, year=None):
-        #     """
-        #     Returns statitics for observations that satisfy the given filters
-        #
-        #     Args:
-        #         indicator_code (str, optional): The indicator code (indicator attribute in Indicator)
-        #         area_code (str, optional): The area code for the observation
-        #         year (str, optional): The year when observation was observed
-        #     Returns:
-        #         list of Statistics: Observations statistics that satisfy the filters
-        #     """
-        #     return StatisticsDocumentAdapter().transform_to_statistics(
-        #         self.find_observations(indicator_code=indicator_code, area_code=area_code, year=year))
-        #
-        #
-        # def find_observations_visualisation(self, indicator_code=None, area_code=None, year=None):
-        #     """
-        #     Returns visualisation for observations that satisfy the given filters
-        #
-        #     Args:
-        #         indicator_code (str, optional): The indicator code (indicator attribute in Indicator)
-        #         area_code (str, optional): The area code for the observation
-        #         year (str, optional): The year when observation was observed
-        #     Returns:
-        #         Visualisation: Observations visualisation that satisfy the filters
-        #     """
-        #     observations = self.find_observations(indicator_code=indicator_code, area_code=area_code, year=year)
-        #     observations_all_areas = self.find_observations(indicator_code=indicator_code, area_code='ALL', year=year)
-        #
-        #     return VisualisationDocumentAdapter().transform_to_visualisation(observations, observations_all_areas)
-        #
-        #
-        # def find_observations_grouped_by_area_visualisation(self, indicator_code=None, area_code=None, year=None):
-        #     """
-        #     Returns grouped by area visualisation for observations that satisfy the given filters
-        #
-        #     Args:
-        #         indicator_code (str, optional): The indicator code (indicator attribute in Indicator)
-        #         area_code (str, optional): The area code for the observation
-        #         year (str, optional): The year when observation was observed
-        #     Returns:
-        #         GroupedByAreaVisualisation: Observations grouped by area visualisation that satisfy the filters
-        #     """
-        #     area_code_splitted = area_code.split(',') if area_code is not None else None
-        #     observations = self.find_observations(indicator_code=indicator_code, area_code=area_code, year=year)
-        #     observations_all_areas = self.find_observations(indicator_code=indicator_code, area_code='ALL', year=year)
-        #     if area_code_splitted is None or len(area_code_splitted) == 0 or area_code == 'ALL':
-        #         areas = AreaRepository(url_root=self._url_root).find_countries(order="iso3")
-        #         area_code_splitted = [area.iso3 for area in areas]
-        #
-        #     return GroupedByAreaVisualisationDocumentAdapter().transform_to_grouped_by_area_visualisation(
-        #         area_codes=area_code_splitted,
-        #         observations=observations,
-        #         observations_all_areas=observations_all_areas
-        #     )
+
+    def find_observations_statistics(self, indicator_code=None, area_code=None, year=None):
+        """
+        Returns statitics for observations that satisfy the given filters
+
+        Args:
+            indicator_code (str, optional): The indicator code (indicator attribute in Indicator)
+            area_code (str, optional): The area code for the observation
+            year (str, optional): The year when observation was observed
+        Returns:
+            list of Statistics: Observations statistics that satisfy the filters
+        """
+        return StatisticsDocumentAdapter().transform_to_statistics(
+            self.find_observations(indicator_code=indicator_code, area_code=area_code, year=year))
+
+    def find_observations_visualisation(self, indicator_code=None, area_code=None, year=None):
+        """
+        Returns visualisation for observations that satisfy the given filters
+
+        Args:
+            indicator_code (str, optional): The indicator code (indicator attribute in Indicator)
+            area_code (str, optional): The area code for the observation
+            year (str, optional): The year when observation was observed
+        Returns:
+            Visualisation: Observations visualisation that satisfy the filters
+        """
+        observations = self.find_observations(indicator_code=indicator_code, area_code=area_code, year=year)
+        observations_all_areas = self.find_observations(indicator_code=indicator_code, area_code='ALL', year=year)
+
+        return VisualisationDocumentAdapter().transform_to_visualisation(observations, observations_all_areas)
+
+    def find_observations_grouped_by_area_visualisation(self, indicator_code=None, area_code=None, year=None):
+        """
+        Returns grouped by area visualisation for observations that satisfy the given filters
+
+        Args:
+            indicator_code (str, optional): The indicator code (indicator attribute in Indicator)
+            area_code (str, optional): The area code for the observation
+            year (str, optional): The year when observation was observed
+        Returns:
+            GroupedByAreaVisualisation: Observations grouped by area visualisation that satisfy the filters
+        """
+        area_code_splitted = area_code.split(',') if area_code is not None else None
+        observations = self.find_observations(indicator_code=indicator_code, area_code=area_code, year=year)
+        observations_all_areas = self.find_observations(indicator_code=indicator_code, area_code='ALL', year=year)
+        if area_code_splitted is None or len(area_code_splitted) == 0 or area_code == 'ALL':
+            areas = AreaRepository(url_root=self._url_root).find_countries(order="iso3")
+            area_code_splitted = [area.iso3 for area in areas]
+
+        return GroupedByAreaVisualisationDocumentAdapter().transform_to_grouped_by_area_visualisation(
+            area_codes=area_code_splitted,
+            observations=observations,
+            observations_all_areas=observations_all_areas
+        )
 
 
 class ObservationRowAdapter(object):
@@ -389,61 +400,64 @@ class YearRowAdapter(object):
         return [YearRowAdapter.dict_to_year(year_dict) for year_dict in year_dict_list]
 
 
-# class StatisticsDocumentAdapter(object):
-#     """
-#     Adapter class to transform observations from PyMongo format to Domain Statistics objects
-#     """
-#
-#     def transform_to_statistics(self, observations):
-#         """
-#         Transforms a list of observations into statistics
-#
-#         Args:
-#             observations (list): Observation document list in PyMongo format
-#
-#         Returns:
-#             Statistics: Statistics object with statistics data for the given observations
-#         """
-#         return Statistics(observations)
-#
-#
-# class VisualisationDocumentAdapter(object):
-#     """
-#     Adapter class to transform observations from PyMongo format to Domain Visualisation objects
-#     """
-#
-#     def transform_to_visualisation(self, observations, observations_all_areas):
-#         """
-#         Transforms a list of observations into visualisation
-#
-#         Args:
-#             observations (list of Observation): Observation list
-#             observations_all_areas (list of Observation): Observations list with all areas without filter applied
-#
-#         Returns:
-#             Visualisation: Visualisation object for the given observations
-#         """
-#         return Visualisation(observations, observations_all_areas)
-#
-#
-# class GroupedByAreaVisualisationDocumentAdapter(object):
-#     """
-#     Adapter class to transform observations from PyMongo format to Domain GroupedByAreaVisualisation objects
-#     """
-#
-#     def transform_to_grouped_by_area_visualisation(self, area_codes, observations, observations_all_areas):
-#         """
-#         Transforms a list of observations into GroupedByAreaVisualisation
-#
-#         Args:
-#             area_codes (list of str): Iso3 codes for the area to group by
-#             observations (list of Observation): Observation list
-#             observations_all_areas (list of Observation): Observations list with all areas without filter applied
-#
-#         Returns:
-#             GroupedByAreaVisualisation: GroupedByAreaVisualisation object for the given observations
-#         """
-#         return GroupedByAreaVisualisation(area_codes, observations, observations_all_areas)
+class StatisticsDocumentAdapter(object):
+    """
+    Adapter class to transform observations from Sqlite format to Domain Statistics objects
+    """
+
+    @staticmethod
+    def transform_to_statistics(observations):
+        """
+        Transforms a list of observations into statistics
+
+        Args:
+            observations (list): Observation document list in Sqlite format
+
+        Returns:
+            Statistics: Statistics object with statistics data for the given observations
+        """
+        return Statistics(observations)
+
+
+class VisualisationDocumentAdapter(object):
+    """
+    Adapter class to transform observations from Sqlite format to Domain Visualisation objects
+    """
+
+    @staticmethod
+    def transform_to_visualisation(observations, observations_all_areas):
+        """
+        Transforms a list of observations into visualisation
+
+        Args:
+            observations (list of Observation): Observation list
+            observations_all_areas (list of Observation): Observations list with all areas without filter applied
+
+        Returns:
+            Visualisation: Visualisation object for the given observations
+        """
+        return Visualisation(observations, observations_all_areas)
+
+
+class GroupedByAreaVisualisationDocumentAdapter(object):
+    """
+    Adapter class to transform observations from SQlite format to Domain GroupedByAreaVisualisation objects
+    """
+
+    @staticmethod
+    def transform_to_grouped_by_area_visualisation(area_codes, observations, observations_all_areas):
+        """
+        Transforms a list of observations into GroupedByAreaVisualisation
+
+        Args:
+            area_codes (list of str): Iso3 codes for the area to group by
+            observations (list of Observation): Observation list
+            observations_all_areas (list of Observation): Observations list with all areas without filter applied
+
+        Returns:
+            GroupedByAreaVisualisation: GroupedByAreaVisualisation object for the given observations
+        """
+        return GroupedByAreaVisualisation(area_codes, observations, observations_all_areas)
 
 
 if __name__ == "__main__":
