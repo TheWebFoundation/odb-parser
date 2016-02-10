@@ -40,7 +40,6 @@ class ObservationRepository(Repository):
                 CREATE TABLE observation
                 (
                     id INTEGER PRIMARY KEY,
-                    tendency INTEGER,
                     value REAL,
                     area TEXT,
                     rank INTEGER,

@@ -37,21 +37,22 @@ class Statistics(object):
         values = self._observations_values()
         return self._median(values)
 
-    @property
-    def average_developing(self):
-        return self._average(self._filter_observations_values_by_area_type(self.DEVELOPING))
-
-    @property
-    def median_developing(self):
-        return self._median(self._filter_observations_values_by_area_type(self.DEVELOPING))
-
-    @property
-    def average_emerging(self):
-        return self._average(self._filter_observations_values_by_area_type(self.EMERGING))
-
-    @property
-    def median_emerging(self):
-        return self._median(self._filter_observations_values_by_area_type(self.EMERGING))
+    # FIXME: Review
+    # @property
+    # def average_developing(self):
+    #     return self._average(self._filter_observations_values_by_area_type(self.DEVELOPING))
+    #
+    # @property
+    # def median_developing(self):
+    #     return self._median(self._filter_observations_values_by_area_type(self.DEVELOPING))
+    #
+    # @property
+    # def average_emerging(self):
+    #     return self._average(self._filter_observations_values_by_area_type(self.EMERGING))
+    #
+    # @property
+    # def median_emerging(self):
+    #     return self._median(self._filter_observations_values_by_area_type(self.EMERGING))
 
     @property
     def max(self):
@@ -61,7 +62,8 @@ class Statistics(object):
     def min(self):
         return min(self._observations_values()) if len(self._observations_values()) > 0 else 0
 
-    def _average(self, values):
+    @staticmethod
+    def _average(values):
         """
         Calculates the average of a set of values
 

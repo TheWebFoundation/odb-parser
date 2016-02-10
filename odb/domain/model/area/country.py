@@ -164,9 +164,7 @@ def create_country(name=None, short_name=None, area=None, income=None, uri=None,
         uri (str, optional): URI that identifies this unique resource, normally composed depending on deployment address
         iso3 (str, optional): ISO 3166-1 alpha-3 code for the country
         iso2 (str, optional): ISO 3166-1 alpha-2 code for the country
-        iso_num (str, optional): ISO 3166-1 number code for the country
         id (optional): Id code for the country
-        type (str, optional): Type of development for the country e.g.: Developing, Emerging
         search (str, optional): Search names separated by ';' with the name of the country in various languages
         info (list of AreaInfo): List of area info for this area
 
@@ -176,8 +174,8 @@ def create_country(name=None, short_name=None, area=None, income=None, uri=None,
     country_id = uuid.uuid4().hex[:24]
     if not info: info = []
     event = Country.Created(originator_id=country_id, originator_version=0, name=name, short_name=short_name, area=area,
-                            income=income, uri=uri, iso3=iso3, iso2=iso2, id=id, search=search,
-                            g20=g20, g7=g7, hdi_rank=hdi_rank, oecd=oecd, iodch=iodch, info=info)
+                            income=income, uri=uri, iso3=iso3, iso2=iso2, id=id, search=search, g20=g20, g7=g7,
+                            hdi_rank=hdi_rank, oecd=oecd, iodch=iodch, info=info, countries=None)
     country = when(event)
     publish(event)
     return country

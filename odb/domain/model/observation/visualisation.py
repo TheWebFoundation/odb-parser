@@ -43,9 +43,9 @@ class Visualisation(object):
         Returns:
             dict: Dictionary representation of self object
         """
-        dict = self.to_dict_without_all_areas()
-        dict['statistics_all_areas'] = self.statistics_all_areas.to_dict()
-        return dict
+        d = self.to_dict_without_all_areas()
+        d['statistics_all_areas'] = self.statistics_all_areas.to_dict()
+        return d
 
     def to_dict_without_all_areas(self):
         """

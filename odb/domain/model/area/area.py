@@ -52,12 +52,7 @@ class Area(Entity):
         self._id = event.id
         self._search = event.search
         self._info = event.info
-
-    # FIXME: Review repr
-    # def __repr__(self):
-    #     return "{d}Region(id={s._id}, type={s._type}, label={s._label}, " \
-    #            "countries=[0..{n}])".format(d="*Discarded* " if self._discarded else "",
-    #                                         s=self, n=len(self._countries))
+        self._countries = event.countries
 
     def to_dict(self):
         """
@@ -73,9 +68,9 @@ class Area(Entity):
         }
 
     def to_dict_without_info(self):
-        dict = self.to_dict()
-        del dict['info']
-        return dict
+        d = self.to_dict()
+        del d['info']
+        return d
 
     # =======================================================================================
     # Properties

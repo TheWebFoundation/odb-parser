@@ -40,10 +40,9 @@ class GroupedByAreaVisualisation(object):
         Returns:
             dict: Dictionary representation of self object
         """
-        dict = {
+        d = {
             'statistics_all_areas': self._statistics_all_areas.to_dict()
         }
         for area_code in self._area_codes:
-            dict[area_code] = \
-                Visualisation(observations=self.observation_by_area(area_code)).to_dict_without_all_areas()
-        return dict
+            d[area_code] = Visualisation(observations=self.observation_by_area(area_code)).to_dict_without_all_areas()
+        return d

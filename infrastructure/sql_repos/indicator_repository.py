@@ -294,7 +294,7 @@ if __name__ == "__main__":
 
     readiness = repo.find_indicator_by_code('readiness')
     indicators = repo.find_indicators_by_level('component', parent=readiness)
-    assert len(indicators) > 0 and len(indicators) < 10
+    assert 0 < len(indicators) < 10
     print(json.dumps([i.to_dict() for i in indicators]))
 
     print('OK!')

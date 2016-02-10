@@ -227,7 +227,7 @@ if __name__ == "__main__":
     sqlite_config = configparser.RawConfigParser()
     sqlite_config.set("CONNECTION", 'SQLITE_DB', '../../../odb2015.db')
     sqlite_config.read("sqlite_config.ini")
-    area_repo = AreaRepository(False, log, sqlite_config)
+    area_repo = AreaRepository(False, sqlite_config)
 
     config = configparser.RawConfigParser()
     config.read("../../../parser_config.ini")

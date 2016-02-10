@@ -51,7 +51,8 @@ class Parser(object):
         matching_sheets = [book.sheet_by_name(sheet_name) for sheet_name in matching_sheet_names]
         return matching_sheets
 
-    def _decorate_config_key(self, key, year):
+    @staticmethod
+    def _decorate_config_key(key, year):
         return "%s_%s" % (key, year)
 
     def _config_getint(self, section_name, key_name, year):

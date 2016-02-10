@@ -137,36 +137,6 @@ class ObservationParser(Parser):
 
         return None
 
-    def _find_subindex_value_column(self, sheet, subindex_name, year):
-        observation_name_row = self._config_getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_NAME_ROW", year)
-        observation_start_column = get_column_number(
-            self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_START_COLUMN", year))
-
-        for column_number in range(observation_start_column, sheet.ncols):
-            column = sheet.cell(observation_name_row, column_number).value
-            parsed_column = self._parse_subindex_value_column_name(column, year)
-            if parsed_column:
-                # It's a column value, check name matching with the indicator
-                if parsed_column.group('subindex').upper() == subindex_name.upper():
-                    return column_number
-
-        return None
-
-    def _find_component_value_column(self, sheet, component_name, year):
-        observation_name_row = self._config_getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_NAME_ROW", year)
-        observation_start_column = get_column_number(
-            self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_START_COLUMN", year))
-
-        for column_number in range(observation_start_column, sheet.ncols):
-            column = sheet.cell(observation_name_row, column_number).value
-            parsed_column = self._parse_component_value_column_name(column, year)
-            if parsed_column:
-                # It's a column value, check name matching with the indicator
-                if parsed_column.group('component').upper() == component_name.upper():
-                    return column_number
-
-        return None
-
     def _retrieve_subindex_observations(self, structure_obs_sheet, subindex_name, subindex_scaled_column, sheet_year):
         self._log.debug(
             "\t\tRetrieving subindex %s observations in sheet %s..." % (subindex_name, structure_obs_sheet.name))
@@ -392,8 +362,8 @@ if __name__ == "__main__":
     sqlite_config = configparser.RawConfigParser()
     sqlite_config.set("CONNECTION", 'SQLITE_DB', '../../../odb2015.db')
     sqlite_config.read("sqlite_config.ini")
-    indicator_repo = IndicatorRepository(False, log, sqlite_config)
-    area_repo = AreaRepository(False, log, sqlite_config)
+    indicator_repo = IndicatorRepository(False, sqlite_config)
+    area_repo = AreaRepository(False, sqlite_config)
 
     config = configparser.RawConfigParser()
     config.read("../../../parser_config.ini")
