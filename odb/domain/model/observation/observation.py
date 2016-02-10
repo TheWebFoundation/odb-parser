@@ -77,7 +77,6 @@ class Observation(Entity):
         self._tendency = event.tendency
         # self._republish = event.republish
         # self._area_type = event.area_type
-        self._scaled = event.scaled
         self._rank = event.rank
         self._rank_change = event.rank_change
         # self._ranking_type = event.ranking_type
@@ -108,7 +107,7 @@ class Observation(Entity):
         indicator_dict = self.indicator.to_dict() if self.indicator else None
         return {'indicator': indicator_dict, 'area': self.area.to_dict(), 'value': self.value,
                 'year': self.year, 'id': self.id, 'tendency': self.tendency, 'rank': self.rank,
-                'rank_change': self.rank_change, 'scaled': self.scaled}
+                'rank_change': self.rank_change}
 
     # =======================================================================================
     # Properties
@@ -193,15 +192,6 @@ class Observation(Entity):
     @value.setter
     def value(self, value):
         self._value = value
-        self.increment_version()
-
-    @property
-    def scaled(self):
-        return self._scaled
-
-    @scaled.setter
-    def scaled(self, scaled):
-        self._scaled = scaled
         self.increment_version()
 
     @property
@@ -352,7 +342,7 @@ class Observation(Entity):
 # Observation aggregate root factory
 # =======================================================================================
 def create_observation(indicator=None, area=None, value=None, year=1970, id=None, tendency=0, rank=None,
-                       rank_change=None, scaled=None):
+                       rank_change=None):
     """
     This function creates new observations and acts as a factory
 
@@ -382,7 +372,7 @@ def create_observation(indicator=None, area=None, value=None, year=1970, id=None
     obs_id = uuid.uuid4().hex[:24]
     event = Observation.Created(originator_id=obs_id, originator_version=0, indicator=indicator,
                                 area=area, value=value, year=year, id=id, tendency=tendency, rank=rank,
-                                rank_change=rank_change, scaled=scaled)
+                                rank_change=rank_change)
     obs = when(event)
     publish(event)
     return obs

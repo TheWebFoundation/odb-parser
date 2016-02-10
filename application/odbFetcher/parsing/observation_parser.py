@@ -40,8 +40,8 @@ class ObservationParser(Parser):
     def _get_structure_obs_sheets(self):
         self._log.info("\tGetting structure observation sheets...")
         data_file_name = self._config.get("STRUCTURE_OBSERVATIONS", "FILE_NAME")
-        scaled_obs_pattern = self._config.get("STRUCTURE_OBSERVATIONS", "SHEET_NAME_PATTERN")
-        structure_obs_sheets = self._get_sheets_by_pattern(data_file_name, scaled_obs_pattern)
+        structure_obs_pattern = self._config.get("STRUCTURE_OBSERVATIONS", "SHEET_NAME_PATTERN")
+        structure_obs_sheets = self._get_sheets_by_pattern(data_file_name, structure_obs_pattern)
         return structure_obs_sheets
 
     def _retrieve_raw_observations(self):
@@ -113,20 +113,12 @@ class ObservationParser(Parser):
         return re.match(self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_SCALED_COLUMN_PATTERN", year),
                         column_name, re.IGNORECASE)
 
-    def _parse_subindex_value_column_name(self, column_name, year):
-        return re.match(self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_VALUE_COLUMN_PATTERN", year),
-                        column_name, re.IGNORECASE)
-
     def _parse_subindex_column_rank(self, column_name, year):
         return re.match(self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_RANK_COLUMN_PATTERN", year),
                         column_name, re.IGNORECASE)
 
     def _parse_component_scaled_column_name(self, column_name, year):
         return re.match(self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_COMPONENT_SCALED_COLUMN_PATTERN", year),
-                        column_name, re.IGNORECASE)
-
-    def _parse_component_value_column_name(self, column_name, year):
-        return re.match(self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_COMPONENT_VALUE_COLUMN_PATTERN", year),
                         column_name, re.IGNORECASE)
 
     def _find_rank_column(self, sheet, subindex_name, year):
@@ -188,10 +180,6 @@ class ObservationParser(Parser):
             if not subindex_rank_column:
                 self._log.warn("No rank column found for SUBINDEX '%s' while parsing %s" % (
                     subindex_name, structure_obs_sheet.name))
-            subindex_value_column = self._find_subindex_value_column(structure_obs_sheet, subindex_name, sheet_year)
-            if not subindex_value_column:
-                self._log.warn("No value column found for SUBINDEX '%s' while parsing %s" % (
-                    subindex_name, structure_obs_sheet.name))
             indicator = self._indicator_repo.find_indicator_by_code(subindex_name, 'SUBINDEX')
             for row_number in range(observation_start_row, structure_obs_sheet.nrows):  # Per country
                 year = int(structure_obs_sheet.cell(row_number, year_column).value)
@@ -199,13 +187,11 @@ class ObservationParser(Parser):
 
                 try:
                     area = self._area_repo.find_by_iso3(iso3)
-                    scaled = structure_obs_sheet.cell(row_number, subindex_scaled_column).value
-                    value = structure_obs_sheet.cell(row_number,
-                                                     subindex_value_column).value if subindex_value_column else None
+                    value = structure_obs_sheet.cell(row_number, subindex_scaled_column).value
                     rank = structure_obs_sheet.cell(row_number,
                                                     subindex_rank_column).value if subindex_rank_column else None
-                    excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, scaled=scaled,
-                                                         year=year, rank=rank, value=value)
+                    excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, year=year,
+                                                         rank=rank, value=value)
                     if [t for t in self._excel_structure_observations if
                         t[0].year == year and t[1].iso3 == iso3 and t[2].indicator == indicator.indicator]:
                         self._log.warn("Ignoring duplicate observation for SUBINDEX %s while parsing %s [%s]" % (
@@ -237,11 +223,6 @@ class ObservationParser(Parser):
             key=lambda x: x[0].value if x[0].value is not None and na_to_none(x[0].value) is not None else 0)
 
         try:
-            component_value_column = self._find_component_value_column(structure_obs_sheet, component_name, sheet_year)
-            if not component_value_column:
-                self._log.warn("No value column found for COMPONENT '%s' while parsing %s" % (
-                    component_name, structure_obs_sheet.name))
-
             indicator = self._indicator_repo.find_indicator_by_code(component_name, 'COMPONENT')
             for row_number in range(observation_start_row, structure_obs_sheet.nrows):  # Per country
                 year = int(structure_obs_sheet.cell(row_number, year_column).value)
@@ -249,11 +230,9 @@ class ObservationParser(Parser):
 
                 try:
                     area = self._area_repo.find_by_iso3(iso3)
-                    scaled = structure_obs_sheet.cell(row_number, component_scaled_column).value
-                    value = structure_obs_sheet.cell(row_number,
-                                                     component_value_column).value if component_value_column else None
-                    excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, scaled=scaled,
-                                                         year=year, value=value)
+                    value = structure_obs_sheet.cell(row_number, component_scaled_column).value
+                    excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, year=year,
+                                                         value=value)
                     if [t for t in sorted_observations if
                         t[0].year == year and t[1].iso3 == iso3 and t[2].indicator == indicator.indicator]:
                         self._log.warn("Ignoring duplicate observation for COMPONENT %s while parsing %s [%s]" % (
@@ -271,8 +250,7 @@ class ObservationParser(Parser):
                     component_name, structure_obs_sheet.name, cellname(0, component_scaled_column)))
 
         # Rank them based on their scaled score
-        self._update_observation_ranking(sorted_observations, observation_getter=lambda x: x[0],
-                                         attribute_getter=attrgetter('scaled'))
+        self._update_observation_ranking(sorted_observations, observation_getter=lambda x: x[0])
         self._excel_structure_observations.extend(sorted_observations)
 
     def _retrieve_subindex_and_component_observations(self, structure_obs_sheet):
@@ -314,8 +292,6 @@ class ObservationParser(Parser):
 
         index_scaled_column = get_column_number(
             self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_INDEX_SCALED_COLUMN", sheet_year))
-        index_value_column = get_column_number(
-            self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_INDEX_VALUE_COLUMN", sheet_year))
         index_rank_column = get_column_number(
             self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_INDEX_RANK_COLUMN", sheet_year))
         index_rank_change_column = get_column_number(
@@ -335,12 +311,11 @@ class ObservationParser(Parser):
 
                 try:
                     area = self._area_repo.find_by_iso3(iso3)
-                    scaled = structure_obs_sheet.cell(row_number, index_scaled_column).value
-                    value = structure_obs_sheet.cell(row_number, index_value_column).value
+                    value = structure_obs_sheet.cell(row_number, index_scaled_column).value
                     rank = structure_obs_sheet.cell(row_number, index_rank_column).value
                     rank_change = structure_obs_sheet.cell(row_number, index_rank_change_column).value
-                    excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, scaled=scaled,
-                                                         year=year, rank=rank, value=value, rank_change=rank_change)
+                    excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, year=year,
+                                                         rank=rank, value=value, rank_change=rank_change)
                     self._excel_structure_observations.append((excel_observation, area, indicator))
                 except AreaRepositoryError:
                     self._log.error("No area with code %s for indicator %s while parsing %s" % (
@@ -351,7 +326,7 @@ class ObservationParser(Parser):
             self._log.error(pe)
 
     def _store_structure_observations(self):
-        self._log.info("\tStoring scaled observations...")
+        self._log.info("\tStoring structure observations...")
         self._store_excel_observation_array(self._excel_structure_observations)
 
     def _store_excel_observation_array(self, observation_tuple_list):

@@ -44,7 +44,6 @@ class ObservationRepository(Repository):
                     id INTEGER PRIMARY KEY,
                     tendency INTEGER,
                     value REAL,
-                    scaled REAL,
                     area TEXT,
                     rank INTEGER,
                     rank_change INTEGER,
