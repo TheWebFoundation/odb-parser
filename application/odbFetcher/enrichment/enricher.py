@@ -1,4 +1,3 @@
-import json
 from collections import defaultdict
 
 from odb.domain.model.area.area_info import AreaInfo
@@ -22,7 +21,6 @@ class Enricher(object):
     def run(self):
         self._log.info("Enriching areas")
         self._retrieve_world_bank_indicators()
-        # self._retrieve_itu_indicators()
         self._enrich()
 
     def _retrieve_world_bank_indicators(self):
@@ -55,37 +53,6 @@ class Enricher(object):
                     self._retrieved_data[area.iso3].append(area_info)
                 else:
                     self._log.warning("\t\t" + area.iso3 + " has no values")
-
-    def _retrieve_itu_indicators(self):
-        """
-        The data provided by the ITU is retrieved from two JSON files; one per indicator. Note that these documents
-        where previously obtained by parsing a PDF report, wich is available through the ITU_PROVIDER_URL value in
-        the config file. This data will be modeled by the auxiliary class IndicatorData for its posterior storage
-        in the database.
-        :return:
-        """
-        self._log.info("\tRetrieving data from ITU")
-        areas = self._area_repo.find_countries("iso3")
-        file_names = self._config.get("ENRICHMENT", "ITU_FILE_NAMES").split(", ")
-        provider_name = self._config.get("ENRICHMENT", "ITU_PROVIDER_NAME")
-        provider_url = self._config.get("ENRICHMENT", "ITU_PROVIDER_URL")
-        year = self._config.get("ENRICHMENT", "ITU_DATA_YEAR")
-        for file_name in file_names:
-            json_data = open(file_name)
-            data = json.load(json_data)
-            for area in areas:
-                found = False
-                for data_element in data:
-                    if area.name == data_element['country'].replace("_", " "):
-                        found = True
-                        for key in data_element:
-                            if key != "country" and data_element[key] != "-":
-                                area_info = AreaInfo(indicator_code=key, year=year, value=data_element[key],
-                                                     provider_name=provider_name, provider_url=provider_url)
-                                self._retrieved_data[area.iso3].append(area_info)
-                if not found:
-                    self._log.warning("\t\t" + area.iso3 + " not found in " + file_name)
-            json_data.close()
 
     def _enrich(self):
         self._log.info("\tUpdating areas")

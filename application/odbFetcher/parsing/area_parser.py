@@ -76,7 +76,7 @@ class AreaParser(Parser):
                 iso3 = area_info_sheet.cell(row_number, iso3_column).value
                 year = area_info_sheet.cell(row_number, year_column).value
                 # FIXME: How to format properly? and do we need to add long name?
-                indicator_code = area_info_sheet.cell(area_info_name_row, cluster_column).value
+                indicator_code = "CLUSTER"  # area_info_sheet.cell(area_info_name_row, cluster_column).value
                 # FIXME: Need to sanitize?
                 value = str_to_none(area_info_sheet.cell(row_number, cluster_column).value)
 
