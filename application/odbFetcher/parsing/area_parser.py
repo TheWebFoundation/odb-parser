@@ -1,4 +1,5 @@
 import re
+from urllib.parse import urljoin
 
 from application.odbFetcher.parsing.excel_model.excel_area import ExcelArea
 from application.odbFetcher.parsing.excel_model.excel_area_info import ExcelAreaInfo
@@ -206,11 +207,13 @@ class AreaParser(Parser):
     def _store_regions(self):
         for excel_region in self._excel_regions:
             region = excel_region_to_dom(excel_region)
+            region.uri = urljoin(self._config.get("OTHERS", "HOST"), "areas/%s" % (region.iso3,))
             self._area_repo.insert_region(region, commit=False)
 
     def _store_countries(self):
         for excel_country in self._excel_countries:
             country = excel_country_to_dom(excel_country)
+            country.uri = urljoin(self._config.get("OTHERS", "HOST"), "areas/%s" % (country.iso3,))
             self._area_repo.insert_country(country, commit=False)
 
 

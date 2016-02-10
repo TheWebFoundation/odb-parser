@@ -1,3 +1,5 @@
+from urllib.parse import urljoin
+
 from application.odbFetcher.parsing.excel_model.excel_indicator import ExcelIndicator
 from application.odbFetcher.parsing.parser import Parser
 from application.odbFetcher.parsing.utils import *
@@ -136,5 +138,6 @@ class IndicatorParser(Parser):
         self._indicator_repo.begin_transaction()
         for excel_indicator in self._excel_indicators:
             indicator = excel_indicator_to_dom(excel_indicator)
+            indicator.uri = urljoin(self._config.get("OTHERS", "HOST"), indicator.indicator)
             self._indicator_repo.insert_indicator(indicator, commit=False)
         self._indicator_repo.commit_transaction()

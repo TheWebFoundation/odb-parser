@@ -126,8 +126,8 @@ class Region(Area):
 # =======================================================================================
 # Region aggregate root factory
 # =======================================================================================
-def create_region(name=None, short_name=None, area=None, countries=None,
-                  uri=None, iso3=None, iso2=None, iso_num=None, id=None, search=None, info=None):
+def create_region(name=None, short_name=None, area=None, countries=None, uri=None, iso3=None, iso2=None, id=None,
+                  search=None, info=None):
     """
     This function creates new regions and acts as a factory
 
@@ -147,10 +147,8 @@ def create_region(name=None, short_name=None, area=None, countries=None,
     region_id = uuid.uuid4().hex[:24]
     if countries is None: countries = []
     if info is None: info = []
-    event = Region.Created(originator_id=region_id, originator_version=0,
-                           name=name, short_name=short_name, area=area,
-                           countries=countries, uri=uri, iso3=iso3, iso2=iso2,
-                           iso_num=iso_num, id=id, search=search, info=info)
+    event = Region.Created(originator_id=region_id, originator_version=0, name=name, short_name=short_name, area=area,
+                           countries=countries, uri=uri, iso3=iso3, iso2=iso2, id=id, search=search, info=info)
     region = when(event)
     publish(event)
     return region

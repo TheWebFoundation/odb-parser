@@ -36,13 +36,13 @@ class AreaRepository(Repository):
                     iso2 TEXT COLLATE NOCASE,
                     iso3 TEXT COLLATE NOCASE,
                     short_name TEXT,
-                    iso_num INTEGER,
                     income TEXT,
                     hdi_rank INTEGER,
                     g20 BOOLEAN,
                     g7 BOOLEAN,
                     iodch BOOLEAN,
-                    oecd BOOLEAN
+                    oecd BOOLEAN,
+                    uri TEXT
                 );
                 """
             db.execute(sql)
@@ -149,7 +149,6 @@ class AreaRepository(Repository):
         area = dict(r)
         self.set_area_info(area)
         self.set_region_countries(area)
-        self.area_uri(area)
 
         return AreaRowAdapter().dict_to_area(area)
 
@@ -181,7 +180,6 @@ class AreaRepository(Repository):
         for country in [dict(r) for r in rows]:
             self.set_region_countries(country)
             self.set_area_info(country)
-            self.area_uri(country)
             country_list.append(country)
 
         return CountryRowAdapter().transform_to_country_list(country_list)
@@ -257,8 +255,6 @@ class AreaRepository(Repository):
             self.set_region_countries(region)
             self.set_area_info(region)
 
-            # FIXME: Review
-            # self.area_uri(continent)
             regions.append(region)
 
         return RegionRowAdapter().transform_to_region_list(regions)
@@ -279,8 +275,6 @@ class AreaRepository(Repository):
         country_list = []
 
         for country in [dict(r) for r in rows]:
-            # FIXME: review
-            # self.area_uri(country)
             self.set_area_info(country)
             country_list.append(country)
 
@@ -316,49 +310,11 @@ class AreaRepository(Repository):
         country_list = []
 
         for country in [dict(r) for r in rows]:
-            # FIXME: review
-            self.area_uri(country)
             self.set_area_info(country)
             country_list.append(country)
 
         if country_list:
             region["countries"] = country_list
-
-
-        # def area_uri(self, area):
-        #     """
-        #     Sets the URI to the given area
-        #
-        #     Args:
-        #         area (Area): Area to set the URI
-        #     """
-        #     field = "iso3" if area["iso3"] is not None else "name"
-        #     uri(url_root=self._url_root, element=area, element_code=field,
-        #         level="areas")
-
-        # def enrich_country(self, iso3, indicator_list):
-        #     """
-        #     Enriches country data with indicator info
-        #
-        #     Note:
-        #         The input indicator_list must contain the following attributes: indicator_code, year, value,
-        #         provider_name and provider_value
-        #     Args:
-        #         iso3 (str): Iso3 of the country for which data is going to be appended.
-        #         indicator_list (list of Indicator): Indicator list with the attributes in the note.
-        #     """
-        #     info_dict = {}
-        #     for indicator in indicator_list:
-        #         info_dict[indicator.indicator_code] = {
-        #             "year": indicator.year,
-        #             "value": indicator.value,
-        #             "provider": {
-        #                 "name": indicator.provider_name,
-        #                 "url": indicator.provider_url
-        #             }
-        #         }
-        #
-        #     self._db["areas"].update({"iso3": iso3}, {"$set": {"info": info_dict}})
 
     def get_areas_info(self):
         all_countries = self.find_countries()
@@ -416,16 +372,15 @@ class RegionRowAdapter(object):
 
         """
         data = {key: value for key, value in region_dict.items() if
-                key in ['name', 'short_name', 'area', 'iso3', 'iso2', 'iso_num', 'id', 'search', 'uri']}
+                key in ['name', 'short_name', 'area', 'iso3', 'iso2', 'id', 'search', 'uri']}
         data['countries'] = CountryRowAdapter.transform_to_country_list(region_dict['countries'])
         data['info'] = AreaInfoRowAdapter.transform_to_info_list(region_dict['info'])
         return create_region(**data)
 
     @staticmethod
     def region_to_dict(region):
-        # FIXME: Review fields
         data = dict((key, value) for key, value in list(region.to_dict().items()) if
-                    key not in ['countries', 'info', 'search', 'uri', 'iso_num'])
+                    key not in ['countries', 'info', 'search'])
         return data
 
     @staticmethod
@@ -454,7 +409,7 @@ class CountryRowAdapter(object):
     @staticmethod
     def country_to_dict(country):
         data = dict((key, value) for key, value in list(country.to_dict().items()) if
-                    key not in ('countries', 'info', 'search', 'uri', 'iso_num'))
+                    key not in ('countries', 'info', 'search'))
         return data
 
     @staticmethod

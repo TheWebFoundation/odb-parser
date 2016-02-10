@@ -49,7 +49,6 @@ class Area(Entity):
         self._uri = event.uri
         self._iso3 = event.iso3
         self._iso2 = event.iso2
-        self._iso_num = event.iso_num
         self._id = event.id
         self._search = event.search
         self._info = event.info
@@ -68,9 +67,8 @@ class Area(Entity):
             dict: Dictionary representation of self object
         """
         return {
-            'name': self.name, 'short_name': self.short_name, 'area': self.area,
-            'uri': self.uri, 'iso3': self.iso3, 'iso2': self.iso2,
-            'iso_num': self.iso_num, 'id': self.id, "search": self.search,
+            'name': self.name, 'short_name': self.short_name, 'area': self.area, 'uri': self.uri, 'iso3': self.iso3,
+            'iso2': self.iso2, 'id': self.id, "search": self.search,
             'info': {area_info.indicator_code: area_info.to_dict() for area_info in self.info}
         }
 
@@ -143,15 +141,6 @@ class Area(Entity):
     @iso2.setter
     def iso2(self, iso2):
         self._iso2 = iso2
-        self.increment_version()
-
-    @property
-    def iso_num(self):
-        return self._iso_num
-
-    @iso_num.setter
-    def iso_num(self, iso_num):
-        self._iso_num = iso_num
         self.increment_version()
 
     @property
@@ -273,9 +262,6 @@ class Repository(object, metaclass=ABCMeta):
         pass
 
     def set_region_countries(self, area):
-        pass
-
-    def area_uri(self, area):
         pass
 
     def upsert_area_info(self, area, area_info, commit=True):

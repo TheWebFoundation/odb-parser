@@ -1,5 +1,6 @@
 import re
 from operator import attrgetter
+from urllib.parse import urljoin
 
 from sortedcontainers import SortedListWithKey
 from xlrd import cellname
@@ -335,6 +336,8 @@ class ObservationParser(Parser):
             area = excel_observation_tuple[1]
             indicator = excel_observation_tuple[2]
             observation = excel_observation_to_dom(excel_observation_tuple[0], area, indicator)
+            observation.uri = urljoin(self._config.get("OTHERS", "HOST"), "observations/%s/%s/%s" % (
+                indicator.indicator, area.iso3, observation.year.value))
             self._observation_repo.insert_observation(observation, commit=False)
         self._observation_repo.commit_transaction()
 

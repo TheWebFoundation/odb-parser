@@ -49,6 +49,7 @@ class ObservationRepository(Repository):
                     rank_change INTEGER,
                     year INTEGER,
                     indicator TEXT,
+                    uri TEXT,
                     CONSTRAINT observation_indicator_area_year_uniq UNIQUE (indicator, area, year)
                 );
                 '''
