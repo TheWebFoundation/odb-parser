@@ -47,13 +47,17 @@ class ObservationParser(Parser):
     def _retrieve_raw_observations(self):
         self._log.info("\tRetrieving raw observations...")
         raw_obs_sheets = self._get_raw_obs_sheets()
-        year_column = get_column_number(self._config.get("RAW_OBSERVATIONS", "OBSERVATION_YEAR_COLUMN"))
-        iso3_column = get_column_number(self._config.get("RAW_OBSERVATIONS", "OBSERVATION_ISO3_COLUMN"))
-        observation_name_row = self._config.getint("RAW_OBSERVATIONS", "OBSERVATION_NAME_ROW")
-        observation_start_row = self._config.getint("RAW_OBSERVATIONS", "OBSERVATION_START_ROW")
-        observation_start_column = get_column_number(self._config.get("RAW_OBSERVATIONS", "OBSERVATION_START_COLUMN"))
 
         for raw_obs_sheet in raw_obs_sheets:  # Per year
+            sheet_year = re.match(self._config.get("RAW_OBSERVATIONS", "SHEET_NAME_PATTERN"),
+                                  raw_obs_sheet.name).group("year")
+
+            year_column = get_column_number(self._config_get("RAW_OBSERVATIONS", "OBSERVATION_YEAR_COLUMN", sheet_year))
+            iso3_column = get_column_number(self._config_get("RAW_OBSERVATIONS", "OBSERVATION_ISO3_COLUMN", sheet_year))
+            observation_name_row = self._config_getint("RAW_OBSERVATIONS", "OBSERVATION_NAME_ROW", sheet_year)
+            observation_start_row = self._config_getint("RAW_OBSERVATIONS", "OBSERVATION_START_ROW", sheet_year)
+            observation_start_column = get_column_number(
+                self._config_get("RAW_OBSERVATIONS", "OBSERVATION_START_COLUMN", sheet_year))
             for column_number in range(observation_start_column, raw_obs_sheet.ncols):  # Per indicator
                 # Maintain sorted list with elements sorted by value
                 # Elements are tuples of the form (ExcelObservation, Area, Indicator)
@@ -67,7 +71,6 @@ class ObservationParser(Parser):
                                     indicator_code_retrieved, raw_obs_sheet.name)
                 indicator_code = indicator_code_retrieved.split()[0]
 
-                indicator = None
                 try:
                     indicator = self._indicator_repo.find_indicator_by_code(indicator_code)
                 except IndicatorRepositoryError:
@@ -102,38 +105,38 @@ class ObservationParser(Parser):
             self._retrieve_index_observations(structure_obs_sheet)
             self._retrieve_subindex_and_component_observations(structure_obs_sheet)
 
-    def _parse_index_scaled_column_name(self, column_name):
-        return re.match(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_INDEX_SCALED_COLUMN_PATTERN"),
+    def _parse_index_scaled_column_name(self, column_name, year):
+        return re.match(self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_INDEX_SCALED_COLUMN_PATTERN", year),
                         column_name, re.IGNORECASE)
 
-    def _parse_subindex_scaled_column_name(self, column_name):
-        return re.match(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_SCALED_COLUMN_PATTERN"),
+    def _parse_subindex_scaled_column_name(self, column_name, year):
+        return re.match(self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_SCALED_COLUMN_PATTERN", year),
                         column_name, re.IGNORECASE)
 
-    def _parse_subindex_value_column_name(self, column_name):
-        return re.match(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_VALUE_COLUMN_PATTERN"),
+    def _parse_subindex_value_column_name(self, column_name, year):
+        return re.match(self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_VALUE_COLUMN_PATTERN", year),
                         column_name, re.IGNORECASE)
 
-    def _parse_subindex_column_rank(self, column_name):
-        return re.match(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_RANK_COLUMN_PATTERN"),
+    def _parse_subindex_column_rank(self, column_name, year):
+        return re.match(self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_RANK_COLUMN_PATTERN", year),
                         column_name, re.IGNORECASE)
 
-    def _parse_component_scaled_column_name(self, column_name):
-        return re.match(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_COMPONENT_SCALED_COLUMN_PATTERN"),
+    def _parse_component_scaled_column_name(self, column_name, year):
+        return re.match(self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_COMPONENT_SCALED_COLUMN_PATTERN", year),
                         column_name, re.IGNORECASE)
 
-    def _parse_component_value_column_name(self, column_name):
-        return re.match(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_COMPONENT_VALUE_COLUMN_PATTERN"),
+    def _parse_component_value_column_name(self, column_name, year):
+        return re.match(self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_COMPONENT_VALUE_COLUMN_PATTERN", year),
                         column_name, re.IGNORECASE)
 
-    def _find_rank_column(self, sheet, subindex_name):
-        observation_name_row = self._config.getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_NAME_ROW")
+    def _find_rank_column(self, sheet, subindex_name, year):
+        observation_name_row = self._config_getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_NAME_ROW", year)
         observation_start_column = get_column_number(
-            self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_START_COLUMN"))
+            self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_START_COLUMN", year))
 
         for column_number in range(observation_start_column, sheet.ncols):
             column = sheet.cell(observation_name_row, column_number).value
-            parsed_column = self._parse_subindex_column_rank(column)
+            parsed_column = self._parse_subindex_column_rank(column, year)
             if parsed_column:
                 # It's a rank, check matching with the indicator
                 if parsed_column.group('subindex').upper() == subindex_name.upper():
@@ -141,14 +144,14 @@ class ObservationParser(Parser):
 
         return None
 
-    def _find_subindex_value_column(self, sheet, subindex_name):
-        observation_name_row = self._config.getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_NAME_ROW")
+    def _find_subindex_value_column(self, sheet, subindex_name, year):
+        observation_name_row = self._config_getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_NAME_ROW", year)
         observation_start_column = get_column_number(
-            self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_START_COLUMN"))
+            self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_START_COLUMN", year))
 
         for column_number in range(observation_start_column, sheet.ncols):
             column = sheet.cell(observation_name_row, column_number).value
-            parsed_column = self._parse_subindex_value_column_name(column)
+            parsed_column = self._parse_subindex_value_column_name(column, year)
             if parsed_column:
                 # It's a column value, check name matching with the indicator
                 if parsed_column.group('subindex').upper() == subindex_name.upper():
@@ -156,14 +159,14 @@ class ObservationParser(Parser):
 
         return None
 
-    def _find_component_value_column(self, sheet, component_name):
-        observation_name_row = self._config.getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_NAME_ROW")
+    def _find_component_value_column(self, sheet, component_name, year):
+        observation_name_row = self._config_getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_NAME_ROW", year)
         observation_start_column = get_column_number(
-            self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_START_COLUMN"))
+            self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_START_COLUMN", year))
 
         for column_number in range(observation_start_column, sheet.ncols):
             column = sheet.cell(observation_name_row, column_number).value
-            parsed_column = self._parse_component_value_column_name(column)
+            parsed_column = self._parse_component_value_column_name(column, year)
             if parsed_column:
                 # It's a column value, check name matching with the indicator
                 if parsed_column.group('component').upper() == component_name.upper():
@@ -171,19 +174,21 @@ class ObservationParser(Parser):
 
         return None
 
-    def _retrieve_subindex_observations(self, structure_obs_sheet, subindex_name, subindex_scaled_column):
+    def _retrieve_subindex_observations(self, structure_obs_sheet, subindex_name, subindex_scaled_column, sheet_year):
         self._log.debug(
             "\t\tRetrieving subindex %s observations in sheet %s..." % (subindex_name, structure_obs_sheet.name))
-        year_column = get_column_number(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_YEAR_COLUMN"))
-        iso3_column = get_column_number(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_ISO3_COLUMN"))
-        observation_start_row = self._config.getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_START_ROW")
+        year_column = get_column_number(
+            self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_YEAR_COLUMN", sheet_year))
+        iso3_column = get_column_number(
+            self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_ISO3_COLUMN", sheet_year))
+        observation_start_row = self._config_getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_START_ROW", sheet_year)
 
         try:
-            subindex_rank_column = self._find_rank_column(structure_obs_sheet, subindex_name)
+            subindex_rank_column = self._find_rank_column(structure_obs_sheet, subindex_name, sheet_year)
             if not subindex_rank_column:
                 self._log.warn("No rank column found for SUBINDEX '%s' while parsing %s" % (
                     subindex_name, structure_obs_sheet.name))
-            subindex_value_column = self._find_subindex_value_column(structure_obs_sheet, subindex_name)
+            subindex_value_column = self._find_subindex_value_column(structure_obs_sheet, subindex_name, sheet_year)
             if not subindex_value_column:
                 self._log.warn("No value column found for SUBINDEX '%s' while parsing %s" % (
                     subindex_name, structure_obs_sheet.name))
@@ -217,19 +222,22 @@ class ObservationParser(Parser):
                 "No SUBINDEX '%s' indicator found while parsing %s [%s]" % (
                     subindex_name, structure_obs_sheet.name, cellname(0, subindex_scaled_column)))
 
-    def _retrieve_component_observations(self, structure_obs_sheet, component_name, component_scaled_column):
+    def _retrieve_component_observations(self, structure_obs_sheet, component_name, component_scaled_column,
+                                         sheet_year):
         self._log.debug(
             "\t\tRetrieving component %s observations in sheet %s..." % (component_name, structure_obs_sheet.name))
-        year_column = get_column_number(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_YEAR_COLUMN"))
-        iso3_column = get_column_number(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_ISO3_COLUMN"))
-        observation_start_row = self._config.getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_START_ROW")
+        year_column = get_column_number(
+            self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_YEAR_COLUMN", sheet_year))
+        iso3_column = get_column_number(
+            self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_ISO3_COLUMN", sheet_year))
+        observation_start_row = self._config_getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_START_ROW", sheet_year)
 
         # Set up sorted list to simplify ranking (components are not ranked in the spreadsheet)
         sorted_observations = SortedListWithKey(
             key=lambda x: x[0].value if x[0].value is not None and na_to_none(x[0].value) is not None else 0)
 
         try:
-            component_value_column = self._find_component_value_column(structure_obs_sheet, component_name)
+            component_value_column = self._find_component_value_column(structure_obs_sheet, component_name, sheet_year)
             if not component_value_column:
                 self._log.warn("No value column found for COMPONENT '%s' while parsing %s" % (
                     component_name, structure_obs_sheet.name))
@@ -269,23 +277,25 @@ class ObservationParser(Parser):
 
     def _retrieve_subindex_and_component_observations(self, structure_obs_sheet):
         self._log.info("\t\tRetrieving subindex and component observations...")
-        observation_name_row = self._config.getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_NAME_ROW")
+        sheet_year = re.match(self._config.get("STRUCTURE_OBSERVATIONS", "SHEET_NAME_PATTERN"),
+                              structure_obs_sheet.name).group("year")
+        observation_name_row = self._config_getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_NAME_ROW", sheet_year)
         observation_start_column = get_column_number(
-            self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_START_COLUMN"))
+            self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_SUBINDEX_START_COLUMN", sheet_year))
 
         for column_number in range(observation_start_column, structure_obs_sheet.ncols):  # Per indicator
             column_name = structure_obs_sheet.cell(observation_name_row, column_number).value
-            parsed_column = self._parse_subindex_scaled_column_name(column_name)
+            parsed_column = self._parse_subindex_scaled_column_name(column_name, sheet_year)
             if parsed_column:
                 # Retrieve a subindex
                 self._retrieve_subindex_observations(structure_obs_sheet, parsed_column.group('subindex'),
-                                                     column_number)
+                                                     column_number, sheet_year)
             else:
-                parsed_column = self._parse_component_scaled_column_name(column_name)
+                parsed_column = self._parse_component_scaled_column_name(column_name, sheet_year)
                 if parsed_column:
                     # Retrieve a component
                     self._retrieve_component_observations(structure_obs_sheet, parsed_column.group('component'),
-                                                          column_number)
+                                                          column_number, sheet_year)
                 else:
                     self._log.debug(
                         'Ignoring column %s while parsing %s (did not detect subindex or component scaled data)' % (
@@ -293,23 +303,27 @@ class ObservationParser(Parser):
 
     def _retrieve_index_observations(self, structure_obs_sheet):
         self._log.info("\t\tRetrieving index observations...")
-        year_column = get_column_number(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_YEAR_COLUMN"))
-        iso3_column = get_column_number(self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_ISO3_COLUMN"))
-        observation_name_row = self._config.getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_NAME_ROW")
-        observation_start_row = self._config.getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_START_ROW")
+        sheet_year = re.match(self._config.get("STRUCTURE_OBSERVATIONS", "SHEET_NAME_PATTERN"),
+                              structure_obs_sheet.name).group("year")
+        year_column = get_column_number(
+            self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_YEAR_COLUMN", sheet_year))
+        iso3_column = get_column_number(
+            self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_ISO3_COLUMN", sheet_year))
+        observation_name_row = self._config_getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_NAME_ROW", sheet_year)
+        observation_start_row = self._config_getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_START_ROW", sheet_year)
 
         index_scaled_column = get_column_number(
-            self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_INDEX_SCALED_COLUMN"))
+            self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_INDEX_SCALED_COLUMN", sheet_year))
         index_value_column = get_column_number(
-            self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_INDEX_VALUE_COLUMN"))
+            self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_INDEX_VALUE_COLUMN", sheet_year))
         index_rank_column = get_column_number(
-            self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_INDEX_RANK_COLUMN"))
+            self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_INDEX_RANK_COLUMN", sheet_year))
         index_rank_change_column = get_column_number(
-            self._config.get("STRUCTURE_OBSERVATIONS", "OBSERVATION_INDEX_RANK_CHANGE_COLUMN"))
+            self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_INDEX_RANK_CHANGE_COLUMN", sheet_year))
 
         try:
             column_name = structure_obs_sheet.cell(observation_name_row, index_scaled_column).value
-            parsed_column = self._parse_index_scaled_column_name(column_name)
+            parsed_column = self._parse_index_scaled_column_name(column_name, sheet_year)
             # Sanity check useful if there could be more than one INDEX, otherwise this check could be relaxed
             if not parsed_column:
                 raise ParserError("Column name '%s' does not match INDEX pattern while parsing %s" % (
