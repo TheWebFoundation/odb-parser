@@ -13,14 +13,13 @@ class AreaRepository(Repository):
     Concrete sqlite repository for Areas.
     """
 
-    def __init__(self, recreate_db, config, url_root=""):
+    def __init__(self, recreate_db, config):
         """
         Constructor for AreaRepository
 
         Args:
         """
         self._config = config
-        self._url_root = url_root
         self._db = self._initialize_db(recreate_db)
 
     def _initialize_db(self, recreate_db):
@@ -474,28 +473,6 @@ class AreaInfoRowAdapter(object):
     def transform_to_info_list(info_dict_list):
         return [AreaInfoRowAdapter.dict_to_info(info_dict) for info_dict in info_dict_list]
 
-
-# class AreaInfoDocumentAdapter(object):
-# """
-#     Adapter class to transform area info from PyMongo format to Domain area info objects
-#     """
-#
-#     def transform_to_area_info_list(self, area_info_document_dict):
-#         """
-#         Transforms a dict with area infos
-#
-#         Args:
-#             area_info_document_dict (dict): Area info document dict in PyMongo format
-#
-#         Returns:
-#             A list of area infos
-#         """
-#         return [AreaInfo(indicator_code=area_info_key,
-#                          provider_name=area_info_document_dict[area_info_key]['provider']['name'],
-#                          provider_url=area_info_document_dict[area_info_key]['provider']['url'],
-#                          value=area_info_document_dict[area_info_key]['value'],
-#                          year=area_info_document_dict[area_info_key]['year'])
-#                 for area_info_key in area_info_document_dict.keys()]
 
 if __name__ == "__main__":
     import configparser

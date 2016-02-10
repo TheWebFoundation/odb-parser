@@ -9,14 +9,13 @@ class IndicatorRepository(Repository):
     Concrete sqlite repository for Indicators.
     """
 
-    def __init__(self, recreate_db, config, url_root=""):
+    def __init__(self, recreate_db, config):
         """
         Constructor for IndicatorRepository
 
         Args:
         """
         self._config = config
-        self._url_root = url_root
         self._db = self._initialize_db(recreate_db)
 
     def _initialize_db(self, recreate_db):
@@ -60,9 +59,7 @@ class IndicatorRepository(Repository):
         self._db.commit()
 
     # FIXME: Why the extra parameters?
-    def insert_indicator(self, indicator, indicator_uri=None, component_name=None, subindex_name=None, index_name=None,
-                         weight=None, source_name=None, provider_name=None, provider_url=None, is_percentage=None,
-                         scale=None, tags=None, commit=True):
+    def insert_indicator(self, indicator, commit=True):
         data = IndicatorRowAdapter().indicator_to_dict(indicator)
         query = create_insert_query('indicator', data)
         self._db.execute(query, data)

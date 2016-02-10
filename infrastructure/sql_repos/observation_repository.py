@@ -16,7 +16,7 @@ class ObservationRepository(Repository):
     Concrete mongodb repository for Observations.
     """
 
-    def __init__(self, recreate_db, area_repo, indicator_repo, config, url_root=""):
+    def __init__(self, recreate_db, area_repo, indicator_repo, config):
         """
         Constructor for ObservationRepository
 
@@ -24,12 +24,10 @@ class ObservationRepository(Repository):
             recreate_db (bool): Indicates if the database should be dropped on start
             area_repo (AreaRepository): Area repository
             indicator_repo (IndicatorRepository): Indicator repository
-            url_root (str): URL root where service is deployed, it will be used to compose URIs on areas
         """
 
         self._config = config
         self._db = self._initialize_db(recreate_db)
-        self._url_root = url_root
         # Maybe the repos could be used in a higher level context to set areas and indicators of observations
         self._area_repo = area_repo
         self._indicator_repo = indicator_repo
@@ -207,7 +205,7 @@ class ObservationRepository(Repository):
         observations = self.find_observations(indicator_code=indicator_code, area_code=area_code, year=year)
         observations_all_areas = self.find_observations(indicator_code=indicator_code, area_code='ALL', year=year)
         if area_code_splitted is None or len(area_code_splitted) == 0 or area_code == 'ALL':
-            areas = AreaRepository(url_root=self._url_root).find_countries(order="iso3")
+            areas = self._area_repo.find_countries(order="iso3")
             area_code_splitted = [area.iso3 for area in areas]
 
         return GroupedByAreaVisualisationDocumentAdapter().transform_to_grouped_by_area_visualisation(

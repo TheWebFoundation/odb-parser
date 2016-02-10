@@ -33,7 +33,7 @@ def run():
     config = configparser.ConfigParser()
     config.read("parser_config.ini")
     parse(log, config, area_repo, indicator_repo, observation_repo)
-    # rank(log, config)
+    # Uncomment if need enriched data
     # enrich(log, config, area_repo)
     log.info('Done')
 
@@ -46,11 +46,6 @@ def parse(log, config, area_repo, indicator_repo, observation_repo):
 
 def enrich(log, config, area_repo):
     Enricher(log, config, area_repo).run()
-
-
-# def rank(log, config):
-#     Ranker(log, config).run()
-
 
 if __name__ == "__main__":
     run()

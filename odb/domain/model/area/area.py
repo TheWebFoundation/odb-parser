@@ -266,3 +266,9 @@ class Repository(object, metaclass=ABCMeta):
 
     def upsert_area_info(self, area, area_info, commit=True):
         pass
+
+    def insert_region(self, region):
+        pass
+
+    def insert_country(self, country):
+        pass
