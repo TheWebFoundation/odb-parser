@@ -30,7 +30,7 @@ def run():
     observation_repo = ObservationRepository(True, area_repo, indicator_repo, sqlite_config)
 
     config = configparser.RawConfigParser()
-    config.read("parse_config.ini")
+    config.read("parser_config.ini")
     parse(log, config, area_repo, indicator_repo, observation_repo)
     # rank(log, config)
     # enrich(log, config)

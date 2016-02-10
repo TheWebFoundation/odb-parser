@@ -396,7 +396,7 @@ if __name__ == "__main__":
     area_repo = AreaRepository(False, log, sqlite_config)
 
     config = configparser.RawConfigParser()
-    config.read("../../../parse_config.ini")
+    config.read("../../../parser_config.ini")
     config.set("DATA_ACCESS", "FILE_NAME", "../../../20160128_data.xlsx")
     parser = ObservationParser(log, config, observation_repo=obs_repo, indicator_repo=indicator_repo,
                                area_repo=area_repo)
