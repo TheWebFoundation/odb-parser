@@ -40,13 +40,6 @@ class Country(Area):
         self._iodch = event.iodch
         self._oecd = event.oecd
 
-    # FIXME: Bad repr
-    # def __repr__(self):
-    #     return "{d}Country(id={id!r}, region_id={c._region.id!r}, " \
-    #            "iso2_code={c._iso2_code}, iso3_code={c._iso3_code}, label={c._label!r})". \
-    #         format(d="Discarded" if self.discarded else "", id=self._id, c=self,
-    #                type=self._type)
-
     def to_dict(self):
         """
         Converts self object to dictionary

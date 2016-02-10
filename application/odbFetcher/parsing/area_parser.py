@@ -1,45 +1,12 @@
 import re
+from json import load
 from urllib.parse import urljoin
 
 from application.odbFetcher.parsing.excel_model.excel_area import ExcelArea
 from application.odbFetcher.parsing.excel_model.excel_area_info import ExcelAreaInfo
 from application.odbFetcher.parsing.parser import Parser
-from application.odbFetcher.parsing.utils import excel_region_to_dom, excel_country_to_dom, str_to_none, \
-    is_not_empty, get_column_number, excel_area_info_to_dom
-
-# FIXME: move to configuration
-# If handcrafted iso codes then we need a matching function between names and codes (or include everything in the sheet)
-# Otherwise we could just auto-increment
-FAKE_ISO = {
-    'latin america & caribbean': {
-        'iso2': ':L',
-        'iso3': ':LA'
-    },
-    'east asia & pacific': {
-        'iso2': ':P',
-        'iso3': ':PA'
-    },
-    'europe & central asia': {
-        'iso2': ':E',
-        'iso3': ':EU'
-    },
-    'middle east & north africa': {
-        'iso2': ':M',
-        'iso3': ':ME'
-    },
-    'south asia': {
-        'iso2': ':S',
-        'iso3': ':SA'
-    },
-    'sub-saharan africa': {
-        'iso2': ':A',
-        'iso3': ':AF'
-    },
-    'north america': {
-        'iso2': ':N',
-        'iso3': ':NA'
-    }
-}
+from application.odbFetcher.parsing.utils import excel_region_to_dom, excel_country_to_dom, str_to_none, is_not_empty, \
+    get_column_number, excel_area_info_to_dom
 
 
 class AreaParser(Parser):
@@ -52,6 +19,8 @@ class AreaParser(Parser):
         self._excel_countries = None
         self._excel_regions = None
         self._excel_area_infos = {}  # Will hold a dict indexed by country iso3 with area infos
+        with open("fake_iso_codes.json") as json_file:
+            self._fake_iso_codes = load(json_file)
 
     def run(self):
         self._log.info("Running area parser")
@@ -135,12 +104,12 @@ class AreaParser(Parser):
         self._excel_regions = self._retrieve_regions(area_sheet)
         self._excel_countries = self._retrieve_countries(area_sheet, self._excel_regions)
 
-    def _build_fake_iso_code(self, region_name):
-        if region_name.lower() not in FAKE_ISO:
+    def _get_fake_iso_code(self, region_name):
+        if region_name.lower() not in self._fake_iso_codes:
             self._log.error("\t%s doesn't have a corresponding ISO", region_name)
             return None
 
-        return FAKE_ISO[region_name.lower()]
+        return self._fake_iso_codes[region_name.lower()]
 
     def _retrieve_regions(self, area_sheet):
         self._log.info("\tRetrieving regions...")
@@ -151,7 +120,7 @@ class AreaParser(Parser):
         start_row = self._config.getint("AREA_ACCESS", "AREA_START_ROW")
         for row_number in range(start_row, area_sheet.nrows):
             region = area_sheet.cell(row_number, region_column).value
-            iso_codes = self._build_fake_iso_code(region)
+            iso_codes = self._get_fake_iso_code(region)
             if iso_codes is not None:
                 region = ExcelArea(iso2=iso_codes['iso2'], iso3=iso_codes['iso3'], name=region, region=None)
                 region_set.add(region)

@@ -423,7 +423,6 @@ class RegionRowAdapter(object):
 class CountryRowAdapter(object):
     @staticmethod
     def dict_to_country(country_dict):
-        # FIXME: Check if is needed to parse area info
         data = {key: value for key, value in country_dict.items() if
                 key not in ['info']}
         data['info'] = AreaInfoRowAdapter.transform_to_info_list(country_dict['info'])

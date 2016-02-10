@@ -58,7 +58,6 @@ class IndicatorRepository(Repository):
     def commit_transaction(self):
         self._db.commit()
 
-    # FIXME: Why the extra parameters?
     def insert_indicator(self, indicator, commit=True):
         data = IndicatorRowAdapter().indicator_to_dict(indicator)
         query = create_insert_query('indicator', data)

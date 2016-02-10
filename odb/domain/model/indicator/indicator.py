@@ -79,18 +79,7 @@ class Indicator(Entity):
         self._uri = event.uri
         self._weight = event.weight
 
-    # FIXME: Review this repr because I think it is not correct
-    # def __repr__(self):
-    #     return "{d}Indicator(id={id!r}," \
-    #            "country_coverage={i._country_coverage!r}, " \
-    #            "provider_link={i._provider_link!r}," \
-    #            "republish={i._republish!r}, high_low={i._high_low!r}, " \
-    #            "type={i._type!r}, label={i._label!r}, comment={i._comment!r}, " \
-    #            "notation={i._notation!r}, interval_starts={i._interval_starts!r}, " \
-    #            "interval_ends={i._interval_ends!r}, organization={i._organization})". \
-    #         format(d="*Discarded* " if self._discarded else "", id=self._id, i=self)
-
-    # TODO: This could be greatly simplified using the output of dir(self)
+    # TODO: This could be greatly simplified using reflection
     def to_dict(self):
         """
         Converts self object to dictionary
