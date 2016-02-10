@@ -1,6 +1,7 @@
 import configparser
 import logging
 
+from application.odbFetcher.enrichment.enricher import Enricher
 from application.odbFetcher.parsing.area_parser import AreaParser
 from application.odbFetcher.parsing.indicator_parser import IndicatorParser
 from application.odbFetcher.parsing.observation_parser import ObservationParser
@@ -33,7 +34,7 @@ def run():
     config.read("parser_config.ini")
     parse(log, config, area_repo, indicator_repo, observation_repo)
     # rank(log, config)
-    # enrich(log, config)
+    # enrich(log, config, area_repo)
     log.info('Done')
 
 
@@ -41,13 +42,10 @@ def parse(log, config, area_repo, indicator_repo, observation_repo):
     IndicatorParser(log, config, area_repo, indicator_repo, observation_repo).run()
     AreaParser(log, config, area_repo, indicator_repo, observation_repo).run()
     ObservationParser(log, config, area_repo, indicator_repo, observation_repo).run()
-    # SecondaryObservationParser(log, config).run()
-    # PrimaryObservationParser(log, config).run()
-    # GroupedObservationParser(log, config).run()
 
 
-def enrich(log, config):
-    Enricher(log, config).run()
+def enrich(log, config, area_repo):
+    Enricher(log, config, area_repo).run()
 
 
 # def rank(log, config):

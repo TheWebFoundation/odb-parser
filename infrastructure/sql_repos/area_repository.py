@@ -206,6 +206,30 @@ class AreaRepository(Repository):
         if commit:
             self._db.commit()
 
+    def enrich_country(self, iso3, indicator_list):
+        """
+        Enriches country data with indicator info
+
+        Note:
+            The input indicator_list must contain the following attributes: indicator_code, year, value,
+            provider_name and provider_value
+        Args:
+            iso3 (str): Iso3 of the country for which data is going to be appended.
+            indicator_list (list of Indicator): Indicator list with the attributes in the note.
+        """
+        info_dict = {}
+        for indicator in indicator_list:
+            info_dict[indicator.indicator_code] = {
+                "year": indicator.year,
+                "value": indicator.value,
+                "provider": {
+                    "name": indicator.provider_name,
+                    "url": indicator.provider_url
+                }
+            }
+
+        self._db["areas"].update({"iso3": iso3}, {"$set": {"info": info_dict}})
+
     def find_area_info(self, iso3):
         """
         Finds the area infor for the country with the iso3 specified
@@ -431,7 +455,7 @@ class AreaInfoRowAdapter(object):
     def info_to_dict(iso3, area_info):
         """
         Args:
-            area (Area):
+            iso3 (str):
             area_info (AreaInfo):
 
         Returns:
