@@ -31,7 +31,7 @@ class GroupedByAreaVisualisation(object):
         Returns:
             list of Observations: Filtered observations by area iso3 code
         """
-        return [obs for obs in self._observations if obs.area == area_code]
+        return [obs for obs in self._observations if obs.area.iso3 == area_code]
 
     def to_dict(self):
         """
