@@ -63,6 +63,8 @@ def get_column_number(colname):
     Returns:
         (int): the column number as an integer ready to be passed to xlrd functions
     """
+    if not colname:
+        return None
     return colx_from_colname(colname) if colname.isalpha() else int(colname)
 
 
@@ -87,6 +89,7 @@ def excel_indicator_to_dom(excel_indicator):
                                  provider_name=excel_indicator.provider_name,
                                  provider_url=excel_indicator.provider_url,
                                  range=excel_indicator.range,
+                                 short_name=excel_indicator.short_name,
                                  source_data=excel_indicator.source_data,
                                  source_name=excel_indicator.source_name,
                                  source_url=excel_indicator.source_url,

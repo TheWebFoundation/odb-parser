@@ -36,6 +36,7 @@ class IndicatorRepository(Repository):
                     provider_name TEXT,
                     provider_url TEXT,
                     range TEXT,
+                    short_name TEXT,
                     source_data TEXT,
                     source_name TEXT,
                     source_url TEXT,

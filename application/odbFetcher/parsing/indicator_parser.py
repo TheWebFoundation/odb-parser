@@ -46,6 +46,8 @@ class IndicatorParser(Parser):
             self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_CODE_COLUMN"))
         name_column = get_column_number(
             self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_NAME_COLUMN"))
+        short_name_column = get_column_number(
+            self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_SHORT_NAME_COLUMN"))
         type_column = get_column_number(
             self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_TYPE_COLUMN"))
         weight_column = get_column_number(
@@ -61,6 +63,7 @@ class IndicatorParser(Parser):
             retrieved_weight = indicator_sheet.cell(row_number, weight_column).value
             code = retrieved_code.upper().replace(" ", "_")
             name = indicator_sheet.cell(row_number, name_column).value
+            short_name = indicator_sheet.cell(row_number, short_name_column).value
             _range = str_to_none(indicator_sheet.cell(row_number, range_column).value)
             _type = retrieved_type.upper()
             index = last_index_code if _type != 'INDEX' else None
@@ -68,7 +71,7 @@ class IndicatorParser(Parser):
             last_subindex_code = code if _type == "SUBINDEX" else last_subindex_code
             last_index_code = code if _type == "INDEX" else last_index_code
             subindex = last_subindex_code if _type == "COMPONENT" else None
-            indicator = ExcelIndicator(index=index, code=code, name=name, _type=_type,
+            indicator = ExcelIndicator(index=index, code=code, name=name, _type=_type, short_name=short_name,
                                        subindex=subindex, weight=weight, _range=_range)
             self._excel_indicators.append(indicator)
 

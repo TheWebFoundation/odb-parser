@@ -116,7 +116,7 @@ class AreaParser(Parser):
 
         region_set = set()
 
-        region_column = self._config.getint("AREA_ACCESS", "AREA_REGION_COLUMN")
+        region_column = get_column_number(self._config.get("AREA_ACCESS", "AREA_REGION_COLUMN"))
         start_row = self._config.getint("AREA_ACCESS", "AREA_START_ROW")
         for row_number in range(start_row, area_sheet.nrows):
             region = area_sheet.cell(row_number, region_column).value

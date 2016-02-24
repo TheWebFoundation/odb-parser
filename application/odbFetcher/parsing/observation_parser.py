@@ -3,7 +3,7 @@ from operator import attrgetter
 from urllib.parse import urljoin
 
 from sortedcontainers import SortedListWithKey
-from xlrd import cellname
+from xlrd import colname
 
 from application.odbFetcher.parsing.excel_model.excel_observation import ExcelObservation
 from application.odbFetcher.parsing.parser import Parser, ParserError
@@ -153,31 +153,37 @@ class ObservationParser(Parser):
                     subindex_name, structure_obs_sheet.name))
             indicator = self._indicator_repo.find_indicator_by_code(subindex_name, 'SUBINDEX')
             for row_number in range(observation_start_row, structure_obs_sheet.nrows):  # Per country
-                year = int(structure_obs_sheet.cell(row_number, year_column).value)
-                iso3 = structure_obs_sheet.cell(row_number, iso3_column).value
-
                 try:
-                    area = self._area_repo.find_by_iso3(iso3)
-                    value = structure_obs_sheet.cell(row_number, subindex_scaled_column).value
-                    rank = structure_obs_sheet.cell(row_number,
-                                                    subindex_rank_column).value if subindex_rank_column else None
-                    excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, year=year,
-                                                         rank=rank, value=value)
-                    if [t for t in self._excel_structure_observations if
-                        t[0].year == year and t[1].iso3 == iso3 and t[2].indicator == indicator.indicator]:
-                        self._log.warn("Ignoring duplicate observation for SUBINDEX %s while parsing %s [%s]" % (
-                            indicator.indicator, structure_obs_sheet.name,
-                            cellname(row_number, subindex_scaled_column)))
-                    else:
-                        self._excel_structure_observations.append((excel_observation, area, indicator))
-                except AreaRepositoryError:
-                    self._log.error("No area with code %s for indicator %s while parsing %s" % (
-                        iso3, indicator.indicator, structure_obs_sheet.name))
+                    year = int(structure_obs_sheet.cell(row_number, year_column).value)
+                    iso3 = structure_obs_sheet.cell(row_number, iso3_column).value
 
+                    try:
+                        area = self._area_repo.find_by_iso3(iso3)
+                        value = structure_obs_sheet.cell(row_number, subindex_scaled_column).value
+                        rank = structure_obs_sheet.cell(row_number,
+                                                        subindex_rank_column).value if subindex_rank_column else None
+                        excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, year=year,
+                                                             rank=rank, value=value)
+                        if [t for t in self._excel_structure_observations if
+                            t[0].year == year and t[1].iso3 == iso3 and t[2].indicator == indicator.indicator]:
+                            self._log.warn("Ignoring duplicate observations for SUBINDEX %s while parsing %s [%s]" % (
+                                indicator.indicator, structure_obs_sheet.name,
+                                colname(subindex_scaled_column)))
+                            # Will not continue parsing, we could check this also at the beginning if we extract the
+                            # year from the sheet name
+                            return
+                        else:
+                            self._excel_structure_observations.append((excel_observation, area, indicator))
+                    except AreaRepositoryError:
+                        self._log.error("No area with code %s for indicator %s while parsing %s" % (
+                            iso3, indicator.indicator, structure_obs_sheet.name))
+                except ValueError:
+                    self._log.warn("Problem with (possibly empty) row %s while parsing %s" % (
+                        row_number, structure_obs_sheet.name))
         except IndicatorRepositoryError:
             self._log.error(
                 "No SUBINDEX '%s' indicator found while parsing %s [%s]" % (
-                    subindex_name, structure_obs_sheet.name, cellname(0, subindex_scaled_column)))
+                    subindex_name, structure_obs_sheet.name, colname(subindex_scaled_column)))
 
     def _retrieve_component_observations(self, structure_obs_sheet, component_name, component_scaled_column,
                                          sheet_year):
@@ -196,29 +202,35 @@ class ObservationParser(Parser):
         try:
             indicator = self._indicator_repo.find_indicator_by_code(component_name, 'COMPONENT')
             for row_number in range(observation_start_row, structure_obs_sheet.nrows):  # Per country
-                year = int(structure_obs_sheet.cell(row_number, year_column).value)
-                iso3 = structure_obs_sheet.cell(row_number, iso3_column).value
-
                 try:
-                    area = self._area_repo.find_by_iso3(iso3)
-                    value = structure_obs_sheet.cell(row_number, component_scaled_column).value
-                    excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, year=year,
-                                                         value=value)
-                    if [t for t in sorted_observations if
-                        t[0].year == year and t[1].iso3 == iso3 and t[2].indicator == indicator.indicator]:
-                        self._log.warn("Ignoring duplicate observation for COMPONENT %s while parsing %s [%s]" % (
-                            indicator.indicator, structure_obs_sheet.name,
-                            cellname(row_number, component_scaled_column)))
-                    else:
-                        sorted_observations.add((excel_observation, area, indicator))
-                except AreaRepositoryError:
-                    self._log.error("No area with code %s for indicator %s while parsing %s" % (
-                        iso3, indicator.indicator, structure_obs_sheet.name))
+                    year = int(structure_obs_sheet.cell(row_number, year_column).value)
+                    iso3 = structure_obs_sheet.cell(row_number, iso3_column).value
 
+                    try:
+                        area = self._area_repo.find_by_iso3(iso3)
+                        value = structure_obs_sheet.cell(row_number, component_scaled_column).value
+                        excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, year=year,
+                                                             value=value)
+                        if [t for t in sorted_observations if
+                            t[0].year == year and t[1].iso3 == iso3 and t[2].indicator == indicator.indicator]:
+                            self._log.warn("Ignoring duplicate observations for COMPONENT %s while parsing %s [%s]" % (
+                                indicator.indicator, structure_obs_sheet.name,
+                                colname(component_scaled_column)))
+                            # Will not continue parsing, we could check this also at the beginning if we extract the
+                            # year from the sheet name
+                            return
+                        else:
+                            sorted_observations.add((excel_observation, area, indicator))
+                    except AreaRepositoryError:
+                        self._log.error("No area with code %s for indicator %s while parsing %s" % (
+                            iso3, indicator.indicator, structure_obs_sheet.name))
+                except ValueError:
+                    self._log.warn("Problem with (possibly empty) row %s while parsing %s" % (
+                        row_number, structure_obs_sheet.name))
         except IndicatorRepositoryError:
             self._log.error(
                 "No COMPONENT '%s' indicator found while parsing %s [%s]" % (
-                    component_name, structure_obs_sheet.name, cellname(0, component_scaled_column)))
+                    component_name, structure_obs_sheet.name, colname(component_scaled_column)))
 
         # Rank them based on their scaled score
         self._update_observation_ranking(sorted_observations, observation_getter=lambda x: x[0])
@@ -273,26 +285,33 @@ class ObservationParser(Parser):
             parsed_column = self._parse_index_scaled_column_name(column_name, sheet_year)
             # Sanity check useful if there could be more than one INDEX, otherwise this check could be relaxed
             if not parsed_column:
-                raise ParserError("Column name '%s' does not match INDEX pattern while parsing %s" % (
+                self._log.warn("Column name '%s' does not match INDEX pattern while parsing %s" % (
                     column_name, structure_obs_sheet.name))
             indicator = self._indicator_repo.find_indicator_by_code(parsed_column.group('index'))
             for row_number in range(observation_start_row, structure_obs_sheet.nrows):  # Per country
-                year = int(structure_obs_sheet.cell(row_number, year_column).value)
-                iso3 = structure_obs_sheet.cell(row_number, iso3_column).value
-
                 try:
-                    area = self._area_repo.find_by_iso3(iso3)
-                    value = structure_obs_sheet.cell(row_number, index_scaled_column).value
-                    rank = structure_obs_sheet.cell(row_number, index_rank_column).value
-                    rank_change = structure_obs_sheet.cell(row_number, index_rank_change_column).value
-                    excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, year=year,
-                                                         rank=rank, value=value, rank_change=rank_change)
-                    self._excel_structure_observations.append((excel_observation, area, indicator))
-                except AreaRepositoryError:
-                    self._log.error("No area with code %s for indicator %s while parsing %s" % (
-                        iso3, indicator.indicator, structure_obs_sheet.name))
+                    year = int(structure_obs_sheet.cell(row_number, year_column).value)
+                    iso3 = structure_obs_sheet.cell(row_number, iso3_column).value
+
+                    try:
+                        area = self._area_repo.find_by_iso3(iso3)
+                        value = structure_obs_sheet.cell(row_number, index_scaled_column).value
+                        rank = structure_obs_sheet.cell(row_number, index_rank_column).value
+                        # Allow for empty values here
+                        rank_change = structure_obs_sheet.cell(row_number,
+                                                               index_rank_change_column).value if index_rank_change_column else None
+                        excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, year=year,
+                                                             rank=rank, value=value, rank_change=rank_change)
+                        self._excel_structure_observations.append((excel_observation, area, indicator))
+                    except AreaRepositoryError:
+                        self._log.error("No area with code %s for indicator %s while parsing %s" % (
+                            iso3, indicator.indicator, structure_obs_sheet.name))
+                except ValueError:
+                    self._log.warn("Problem with (possibly empty) row %s while parsing %s" % (
+                        row_number, structure_obs_sheet.name))
         except IndicatorRepositoryError:
-            self._log.error("No INDEX indicator found while parsing %s" % (structure_obs_sheet.name,))
+            self._log.error("No INDEX indicator found while parsing %s [%s]" % (
+                structure_obs_sheet.name, colname(index_scaled_column)))
         except ParserError as pe:
             self._log.error(pe)
 
