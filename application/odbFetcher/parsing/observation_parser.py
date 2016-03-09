@@ -185,10 +185,11 @@ class ObservationParser(Parser):
                 "No SUBINDEX '%s' indicator found while parsing %s [%s]" % (
                     subindex_name, structure_obs_sheet.name, colname(subindex_scaled_column)))
 
-    def _retrieve_component_observations(self, structure_obs_sheet, component_name, component_scaled_column,
+    def _retrieve_component_observations(self, structure_obs_sheet, subindex_name, component_name,
+                                         component_scaled_column,
                                          sheet_year):
-        self._log.debug(
-            "\t\tRetrieving component %s observations in sheet %s..." % (component_name, structure_obs_sheet.name))
+        self._log.debug("\t\tRetrieving component %s from subindex %s observations in sheet %s..." % (
+            component_name, subindex_name, structure_obs_sheet.name))
         year_column = get_column_number(
             self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_YEAR_COLUMN", sheet_year))
         iso3_column = get_column_number(
@@ -200,7 +201,7 @@ class ObservationParser(Parser):
             key=lambda x: x[0].value if x[0].value is not None and na_to_none(x[0].value) is not None else 0)
 
         try:
-            indicator = self._indicator_repo.find_indicator_by_code(component_name, 'COMPONENT')
+            indicator = self._indicator_repo.find_component_by_short_name(component_name, subindex_name)
             for row_number in range(observation_start_row, structure_obs_sheet.nrows):  # Per country
                 try:
                     year = int(structure_obs_sheet.cell(row_number, year_column).value)
@@ -255,8 +256,8 @@ class ObservationParser(Parser):
                 parsed_column = self._parse_component_scaled_column_name(column_name, sheet_year)
                 if parsed_column:
                     # Retrieve a component
-                    self._retrieve_component_observations(structure_obs_sheet, parsed_column.group('component'),
-                                                          column_number, sheet_year)
+                    self._retrieve_component_observations(structure_obs_sheet, parsed_column.group('subindex'),
+                                                          parsed_column.group('component'), column_number, sheet_year)
                 else:
                     self._log.debug(
                         'Ignoring column %s while parsing %s (did not detect subindex or component scaled data)' % (
@@ -285,7 +286,7 @@ class ObservationParser(Parser):
             parsed_column = self._parse_index_scaled_column_name(column_name, sheet_year)
             # Sanity check useful if there could be more than one INDEX, otherwise this check could be relaxed
             if not parsed_column:
-                self._log.warn("Column name '%s' does not match INDEX pattern while parsing %s" % (
+                raise IndicatorRepositoryError("Column name '%s' does not match INDEX pattern while parsing %s" % (
                     column_name, structure_obs_sheet.name))
             indicator = self._indicator_repo.find_indicator_by_code(parsed_column.group('index'))
             for row_number in range(observation_start_row, structure_obs_sheet.nrows):  # Per country

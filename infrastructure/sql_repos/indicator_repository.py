@@ -88,6 +88,22 @@ class IndicatorRepository(Repository):
 
         return IndicatorRowAdapter().dict_to_indicator(data)
 
+    def find_component_by_short_name(self, short_name, subindex):
+        query = "SELECT * FROM indicator WHERE short_name LIKE :short_name AND subindex LIKE :subindex"
+        if not short_name:
+            raise IndicatorRepositoryError("Indicator short name must not be empty")
+        if not subindex:
+            raise IndicatorRepositoryError("Indicator subindex must not be empty")
+        data = {'short_name': short_name.upper(), 'subindex': subindex.upper()}
+
+        r = self._db.execute(query, data).fetchone()
+        if r is None:
+            raise IndicatorRepositoryError(
+                "No component with short name %s and subindex %s found" % (short_name, subindex))
+
+        data = dict(r)
+        return IndicatorRowAdapter().dict_to_indicator(data)
+
     def find_indicators(self):
         """
         Finds all indicators

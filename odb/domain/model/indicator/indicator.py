@@ -440,3 +440,6 @@ class Repository(object, metaclass=ABCMeta):
 
     def insert_indicator(self, indicator):
         pass
+
+    def find_component_by_short_name(self, short_name, subindex):
+        pass

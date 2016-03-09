@@ -63,7 +63,8 @@ class IndicatorParser(Parser):
             retrieved_weight = indicator_sheet.cell(row_number, weight_column).value
             code = retrieved_code.upper().replace(" ", "_")
             name = indicator_sheet.cell(row_number, name_column).value
-            short_name = indicator_sheet.cell(row_number, short_name_column).value
+            short_name_retrieved = indicator_sheet.cell(row_number, short_name_column).value
+            short_name = short_name_retrieved.upper().replace(" ", "_")
             _range = str_to_none(indicator_sheet.cell(row_number, range_column).value)
             _type = retrieved_type.upper()
             index = last_index_code if _type != 'INDEX' else None
