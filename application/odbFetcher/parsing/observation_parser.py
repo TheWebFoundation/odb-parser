@@ -299,8 +299,9 @@ class ObservationParser(Parser):
                         value = structure_obs_sheet.cell(row_number, index_scaled_column).value
                         rank = structure_obs_sheet.cell(row_number, index_rank_column).value
                         # Allow for empty values here
-                        rank_change = structure_obs_sheet.cell(row_number,
-                                                               index_rank_change_column).value if index_rank_change_column else None
+                        rank_change_retrieved = structure_obs_sheet.cell(row_number,
+                                                                         index_rank_change_column).value if index_rank_change_column else None
+                        rank_change = rank_change_retrieved if rank_change_retrieved else None
                         excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, year=year,
                                                              rank=rank, value=value, rank_change=rank_change)
                         self._excel_structure_observations.append((excel_observation, area, indicator))
