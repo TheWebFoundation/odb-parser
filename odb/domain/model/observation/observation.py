@@ -62,6 +62,7 @@ class Observation(Entity):
         """
         super(Observation, self).__init__(event.originator_id, event.originator_version)
         self._indicator = event.indicator
+        self._dataset_indicator = event.dataset_indicator
         self._area = event.area
         self._uri = event.uri
         self._value = event.value
@@ -80,7 +81,8 @@ class Observation(Entity):
         # There could be data without an indicator associated
         indicator_dict = self.indicator.to_dict() if self.indicator else None
         return {'indicator': indicator_dict, 'area': self.area.to_dict(), 'value': self.value, 'year': self.year,
-                'id': self.id, 'rank': self.rank, 'rank_change': self.rank_change, 'uri': self.uri}
+                'id': self.id, 'rank': self.rank, 'rank_change': self.rank_change, 'uri': self.uri,
+                'dataset_indicator': self.dataset_indicator}
 
     # =======================================================================================
     # Properties
@@ -92,6 +94,15 @@ class Observation(Entity):
     @indicator.setter
     def indicator(self, indicator):
         self._indicator = indicator
+        self.increment_version()
+
+    @property
+    def dataset_indicator(self):
+        return self._dataset_indicator
+
+    @dataset_indicator.setter
+    def dataset_indicator(self, dataset_indicator):
+        self._dataset_indicator = dataset_indicator
         self.increment_version()
 
     @property
@@ -215,7 +226,7 @@ class Observation(Entity):
 # Observation aggregate root factory
 # =======================================================================================
 def create_observation(indicator=None, area=None, value=None, year=1970, id=None, rank=None, rank_change=None,
-                       uri=None):
+                       uri=None, dataset_indicator=None):
     """
     This function creates new observations and acts as a factory
 
@@ -244,7 +255,8 @@ def create_observation(indicator=None, area=None, value=None, year=1970, id=None
     """
     obs_id = uuid.uuid4().hex[:24]
     event = Observation.Created(originator_id=obs_id, originator_version=0, indicator=indicator, area=area, value=value,
-                                year=year, id=id, rank=rank, rank_change=rank_change, uri=uri)
+                                year=year, id=id, rank=rank, rank_change=rank_change, uri=uri,
+                                dataset_indicator=dataset_indicator)
     obs = when(event)
     publish(event)
     return obs

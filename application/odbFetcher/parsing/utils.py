@@ -101,12 +101,13 @@ def excel_indicator_to_dom(excel_indicator):
     return indicator
 
 
-def excel_observation_to_dom(excel_observation, area, indicator):
+def excel_observation_to_dom(excel_observation, area, indicator, dataset_indicator=None):
     observation = create_observation(value=excel_observation.value,
                                      year=Year(excel_observation.year),
                                      rank=excel_observation.rank,
                                      rank_change=excel_observation.rank_change,
                                      indicator=indicator,
+                                     dataset_indicator=dataset_indicator,
                                      area=area)
     return observation
 

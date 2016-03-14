@@ -6,7 +6,6 @@ from urllib.parse import urljoin
 from sortedcontainers import SortedListWithKey
 from xlrd import colname, cellname
 
-from application.odbFetcher.parsing.excel_model.excel_dataset_observation import ExcelDatasetObservation
 from application.odbFetcher.parsing.excel_model.excel_observation import ExcelObservation
 from application.odbFetcher.parsing.parser import Parser, ParserError
 from application.odbFetcher.parsing.utils import excel_observation_to_dom, na_to_none, get_column_number
@@ -106,10 +105,10 @@ class ObservationParser(Parser):
                         area = self._memoized_get_area_by_iso3(iso3)
                         value_retrieved = dataset_obs_sheet.cell(row_number, column_number).value
                         value = na_to_none(value_retrieved)
-                        excel_dataset_observation = ExcelDatasetObservation(iso3=iso3, indicator_code=indicator_code,
-                                                                            value=value,
-                                                                            year=year,
-                                                                            dataset_indicator_code=dataset_indicator_code)
+                        excel_dataset_observation = ExcelObservation(iso3=iso3, indicator_code=indicator_code,
+                                                                     value=value,
+                                                                     year=year,
+                                                                     dataset_indicator_code=dataset_indicator_code)
                         self._excel_dataset_observations.append(
                             (excel_dataset_observation, area, indicator, dataset_indicator))
                     except IndicatorRepositoryError:
@@ -403,7 +402,8 @@ class ObservationParser(Parser):
         for excel_observation_tuple in observation_tuple_list:
             area = excel_observation_tuple[1]
             indicator = excel_observation_tuple[2]
-            observation = excel_observation_to_dom(excel_observation_tuple[0], area, indicator)
+            dataset_indicator = excel_observation_tuple[3] if len(excel_observation_tuple) == 4 else None
+            observation = excel_observation_to_dom(excel_observation_tuple[0], area, indicator, dataset_indicator)
             observation.uri = urljoin(self._config.get("OTHERS", "HOST"), "observations/%s/%s/%s" % (
                 indicator.indicator, area.iso3, observation.year.value))
             self._observation_repo.insert_observation(observation, commit=False)
@@ -444,18 +444,9 @@ class ObservationParser(Parser):
         self._log.info("\tStoring raw observations...")
         self._store_excel_observation_array(self._excel_raw_observations)
 
-    def _store_dataset_observations(self, observation_tuple_list):
+    def _store_dataset_observations(self):
         self._log.info("\tStoring dataset observations...")
-        self._observation_repo.begin_transaction()
-        for excel_observation_tuple in observation_tuple_list:
-            area = excel_observation_tuple[1]
-            indicator = excel_observation_tuple[2]
-            dataset_indicator = excel_observation_tuple[3]
-            # observation = excel_observation_to_dom(excel_observation_tuple[0], area, indicator)
-            # observation.uri = urljoin(self._config.get("OTHERS", "HOST"), "observations/%s/%s/%s" % (
-            #     indicator.indicator, area.iso3, observation.year.value))
-            # self._observation_repo.insert_observation(observation, commit=False)
-        self._observation_repo.commit_transaction()
+        self._store_excel_observation_array(self._excel_dataset_observations)
 
 
 if __name__ == "__main__":

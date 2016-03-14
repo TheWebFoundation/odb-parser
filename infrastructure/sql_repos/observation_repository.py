@@ -46,8 +46,9 @@ class ObservationRepository(Repository):
                     rank_change INTEGER,
                     year INTEGER,
                     indicator TEXT,
+                    dataset_indicator TEXT,
                     uri TEXT,
-                    CONSTRAINT observation_indicator_area_year_uniq UNIQUE (indicator, area, year)
+                    CONSTRAINT observation_indicator_area_year_uniq UNIQUE (indicator, area, year, dataset_indicator)
                 );
                 '''
             db.execute(sql)
@@ -83,6 +84,7 @@ class ObservationRepository(Repository):
         return YearRowAdapter().transform_to_year_list([dict(r) for r in rows])
 
     # FIXME: Review area_type subquery
+    # FIXME: Filter out or not dataset observations when asked for an indicator?
     def find_observations(self, indicator_code=None, area_code=None, year=None, area_type=None):
         """
         Returns all observations that satisfy the given filters
@@ -233,9 +235,10 @@ class ObservationRowAdapter(object):
         # Strip unwanted values
         data = dict(
             (key, value) for key, value in list(observation.to_dict().items()) if
-            key not in ('indicator', 'year', 'area'))
+            key not in ('indicator', 'dataset_indicator', 'year', 'area'))
         # Replace keys
         data['indicator'] = observation.indicator.indicator if observation.indicator else None
+        data['dataset_indicator'] = observation.dataset_indicator.indicator if observation.dataset_indicator else None
         data['year'] = observation.year.value
         data['area'] = observation.area.iso3
         return data

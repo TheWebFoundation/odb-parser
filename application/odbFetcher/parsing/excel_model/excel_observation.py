@@ -3,9 +3,11 @@ class ExcelObservation(object):
     Auxiliary class for modeling the observations information retrieved from the Excel structure file.
     """
 
-    def __init__(self, iso3=None, indicator_code=None, value=None, year=None, rank=None, rank_change=None):
+    def __init__(self, iso3=None, indicator_code=None, value=None, year=None, rank=None, rank_change=None,
+                 dataset_indicator_code=None):
         self._iso3 = iso3
         self._indicator_code = indicator_code
+        self._dataset_indicator_code = dataset_indicator_code
         self._value = value
         self._rank = rank
         self._year = year
@@ -22,6 +24,10 @@ class ExcelObservation(object):
     @property
     def indicator_code(self):
         return self._indicator_code
+
+    @property
+    def dataset_indicator_code(self):
+        return self._dataset_indicator_code
 
     @property
     def value(self):
