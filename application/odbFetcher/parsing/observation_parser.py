@@ -1,10 +1,12 @@
 import re
+from functools import lru_cache
 from operator import attrgetter
 from urllib.parse import urljoin
 
 from sortedcontainers import SortedListWithKey
-from xlrd import colname
+from xlrd import colname, cellname
 
+from application.odbFetcher.parsing.excel_model.excel_dataset_observation import ExcelDatasetObservation
 from application.odbFetcher.parsing.excel_model.excel_observation import ExcelObservation
 from application.odbFetcher.parsing.parser import Parser, ParserError
 from application.odbFetcher.parsing.utils import excel_observation_to_dom, na_to_none, get_column_number
@@ -22,6 +24,7 @@ class ObservationParser(Parser):
     def __init__(self, log, config, area_repo=None, indicator_repo=None, observation_repo=None):
         super(ObservationParser, self).__init__(log, config, area_repo, indicator_repo, observation_repo)
         self._excel_raw_observations = []
+        self._excel_dataset_observations = []
         self._excel_structure_observations = []
 
     def run(self):
@@ -30,6 +33,8 @@ class ObservationParser(Parser):
         self._store_raw_observations()
         self._retrieve_structure_observations()
         self._store_structure_observations()
+        self._retrieve_dataset_assesments()
+        self._store_dataset_observations()
 
     def _get_raw_obs_sheets(self):
         self._log.info("\tGetting raw observations sheets...")
@@ -38,12 +43,84 @@ class ObservationParser(Parser):
         raw_obs_sheets = self._get_sheets_by_pattern(data_file_name, raw_obs_pattern)
         return raw_obs_sheets
 
+    def _get_dataset_obs_sheets(self):
+        self._log.info("\tGetting dataset observations sheets...")
+        data_file_name = self._config.get("DATASET_OBSERVATIONS", "FILE_NAME")
+        dataset_obs_pattern = self._config.get("DATASET_OBSERVATIONS", "SHEET_NAME_PATTERN")
+        dataset_obs_sheets = self._get_sheets_by_pattern(data_file_name, dataset_obs_pattern)
+        return dataset_obs_sheets
+
     def _get_structure_obs_sheets(self):
         self._log.info("\tGetting structure observation sheets...")
         data_file_name = self._config.get("STRUCTURE_OBSERVATIONS", "FILE_NAME")
         structure_obs_pattern = self._config.get("STRUCTURE_OBSERVATIONS", "SHEET_NAME_PATTERN")
         structure_obs_sheets = self._get_sheets_by_pattern(data_file_name, structure_obs_pattern)
         return structure_obs_sheets
+
+    @lru_cache(maxsize=None)
+    def _memoized_get_indicator_by_code(self, indicator_code, _type=None):
+        return self._indicator_repo.find_indicator_by_code(indicator_code, _type)
+
+    @lru_cache(maxsize=None)
+    def _memoized_get_area_by_iso3(self, iso3):
+        return self._area_repo.find_by_iso3(iso3)
+
+    def _retrieve_dataset_assesments(self):
+        self._log.info("\tRetrieving dataset assesments")
+        dataset_obs_sheets = self._get_dataset_obs_sheets()
+        indicator_code_error_cache = {}
+
+        for dataset_obs_sheet in dataset_obs_sheets:  # Per year
+            sheet_year = re.match(self._config.get("DATASET_OBSERVATIONS", "SHEET_NAME_PATTERN"),
+                                  dataset_obs_sheet.name).group("year")
+            year_column = get_column_number(
+                self._config_get("DATASET_OBSERVATIONS", "OBSERVATION_YEAR_COLUMN", sheet_year))
+            iso3_column = get_column_number(
+                self._config_get("DATASET_OBSERVATIONS", "OBSERVATION_ISO3_COLUMN", sheet_year))
+            indicator_column = get_column_number(
+                self._config_get("DATASET_OBSERVATIONS", "OBSERVATION_INDICATOR_COLUMN", sheet_year))
+            observation_name_row = self._config_getint("DATASET_OBSERVATIONS", "OBSERVATION_NAME_ROW", sheet_year)
+            observation_start_row = self._config_getint("DATASET_OBSERVATIONS", "OBSERVATION_START_ROW", sheet_year)
+            observation_start_column = get_column_number(
+                self._config_get("DATASET_OBSERVATIONS", "OBSERVATION_START_COLUMN", sheet_year))
+
+            for column_number in range(observation_start_column, dataset_obs_sheet.ncols):  # Per dataset indicator
+                dataset_indicator_code = dataset_obs_sheet.cell(observation_name_row, column_number).value
+
+                try:
+                    dataset_indicator = self._memoized_get_indicator_by_code(dataset_indicator_code)
+                except IndicatorRepositoryError:
+                    if dataset_indicator_code not in indicator_code_error_cache:
+                        self._log.warn(
+                            "No indicator with code %s found while parsing %s[%s] (additional errors regarding this indicator will be omitted)" % (
+                                dataset_indicator_code, dataset_obs_sheet.name, colname(column_number)))
+                        indicator_code_error_cache[dataset_indicator_code] = True
+                    continue
+
+                for row_number in range(observation_start_row, dataset_obs_sheet.nrows):  # Per country and variable
+                    year = int(dataset_obs_sheet.cell(row_number, year_column).value)
+                    iso3 = dataset_obs_sheet.cell(row_number, iso3_column).value
+                    try:
+                        indicator_code = dataset_obs_sheet.cell(row_number, indicator_column).value
+                        indicator = self._memoized_get_indicator_by_code(indicator_code)
+                        area = self._memoized_get_area_by_iso3(iso3)
+                        value_retrieved = dataset_obs_sheet.cell(row_number, column_number).value
+                        value = na_to_none(value_retrieved)
+                        excel_dataset_observation = ExcelDatasetObservation(iso3=iso3, indicator_code=indicator_code,
+                                                                            value=value,
+                                                                            year=year,
+                                                                            dataset_indicator_code=dataset_indicator_code)
+                        self._excel_dataset_observations.append(
+                            (excel_dataset_observation, area, indicator, dataset_indicator))
+                    except IndicatorRepositoryError:
+                        if indicator_code not in indicator_code_error_cache:
+                            self._log.warn(
+                                "No indicator with code %s found while parsing %s[%s] (additional errors regarding this indicator will be omitted)" % (
+                                    indicator_code, dataset_obs_sheet.name, cellname(indicator_column, row_number)))
+                            indicator_code_error_cache[indicator_code] = True
+                    except AreaRepositoryError:
+                        self._log.error("No area found with code %s while parsing %s" % (
+                            iso3, dataset_obs_sheet.name))
 
     def _retrieve_raw_observations(self):
         self._log.info("\tRetrieving raw observations...")
@@ -73,7 +150,7 @@ class ObservationParser(Parser):
                 indicator_code = indicator_code_retrieved.split()[0]
 
                 try:
-                    indicator = self._indicator_repo.find_indicator_by_code(indicator_code)
+                    indicator = self._memoized_get_indicator_by_code(indicator_code)
                 except IndicatorRepositoryError:
                     self._log.warn(
                         "No indicator with code %s found while parsing %s" % (indicator_code, raw_obs_sheet.name))
@@ -84,7 +161,7 @@ class ObservationParser(Parser):
                     iso3 = raw_obs_sheet.cell(row_number, iso3_column).value
 
                     try:
-                        area = self._area_repo.find_by_iso3(iso3)
+                        area = self._memoized_get_area_by_iso3(iso3)
                         value_retrieved = raw_obs_sheet.cell(row_number, column_number).value
                         value = na_to_none(value_retrieved)
                         excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator_code, value=value,
@@ -151,14 +228,14 @@ class ObservationParser(Parser):
             if not subindex_rank_column:
                 self._log.warn("No rank column found for SUBINDEX '%s' while parsing %s" % (
                     subindex_name, structure_obs_sheet.name))
-            indicator = self._indicator_repo.find_indicator_by_code(subindex_name, 'SUBINDEX')
+            indicator = self._memoized_get_indicator_by_code(subindex_name, 'SUBINDEX')
             for row_number in range(observation_start_row, structure_obs_sheet.nrows):  # Per country
                 try:
                     year = int(structure_obs_sheet.cell(row_number, year_column).value)
                     iso3 = structure_obs_sheet.cell(row_number, iso3_column).value
 
                     try:
-                        area = self._area_repo.find_by_iso3(iso3)
+                        area = self._memoized_get_area_by_iso3(iso3)
                         value = structure_obs_sheet.cell(row_number, subindex_scaled_column).value
                         rank = structure_obs_sheet.cell(row_number,
                                                         subindex_rank_column).value if subindex_rank_column else None
@@ -208,7 +285,7 @@ class ObservationParser(Parser):
                     iso3 = structure_obs_sheet.cell(row_number, iso3_column).value
 
                     try:
-                        area = self._area_repo.find_by_iso3(iso3)
+                        area = self._memoized_get_area_by_iso3(iso3)
                         value = structure_obs_sheet.cell(row_number, component_scaled_column).value
                         excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, year=year,
                                                              value=value)
@@ -288,14 +365,14 @@ class ObservationParser(Parser):
             if not parsed_column:
                 raise IndicatorRepositoryError("Column name '%s' does not match INDEX pattern while parsing %s" % (
                     column_name, structure_obs_sheet.name))
-            indicator = self._indicator_repo.find_indicator_by_code(parsed_column.group('index'))
+            indicator = self._memoized_get_indicator_by_code(parsed_column.group('index'))
             for row_number in range(observation_start_row, structure_obs_sheet.nrows):  # Per country
                 try:
                     year = int(structure_obs_sheet.cell(row_number, year_column).value)
                     iso3 = structure_obs_sheet.cell(row_number, iso3_column).value
 
                     try:
-                        area = self._area_repo.find_by_iso3(iso3)
+                        area = self._memoized_get_area_by_iso3(iso3)
                         value = structure_obs_sheet.cell(row_number, index_scaled_column).value
                         rank = structure_obs_sheet.cell(row_number, index_rank_column).value
                         # Allow for empty values here
@@ -366,6 +443,19 @@ class ObservationParser(Parser):
     def _store_raw_observations(self):
         self._log.info("\tStoring raw observations...")
         self._store_excel_observation_array(self._excel_raw_observations)
+
+    def _store_dataset_observations(self, observation_tuple_list):
+        self._log.info("\tStoring dataset observations...")
+        self._observation_repo.begin_transaction()
+        for excel_observation_tuple in observation_tuple_list:
+            area = excel_observation_tuple[1]
+            indicator = excel_observation_tuple[2]
+            dataset_indicator = excel_observation_tuple[3]
+            # observation = excel_observation_to_dom(excel_observation_tuple[0], area, indicator)
+            # observation.uri = urljoin(self._config.get("OTHERS", "HOST"), "observations/%s/%s/%s" % (
+            #     indicator.indicator, area.iso3, observation.year.value))
+            # self._observation_repo.insert_observation(observation, commit=False)
+        self._observation_repo.commit_transaction()
 
 
 if __name__ == "__main__":
