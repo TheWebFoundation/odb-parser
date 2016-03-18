@@ -34,7 +34,7 @@ def run():
     config.read("parser_config.ini")
     parse(log, config, area_repo, indicator_repo, observation_repo)
     # Uncomment if need enriched data
-    # enrich(log, config, area_repo)
+    enrich(log, config, area_repo)
     log.info('Done')
 
 

@@ -267,3 +267,6 @@ class Repository(object, metaclass=ABCMeta):
 
     def insert_country(self, country):
         pass
+
+    def update_search_data(self, iso3, search, commit=True):
+        pass

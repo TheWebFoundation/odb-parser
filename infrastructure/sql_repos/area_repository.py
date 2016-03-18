@@ -34,6 +34,7 @@ class AreaRepository(Repository):
                     area TEXT,
                     iso2 TEXT COLLATE NOCASE,
                     iso3 TEXT COLLATE NOCASE,
+                    search TEXT,
                     short_name TEXT,
                     income TEXT,
                     hdi_rank INTEGER,
@@ -205,29 +206,10 @@ class AreaRepository(Repository):
         if commit:
             self._db.commit()
 
-    def enrich_country(self, iso3, indicator_list):
-        """
-        Enriches country data with indicator info
-
-        Note:
-            The input indicator_list must contain the following attributes: indicator_code, year, value,
-            provider_name and provider_value
-        Args:
-            iso3 (str): Iso3 of the country for which data is going to be appended.
-            indicator_list (list of Indicator): Indicator list with the attributes in the note.
-        """
-        info_dict = {}
-        for indicator in indicator_list:
-            info_dict[indicator.indicator_code] = {
-                "year": indicator.year,
-                "value": indicator.value,
-                "provider": {
-                    "name": indicator.provider_name,
-                    "url": indicator.provider_url
-                }
-            }
-
-        self._db["areas"].update({"iso3": iso3}, {"$set": {"info": info_dict}})
+    def update_search_data(self, iso3, search, commit=True):
+        self._db.execute('UPDATE area SET search=:search WHERE iso3=:iso3', {'iso3': iso3, 'search': search})
+        if commit:
+            self._db.commit()
 
     def find_area_info(self, iso3):
         """
