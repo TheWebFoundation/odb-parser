@@ -69,6 +69,6 @@ class Enricher(object):
             area_info = area_info_dict
             self._area_repo.upsert_area_info(iso3, area_info, commit=False)
 
-        for search in self._retrieved_search_data:
-            self._area_repo.update_search_data(search['iso3'], search['search'], commit=False)
+        for iso3, search in self._retrieved_search_data.items():
+            self._area_repo.update_search_data(iso3, search, commit=False)
         self._area_repo.commit_transaction()
