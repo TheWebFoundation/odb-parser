@@ -1,6 +1,7 @@
 # #########################################################################################
 ##                                  INITIALISATIONS                                     ##
 ##########################################################################################
+import statistics
 from configparser import RawConfigParser
 from json import dumps
 
@@ -296,6 +297,37 @@ def list_observations_by_indicator_and_country_and_year(indicator_code, area_cod
     return json_encoder(request, observations)
 
 
+@app.route("/rawObservations/<indicator_code>/<year>")
+@cache.cached(timeout=TIMEOUT, key_prefix=make_cache_key)
+def pruned_observations_by_indicator_and_year(indicator_code, year):
+    area_repo = AreaRepository(recreate_db=False, config=sqlite_config)
+    indicator_repo = IndicatorRepository(recreate_db=False, config=sqlite_config)
+    observation_repo = ObservationRepository(recreate_db=False, area_repo=area_repo, indicator_repo=indicator_repo,
+                                             config=sqlite_config)
+    observations = observation_repo.find_tree_observations(indicator_code, year, 'INDICATOR')
+    areas = area_repo.find_countries(order="iso3")
+
+    data = {'year': year, 'areas': {}, 'stats': {}}
+    for area in areas:
+        data['areas'][area.iso3] = {}
+        for obs in [obs for obs in observations if obs.area.iso3 == area.iso3]:
+            data['areas'][area.iso3][obs.indicator.indicator] = {
+                'value': obs.value,
+                'rank': obs.rank,
+                'rank_change': obs.rank_change
+            }
+
+    for indicator_code in set([o.indicator.indicator for o in observations]):
+        per_indicator_obs = [o.value for o in observations if
+                             o.indicator.indicator == indicator_code and o.value is not None]
+        data['stats'][indicator_code] = {}
+        data['stats'][indicator_code]['mean'] = statistics.mean(per_indicator_obs)
+        data['stats'][indicator_code]['median'] = statistics.median(per_indicator_obs)
+
+    return json_response_ok(request, data)
+
+
+
 ##########################################################################################
 ##                                      STATISTICS                                      ##
 ##########################################################################################
@@ -388,7 +420,6 @@ def list_observations_by_indicator_and_country_and_year_visualisations(indicator
                                              config=sqlite_config)
     visualisation = observation_repo.find_observations_visualisation(indicator_code, area_code, year)
     return json_encoder(request, visualisation)
-
 
 
 # FIXME

@@ -83,7 +83,34 @@ class ObservationRepository(Repository):
 
         return YearRowAdapter().transform_to_year_list([dict(r) for r in rows])
 
-    # FIXME: Review area_type subquery
+    def find_tree_observations(self, indicator_code, year=None, level='COMPONENT'):
+        if indicator_code is not None:
+            self._indicator_repo.find_indicator_by_code(indicator_code)
+
+        data = {'indicator': indicator_code}
+        year_query_filter = self._build_year_query_filter(year)
+        level_query_filter = self._build_level_query_filter(level)
+
+        query_filter = " AND ".join(filter(None, [year_query_filter, level_query_filter]))
+        query = "SELECT * FROM observation WHERE " + query_filter if query_filter else "SELECT * FROM observation"
+        rows = self._db.execute(query, data).fetchall()
+
+        processed_observation_list = []
+        for observation in [dict(r) for r in rows]:
+            area = self._area_repo.find_by_iso3(observation['area'])
+            # Filter out orphan observations
+            try:
+                indicator = self._indicator_repo.find_indicator_by_code(observation['indicator'])
+            except IndicatorRepositoryError:
+                continue
+            observation['area'] = area
+            observation['indicator'] = indicator
+            processed_observation_list.append(observation)
+
+        return ObservationRowAdapter.transform_to_observation_list(processed_observation_list)
+
+        # FIXME: Review area_type subquery
+
     # FIXME: Filter out or not dataset observations when asked for an indicator?
     def find_observations(self, indicator_code=None, area_code=None, year=None, area_type=None):
         """
@@ -130,6 +157,19 @@ class ObservationRepository(Repository):
 
         # FIXME: The original sorted everything by ranking, do we want it too?
         return ObservationRowAdapter.transform_to_observation_list(processed_observation_list)
+
+    def _build_level_query_filter(self, level):
+        if level is None:
+            return None
+
+        if level.upper() == 'INDEX':
+            return "(indicator IN (SELECT indicator FROM indicator WHERE index_code IS NULL AND indicator:indicator))"
+        elif level.upper() == 'SUBINDEX':
+            return "(indicator IN (SELECT indicator FROM indicator WHERE subindex IS NULL AND (index_code=:indicator OR indicator=:indicator)))"
+        elif level.upper() == 'COMPONENT':
+            return "(indicator IN (SELECT indicator FROM indicator WHERE component IS NULL AND (subindex=:indicator OR index_code=:indicator OR indicator=:indicator)))"
+        elif level.upper() == 'INDICATOR':
+            return "(indicator IN (SELECT indicator FROM indicator WHERE component=:indicator OR subindex=:indicator OR index_code=:indicator OR indicator=:indicator))"
 
     def _build_year_query_filter(self, year):
         """
@@ -215,6 +255,26 @@ class ObservationRepository(Repository):
             observations_all_areas=observations_all_areas
         )
 
+    def find_tree_observations_grouped_by_area_visualisation(self, indicator_code=None, year=None):
+        """
+        Returns grouped by area visualisation for observations that satisfy the given filters
+
+        Args:
+            indicator_code (str, optional): The indicator code (indicator attribute in Indicator)
+            area_code (str, optional): The area code for the observation
+            year (str, optional): The year when observation was observed
+        Returns:
+            GroupedByAreaVisualisation: Observations grouped by area visualisation that satisfy the filters
+        """
+        observations = self.find_tree_observations(indicator_code=indicator_code, year=year)
+        areas = self._area_repo.find_countries(order="iso3")
+        area_code_splitted = [area.iso3 for area in areas]
+
+        return GroupedByAreaVisualisationDocumentAdapter().transform_to_grouped_by_area_visualisation(
+            area_codes=area_code_splitted,
+            observations=observations,
+            observations_all_areas=observations
+        )
 
 class ObservationRowAdapter(object):
     """
@@ -376,5 +436,8 @@ if __name__ == "__main__":
     indicator_repo = IndicatorRepository(False, sqlite_config)
     obs_repo = ObservationRepository(False, area_repo, indicator_repo, sqlite_config)
 
-    print(obs_repo.get_year_list())
-    print(json.dumps([o.to_dict() for o in obs_repo.find_observations(area_code="FRA", year='2014-2015')]))
+    # print(obs_repo.get_year_list())
+    # print(json.dumps([o.to_dict() for o in obs_repo.find_observations(area_code="FRA", year='2014-2015')]))
+
+    with open('dump.json', 'w') as f:
+        json.dump([o.to_dict() for o in obs_repo.find_tree_observations(indicator_code='ODB', level='SUBINDEX')], f)
