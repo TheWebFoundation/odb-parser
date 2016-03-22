@@ -83,15 +83,18 @@ class ObservationRepository(Repository):
 
         return YearRowAdapter().transform_to_year_list([dict(r) for r in rows])
 
-    def find_tree_observations(self, indicator_code, year=None, level='COMPONENT'):
+    def find_tree_observations(self, indicator_code, area_code=None, year=None, level='COMPONENT', filter_dataset=True):
         if indicator_code is not None:
             self._indicator_repo.find_indicator_by_code(indicator_code)
 
         data = {'indicator': indicator_code}
         year_query_filter = self._build_year_query_filter(year)
         level_query_filter = self._build_level_query_filter(level)
-
-        query_filter = " AND ".join(filter(None, [year_query_filter, level_query_filter]))
+        area_query_filter = "area = :area" if area_code and area_code.upper() != 'ALL' else None
+        if area_query_filter:
+            data['area'] = area_code
+        dataset_query_filter = "dataset_indicator IS NULL" if filter_dataset else None
+        query_filter = " AND ".join(filter(None, [dataset_query_filter, year_query_filter, level_query_filter]))
         query = "SELECT * FROM observation WHERE " + query_filter if query_filter else "SELECT * FROM observation"
         rows = self._db.execute(query, data).fetchall()
 
@@ -105,14 +108,15 @@ class ObservationRepository(Repository):
                 continue
             observation['area'] = area
             observation['indicator'] = indicator
+            observation['dataset_indicator'] = self._indicator_repo.find_indicator_by_code(
+                observation['dataset_indicator']) if observation['dataset_indicator'] else None
             processed_observation_list.append(observation)
 
         return ObservationRowAdapter.transform_to_observation_list(processed_observation_list)
 
-        # FIXME: Review area_type subquery
-
+    # FIXME: Review area_type subquery
     # FIXME: Filter out or not dataset observations when asked for an indicator?
-    def find_observations(self, indicator_code=None, area_code=None, year=None, area_type=None):
+    def find_observations(self, indicator_code=None, area_code=None, year=None, area_type=None, filter_dataset=True):
         """
         Returns all observations that satisfy the given filters
 
@@ -138,8 +142,10 @@ class ObservationRepository(Repository):
         if area_query_filter:
             data['area'] = area_code
         year_query_filter = self._build_year_query_filter(year)
+        dataset_query_filter = "dataset_indicator IS NULL" if filter_dataset else None
 
-        query_filter = " AND ".join(filter(None, [indicator_query_filter, area_query_filter, year_query_filter]))
+        query_filter = " AND ".join(
+            filter(None, [dataset_query_filter, indicator_query_filter, area_query_filter, year_query_filter]))
         query = "SELECT * FROM observation WHERE " + query_filter if query_filter else "SELECT * FROM observation"
         rows = self._db.execute(query, data).fetchall()
 
@@ -153,9 +159,28 @@ class ObservationRepository(Repository):
                 continue
             observation['area'] = area
             observation['indicator'] = indicator
+            observation['dataset_indicator'] = self._indicator_repo.find_indicator_by_code(
+                observation['dataset_indicator']) if observation['dataset_indicator'] else None
             processed_observation_list.append(observation)
 
         # FIXME: The original sorted everything by ranking, do we want it too?
+        return ObservationRowAdapter.transform_to_observation_list(processed_observation_list)
+
+    def find_dataset_observations(self, indicator_code, area_code, year):
+        indicator = self._indicator_repo.find_indicator_by_code(indicator_code)
+        query = "SELECT * FROM observation WHERE year=:year AND indicator=:indicator AND area=:area AND dataset_indicator IS NOT NULL"
+        data = {'indicator': indicator_code, 'year': year, 'area': area_code}
+        rows = self._db.execute(query, data)
+
+        processed_observation_list = []
+        for observation in [dict(r) for r in rows]:
+            area = self._area_repo.find_by_iso3(observation['area'])
+            observation['area'] = area
+            observation['indicator'] = indicator
+            observation['dataset_indicator'] = self._indicator_repo.find_indicator_by_code(
+                observation['dataset_indicator'])
+            processed_observation_list.append(observation)
+
         return ObservationRowAdapter.transform_to_observation_list(processed_observation_list)
 
     def _build_level_query_filter(self, level):
@@ -275,6 +300,7 @@ class ObservationRepository(Repository):
             observations=observations,
             observations_all_areas=observations
         )
+
 
 class ObservationRowAdapter(object):
     """

@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from infrastructure.errors.errors import IndicatorRepositoryError
 from infrastructure.sql_repos.utils import create_insert_query, get_db
 from odb.domain.model.indicator.indicator import Repository, Indicator
@@ -66,6 +68,7 @@ class IndicatorRepository(Repository):
         if commit:
             self._db.commit()
 
+    @lru_cache(maxsize=None)
     def find_indicator_by_code(self, indicator_code, _type=None):
         query = "SELECT * FROM indicator WHERE indicator LIKE :indicator"
         if not indicator_code:

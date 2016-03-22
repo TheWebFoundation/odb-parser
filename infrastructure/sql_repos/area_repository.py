@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from infrastructure.errors.errors import AreaRepositoryError
 from infrastructure.sql_repos.utils import create_insert_query, get_db, create_replace_query
 from odb.domain.model.area.area import Repository, Area
@@ -107,6 +109,7 @@ class AreaRepository(Repository):
         self.set_area_info(data)
         return AreaRowAdapter().dict_to_area(data)
 
+    @lru_cache(maxsize=None)
     def find_by_iso3(self, iso3_code):
         query = "SELECT * FROM area WHERE (iso3 = :iso3_code)"
         iso3_code = iso3_code or ''

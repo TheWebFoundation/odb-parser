@@ -1,5 +1,4 @@
 import re
-from functools import lru_cache
 from operator import attrgetter
 from urllib.parse import urljoin
 
@@ -56,14 +55,6 @@ class ObservationParser(Parser):
         structure_obs_sheets = self._get_sheets_by_pattern(data_file_name, structure_obs_pattern)
         return structure_obs_sheets
 
-    @lru_cache(maxsize=None)
-    def _memoized_get_indicator_by_code(self, indicator_code, _type=None):
-        return self._indicator_repo.find_indicator_by_code(indicator_code, _type)
-
-    @lru_cache(maxsize=None)
-    def _memoized_get_area_by_iso3(self, iso3):
-        return self._area_repo.find_by_iso3(iso3)
-
     def _retrieve_dataset_assesments(self):
         self._log.info("\tRetrieving dataset assesments")
         dataset_obs_sheets = self._get_dataset_obs_sheets()
@@ -87,7 +78,7 @@ class ObservationParser(Parser):
                 dataset_indicator_code = dataset_obs_sheet.cell(observation_name_row, column_number).value
 
                 try:
-                    dataset_indicator = self._memoized_get_indicator_by_code(dataset_indicator_code)
+                    dataset_indicator = self._indicator_repo.find_indicator_by_code(dataset_indicator_code)
                 except IndicatorRepositoryError:
                     if dataset_indicator_code not in indicator_code_error_cache:
                         self._log.warn(
@@ -101,8 +92,8 @@ class ObservationParser(Parser):
                     iso3 = dataset_obs_sheet.cell(row_number, iso3_column).value
                     try:
                         indicator_code = dataset_obs_sheet.cell(row_number, indicator_column).value
-                        indicator = self._memoized_get_indicator_by_code(indicator_code)
-                        area = self._memoized_get_area_by_iso3(iso3)
+                        indicator = self._indicator_repo.find_indicator_by_code(indicator_code)
+                        area = self._area_repo.find_by_iso3(iso3)
                         value_retrieved = dataset_obs_sheet.cell(row_number, column_number).value
                         value = na_to_none(value_retrieved)
                         excel_dataset_observation = ExcelObservation(iso3=iso3, indicator_code=indicator_code,
@@ -149,7 +140,7 @@ class ObservationParser(Parser):
                 indicator_code = indicator_code_retrieved.split()[0]
 
                 try:
-                    indicator = self._memoized_get_indicator_by_code(indicator_code)
+                    indicator = self._indicator_repo.find_indicator_by_code(indicator_code)
                 except IndicatorRepositoryError:
                     self._log.warn(
                         "No indicator with code %s found while parsing %s" % (indicator_code, raw_obs_sheet.name))
@@ -160,7 +151,7 @@ class ObservationParser(Parser):
                     iso3 = raw_obs_sheet.cell(row_number, iso3_column).value
 
                     try:
-                        area = self._memoized_get_area_by_iso3(iso3)
+                        area = self._area_repo.find_by_iso3(iso3)
                         value_retrieved = raw_obs_sheet.cell(row_number, column_number).value
                         value = na_to_none(value_retrieved)
                         excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator_code, value=value,
@@ -227,14 +218,14 @@ class ObservationParser(Parser):
             if not subindex_rank_column:
                 self._log.warn("No rank column found for SUBINDEX '%s' while parsing %s" % (
                     subindex_name, structure_obs_sheet.name))
-            indicator = self._memoized_get_indicator_by_code(subindex_name, 'SUBINDEX')
+            indicator = self._indicator_repo.find_indicator_by_code(subindex_name, 'SUBINDEX')
             for row_number in range(observation_start_row, structure_obs_sheet.nrows):  # Per country
                 try:
                     year = int(structure_obs_sheet.cell(row_number, year_column).value)
                     iso3 = structure_obs_sheet.cell(row_number, iso3_column).value
 
                     try:
-                        area = self._memoized_get_area_by_iso3(iso3)
+                        area = self._area_repo.find_by_iso3(iso3)
                         value = structure_obs_sheet.cell(row_number, subindex_scaled_column).value
                         rank = structure_obs_sheet.cell(row_number,
                                                         subindex_rank_column).value if subindex_rank_column else None
@@ -284,7 +275,7 @@ class ObservationParser(Parser):
                     iso3 = structure_obs_sheet.cell(row_number, iso3_column).value
 
                     try:
-                        area = self._memoized_get_area_by_iso3(iso3)
+                        area = self._area_repo.find_by_iso3(iso3)
                         value = structure_obs_sheet.cell(row_number, component_scaled_column).value
                         excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, year=year,
                                                              value=value)
@@ -364,14 +355,14 @@ class ObservationParser(Parser):
             if not parsed_column:
                 raise IndicatorRepositoryError("Column name '%s' does not match INDEX pattern while parsing %s" % (
                     column_name, structure_obs_sheet.name))
-            indicator = self._memoized_get_indicator_by_code(parsed_column.group('index'))
+            indicator = self._indicator_repo.find_indicator_by_code(parsed_column.group('index'))
             for row_number in range(observation_start_row, structure_obs_sheet.nrows):  # Per country
                 try:
                     year = int(structure_obs_sheet.cell(row_number, year_column).value)
                     iso3 = structure_obs_sheet.cell(row_number, iso3_column).value
 
                     try:
-                        area = self._memoized_get_area_by_iso3(iso3)
+                        area = self._area_repo.find_by_iso3(iso3)
                         value = structure_obs_sheet.cell(row_number, index_scaled_column).value
                         rank = structure_obs_sheet.cell(row_number, index_rank_column).value
                         # Allow for empty values here
