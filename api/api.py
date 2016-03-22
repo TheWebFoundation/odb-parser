@@ -2,8 +2,10 @@
 ##                                  INITIALISATIONS                                     ##
 ##########################################################################################
 import statistics
+from collections import OrderedDict
 from configparser import RawConfigParser
 from json import dumps
+from operator import attrgetter
 
 from flask import Flask, request, render_template, Response
 # import sys
@@ -310,20 +312,21 @@ def indexObservations_by_year(year):
     observations = observation_repo.find_tree_observations(index_indicator.indicator, 'ALL', year, 'INDICATOR')
     areas = area_repo.find_countries(order="iso3")
 
-    data = {'year': year, 'areas': {}, 'stats': {}}
-    for area in areas:
-        data['areas'][area.iso3] = {}
-        for obs in [obs for obs in observations if obs.area.iso3 == area.iso3]:
+    data = {'year': year, 'areas': OrderedDict(), 'stats': OrderedDict()}
+    for area in sorted(areas, key=attrgetter('iso3')):
+        data['areas'][area.iso3] = OrderedDict()
+        for obs in sorted([obs for obs in observations if obs.area.iso3 == area.iso3],
+                          key=lambda o: o.indicator.indicator):
             data['areas'][area.iso3][obs.indicator.indicator] = {
                 'value': obs.value,
                 'rank': obs.rank,
                 'rank_change': obs.rank_change
             }
 
-    for indicator_code in set([o.indicator.indicator for o in observations]):
+    for indicator_code in sorted(set([o.indicator.indicator for o in observations])):
         per_indicator_obs = [o.value for o in observations if
                              o.indicator.indicator == indicator_code and o.value is not None]
-        data['stats'][indicator_code] = {}
+        data['stats'][indicator_code] = OrderedDict()
         data['stats'][indicator_code]['mean'] = statistics.mean(per_indicator_obs)
         data['stats'][indicator_code]['median'] = statistics.median(per_indicator_obs)
 
@@ -338,28 +341,28 @@ def countryObservations_by_area(area_code):
     observation_repo = ObservationRepository(recreate_db=False, area_repo=area_repo, indicator_repo=indicator_repo,
                                              config=sqlite_config)
 
-    areas = area_repo.find_countries(order="iso3")
     index_indicator = indicator_repo.find_indicators_index()[0]
 
-    data = {'area': area_code, 'years': {}}
+    data = {'area': area_code, 'years': OrderedDict()}
 
-    for year in [str(y.value) for y in observation_repo.get_year_list()]:
+    for year in sorted([str(y.value) for y in observation_repo.get_year_list()]):
         observations = observation_repo.find_tree_observations(index_indicator.indicator, area_code, year, 'INDICATOR',
                                                                False)
-        data['years'][year] = {'observations': {}, 'stats': {}, 'datasets': {}}
-        for obs in [obs for obs in observations if obs.dataset_indicator is None]:
+        data['years'][year] = {'observations': OrderedDict(), 'stats': OrderedDict(), 'datasets': OrderedDict()}
+        for obs in sorted([obs for obs in observations if obs.dataset_indicator is None],
+                          key=lambda o: o.indicator.indicator):
             data['years'][year]['observations'][obs.indicator.indicator] = {
                 'value': obs.value,
                 'rank': obs.rank,
                 'rank_change': obs.rank_change
             }
 
-        indicators_with_dataset = set(
-            [obs.indicator.indicator for obs in observations if obs.dataset_indicator is not None])
+        indicators_with_dataset = sorted(
+            set([obs.indicator.indicator for obs in observations if obs.dataset_indicator is not None]))
         for indicator in indicators_with_dataset:
-            data['years'][year]['datasets'][indicator] = {}
-            dataset_observations = [obs for obs in observations if obs.indicator.indicator == indicator]
-
+            data['years'][year]['datasets'][indicator] = OrderedDict()
+            dataset_observations = sorted([obs for obs in observations if obs.indicator.indicator == indicator],
+                                          key=lambda o: o.indicator.indicator)
             for obs in dataset_observations:
                 if obs.dataset_indicator is None:
                     data['years'][year]['datasets'][obs.indicator.indicator]['VALUE'] = obs.value
@@ -367,10 +370,10 @@ def countryObservations_by_area(area_code):
                     data['years'][year]['datasets'][obs.indicator.indicator][
                         obs.dataset_indicator.indicator] = obs.value
 
-        for indicator_code in set([o.indicator.indicator for o in observations]):
+        for indicator_code in sorted(set([o.indicator.indicator for o in observations])):
             per_indicator_obs = [o.value for o in observations if
                                  o.indicator.indicator == indicator_code and o.value is not None and o.dataset_indicator is None]
-            data['years'][year]['stats'][indicator_code] = {}
+            data['years'][year]['stats'][indicator_code] = OrderedDict()
             data['years'][year]['stats'][indicator_code]['mean'] = statistics.mean(per_indicator_obs)
             data['years'][year]['stats'][indicator_code]['median'] = statistics.median(per_indicator_obs)
 
