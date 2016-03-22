@@ -1,5 +1,5 @@
+import os
 import re
-from json import load
 from urllib.parse import urljoin
 
 from application.odbFetcher.parsing.excel_model.excel_area import ExcelArea
@@ -7,6 +7,7 @@ from application.odbFetcher.parsing.excel_model.excel_area_info import ExcelArea
 from application.odbFetcher.parsing.parser import Parser
 from application.odbFetcher.parsing.utils import excel_region_to_dom, excel_country_to_dom, str_to_none, is_not_empty, \
     get_column_number, excel_area_info_to_dom
+from json import load
 
 
 class AreaParser(Parser):
@@ -19,7 +20,7 @@ class AreaParser(Parser):
         self._excel_countries = None
         self._excel_regions = None
         self._excel_area_infos = {}  # Will hold a dict indexed by country iso3 with area infos
-        with open("fake_iso_codes.json") as json_file:
+        with open(os.path.join(os.path.dirname(__file__), "../..", "fake_iso_codes.json")) as json_file:
             self._fake_iso_codes = load(json_file)
 
     def run(self):

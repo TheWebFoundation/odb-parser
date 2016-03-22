@@ -1,4 +1,5 @@
 import json
+import os
 from collections import defaultdict
 
 from odb.domain.model.area.area_info import AreaInfo
@@ -59,7 +60,7 @@ class Enricher(object):
 
     def _retrieve_search_data(self):
         self._log.info("\tRetrieving search data")
-        self._retrieved_search_data = json.load(open('search.json'))
+        self._retrieved_search_data = json.load(open(os.path.join(os.path.dirname(__file__), "../..", 'search.json')))
 
     def _enrich(self):
         self._log.info("\tUpdating areas")

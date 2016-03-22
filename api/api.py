@@ -1,22 +1,20 @@
 # #########################################################################################
 ##                                  INITIALISATIONS                                     ##
 ##########################################################################################
+import os
 import statistics
 from collections import OrderedDict
 from configparser import RawConfigParser
-from json import dumps
 from operator import attrgetter
 
 from flask import Flask, request, render_template, Response
-# import sys
-# import os
-#
-# sys.path.append(os.path.abspath(os.path.dirname(__file__) + '/../../a4aiDom'))
+from flask.ext.cache import Cache
+
+from infrastructure.errors.errors import RepositoryError
 from infrastructure.sql_repos.area_repository import AreaRepository
 from infrastructure.sql_repos.indicator_repository import IndicatorRepository
 from infrastructure.sql_repos.observation_repository import ObservationRepository
-from infrastructure.errors.errors import RepositoryError
-from flask.ext.cache import Cache
+from json import dumps
 
 cache = Cache(config={'CACHE_TYPE': 'simple'})
 app = Flask(__name__)
@@ -25,7 +23,9 @@ cache.init_app(app)
 TIMEOUT = 30  # timeout to clean cache in seconds
 
 sqlite_config = RawConfigParser()
-sqlite_config.read("../api_sqlite_config.ini")
+sqlite_config.read(os.path.join(os.path.dirname(__file__), "api_sqlite_config.ini"))
+sqlite_config.set("CONNECTION", "SQLITE_DB",
+                  os.path.join(os.path.dirname(__file__), sqlite_config.get("CONNECTION", "SQLITE_DB")))
 
 
 ##########################################################################################
