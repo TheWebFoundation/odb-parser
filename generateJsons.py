@@ -1,7 +1,8 @@
-import json
 import logging
 import os
+from operator import itemgetter
 
+import json
 from application.odbFetcher.enrichment.rest_client import get_json
 
 
@@ -32,11 +33,19 @@ def generateOdbJson(log):
 
 def generateCountriesJson(log):
     log.info('Generating countries document')
-    uri = "http://localhost:5000/areas/countries"
-    filename = os.path.join(os.path.dirname(__file__), "json", "countries.json")
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    uri = "http://localhost:5000/areas/regions"
+    countries_filename = os.path.join(os.path.dirname(__file__), "json", "countries.json")
+    regions_filename = os.path.join(os.path.dirname(__file__), "json", "regions.json")
+    os.makedirs(os.path.dirname(countries_filename), exist_ok=True)
     response = get_json(uri, {"format": "json"})
-    json.dump(response['data'], open(filename, "w"), ensure_ascii=False)
+    regions = []
+    countries = []
+    for region in sorted(response['data'], key=itemgetter('short_name')):
+        regions.append({k: v for (k, v) in region.items() if k in ['iso3', 'name', 'short_name']})
+        countries.extend(region['countries'])
+    countries = sorted(countries, key=itemgetter('short_name'))
+    json.dump(countries, open(countries_filename, "w"), ensure_ascii=False)
+    json.dump(regions, open(regions_filename, "w"), ensure_ascii=False)
 
 
 def generateIndicatorsJson(log):
@@ -65,10 +74,10 @@ def generateOdbPerCountryJson(log):
 def run():
     configure_log()
     log = logging.getLogger("odbFetcher")
-    generateIndicatorsJson(log)
+    # generateIndicatorsJson(log)
     generateCountriesJson(log)
-    generateOdbJson(log)
-    generateOdbPerCountryJson(log)
+    # generateOdbJson(log)
+    # generateOdbPerCountryJson(log)
     log.info('Done')
 
 

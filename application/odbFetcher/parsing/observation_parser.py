@@ -252,23 +252,39 @@ class ObservationParser(Parser):
                 "No SUBINDEX '%s' indicator found while parsing %s [%s]" % (
                     subindex_name, structure_obs_sheet.name, colname(subindex_scaled_column)))
 
-    def _retrieve_component_observations(self, structure_obs_sheet, subindex_name, component_name,
-                                         component_scaled_column,
-                                         sheet_year):
+    def _get_aliased_component(self, component_name, year):
+        mangled_indicator = re.sub(' +', r'_', component_name).upper()
+        config_alias = 'ALIAS-%s-%s' % (mangled_indicator, year)
+        if self._config.has_option('STRUCTURE_OBSERVATIONS', config_alias):
+            return self._config.get('STRUCTURE_OBSERVATIONS', config_alias)
+        else:
+            return None
+
+    def _retrieve_component_observations(self, structure_obs_sheet, subindex_name, component_short_name,
+                                         component_scaled_column, sheet_year):
         self._log.debug("\t\tRetrieving component %s from subindex %s observations in sheet %s..." % (
-            component_name, subindex_name, structure_obs_sheet.name))
+            component_short_name, subindex_name, structure_obs_sheet.name))
         year_column = get_column_number(
             self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_YEAR_COLUMN", sheet_year))
         iso3_column = get_column_number(
             self._config_get("STRUCTURE_OBSERVATIONS", "OBSERVATION_ISO3_COLUMN", sheet_year))
         observation_start_row = self._config_getint("STRUCTURE_OBSERVATIONS", "OBSERVATION_START_ROW", sheet_year)
 
+        aliased_short_name = self._get_aliased_component(component_short_name, sheet_year)
+
+        if aliased_short_name:
+            self._log.info("Using alias %s for COMPONENT %s while parsing %s [%s]" % (
+                aliased_short_name, component_short_name, structure_obs_sheet.name, colname(component_scaled_column)))
+            short_name = aliased_short_name
+        else:
+            short_name = component_short_name
+
         # Set up sorted list to simplify ranking (components are not ranked in the spreadsheet)
         sorted_observations = SortedListWithKey(
             key=lambda x: x[0].value if x[0].value is not None and na_to_none(x[0].value) is not None else 0)
 
         try:
-            indicator = self._indicator_repo.find_component_by_short_name(component_name, subindex_name)
+            indicator = self._indicator_repo.find_component_by_short_name(short_name, subindex_name)
             for row_number in range(observation_start_row, structure_obs_sheet.nrows):  # Per country
                 try:
                     year = int(structure_obs_sheet.cell(row_number, year_column).value)
@@ -298,7 +314,7 @@ class ObservationParser(Parser):
         except IndicatorRepositoryError:
             self._log.error(
                 "No COMPONENT '%s' indicator found while parsing %s [%s]" % (
-                    component_name, structure_obs_sheet.name, colname(component_scaled_column)))
+                    short_name, structure_obs_sheet.name, colname(component_scaled_column)))
 
         # Rank them based on their scaled score
         self._update_observation_ranking(sorted_observations, observation_getter=lambda x: x[0])
