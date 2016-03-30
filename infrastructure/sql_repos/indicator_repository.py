@@ -116,9 +116,10 @@ class IndicatorRepository(Repository):
         """
         _index = self.find_indicators_index()
         subindices = self.find_indicators_sub_indexes()
+        components = self.find_indicators_components()
         indicators = self.find_indicators_indicators()
 
-        result = (_index + subindices + indicators)
+        result = (_index + subindices + components + indicators)
         return result
 
     def find_indicators_index(self):

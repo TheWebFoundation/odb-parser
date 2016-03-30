@@ -74,10 +74,10 @@ def generateOdbPerCountryJson(log):
 def run():
     configure_log()
     log = logging.getLogger("odbFetcher")
-    # generateIndicatorsJson(log)
+    generateIndicatorsJson(log)
     generateCountriesJson(log)
-    # generateOdbJson(log)
-    # generateOdbPerCountryJson(log)
+    generateOdbJson(log)
+    generateOdbPerCountryJson(log)
     log.info('Done')
 
 

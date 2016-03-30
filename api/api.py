@@ -167,7 +167,8 @@ def show_area_countries(area_code):
 @cache.cached(timeout=TIMEOUT, key_prefix=make_cache_key)
 def list_indicators():
     indicators = IndicatorRepository(recreate_db=False, config=sqlite_config).find_indicators()
-
+    for indicator in indicators:
+        indicator.children = []
     return json_encoder(request, indicators)
 
 
