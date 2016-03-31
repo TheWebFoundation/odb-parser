@@ -3,7 +3,7 @@
 ##########################################################################################
 import os
 import statistics
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from configparser import RawConfigParser
 from operator import attrgetter
 
@@ -167,10 +167,26 @@ def show_area_countries(area_code):
 @cache.cached(timeout=TIMEOUT, key_prefix=make_cache_key)
 def list_indicators():
     indicators = IndicatorRepository(recreate_db=False, config=sqlite_config).find_indicators()
-    for indicator in indicators:
-        indicator.children = []
     return json_encoder(request, indicators)
 
+
+@app.route("/indicators_flattened")
+@cache.cached(timeout=TIMEOUT, key_prefix=make_cache_key)
+def list_indicators_flattened():
+    indicators = IndicatorRepository(recreate_db=False, config=sqlite_config).find_indicators()
+    index_indicator = next(i for i in indicators if i.index is None)
+    q = deque([index_indicator])
+    final_indicators = []
+    while q:
+        i = q.popleft()
+        print(i.indicator, len(q))
+        final_indicators.append(i)
+        q.extendleft(i.children)
+        i.children = []
+
+    # TODO: Uncomment to include orphan indicators (e.g. dataset_assesment)
+    # final_indicators.extend([i for i in indicators if i not in final_indicators])
+    return json_encoder(request, final_indicators)
 
 @app.route("/indicators/index")
 @cache.cached(timeout=TIMEOUT, key_prefix=make_cache_key)

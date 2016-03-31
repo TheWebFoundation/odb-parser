@@ -50,7 +50,7 @@ def generateCountriesJson(log):
 
 def generateIndicatorsJson(log):
     log.info('Generating indicators document')
-    uri = "http://localhost:5000/indicators"
+    uri = "http://localhost:5000/indicators_flattened"
     filename = os.path.join(os.path.dirname(__file__), "json", "indicators.json")
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     response = get_json(uri, {"format": "json"})

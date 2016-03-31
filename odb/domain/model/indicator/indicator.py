@@ -80,6 +80,9 @@ class Indicator(Entity):
         self._uri = event.uri
         self._weight = event.weight
 
+    def __eq__(self, other):
+        return self.indicator == other.indicator
+
     # TODO: This could be greatly simplified using reflection
     def to_dict(self):
         """
