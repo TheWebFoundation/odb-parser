@@ -57,6 +57,14 @@ def generateIndicatorsJson(log):
     json.dump(response['data'], open(filename, "w"), ensure_ascii=False)
 
 
+def generateMetaIndicatorsJson(log):
+    log.info('Generating meta indicators document')
+    uri = "http://localhost:5000/indicators_meta"
+    filename = os.path.join(os.path.dirname(__file__), "json", "indicators_meta.json")
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    response = get_json(uri, {"format": "json"})
+    json.dump(response['data'], open(filename, "w"), ensure_ascii=False)
+
 def generateOdbPerCountryJson(log):
     log.info('Generating ODB data per country documents')
     uri = "http://localhost:5000/areas/countries"
@@ -75,6 +83,7 @@ def run():
     configure_log()
     log = logging.getLogger("odbFetcher")
     generateIndicatorsJson(log)
+    generateMetaIndicatorsJson(log)
     generateCountriesJson(log)
     generateOdbJson(log)
     generateOdbPerCountryJson(log)
