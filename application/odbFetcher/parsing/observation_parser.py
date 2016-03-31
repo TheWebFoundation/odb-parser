@@ -33,6 +33,11 @@ class ObservationParser(Parser):
         self._store_structure_observations()
         self._retrieve_dataset_assesments()
         self._store_dataset_observations()
+        self._update_rank_change()
+
+    def _update_rank_change(self):
+        self._log.info("\tUpdating rank changes")
+        self._observation_repo.update_rank_change()
 
     def _get_raw_obs_sheets(self):
         self._log.info("\tGetting raw observations sheets...")
@@ -382,9 +387,8 @@ class ObservationParser(Parser):
                         value = structure_obs_sheet.cell(row_number, index_scaled_column).value
                         rank = structure_obs_sheet.cell(row_number, index_rank_column).value
                         # Allow for empty values here
-                        rank_change_retrieved = structure_obs_sheet.cell(row_number,
-                                                                         index_rank_change_column).value if index_rank_change_column else None
-                        rank_change = rank_change_retrieved if rank_change_retrieved else None
+                        rank_change = na_to_none(structure_obs_sheet.cell(row_number,
+                                                                          index_rank_change_column).value) if index_rank_change_column else None
                         excel_observation = ExcelObservation(iso3=iso3, indicator_code=indicator.indicator, year=year,
                                                              rank=rank, value=value, rank_change=rank_change)
                         self._excel_structure_observations.append((excel_observation, area, indicator))

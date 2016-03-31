@@ -71,6 +71,18 @@ class ObservationRepository(Repository):
         if commit:
             self._db.commit()
 
+    def update_rank_change(self):
+        query = """
+            UPDATE observation SET rank_change = CASE
+                  WHEN (SELECT 1 FROM observation o2 WHERE o2.year = observation.year - 1 AND o2.area = observation.area AND o2.indicator = observation.indicator)
+                      THEN (SELECT o2.rank - observation.rank FROM observation o2 WHERE o2.year = observation.year - 1 AND o2.area = observation.area AND o2.indicator = observation.indicator)
+                      ELSE NULL
+                      END;
+        """
+
+        self._db.execute(query)
+        self._db.commit()
+
     def get_year_list(self):
         """
         Returns all years with observations in descending order
