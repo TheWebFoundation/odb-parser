@@ -54,29 +54,58 @@ class IndicatorParser(Parser):
             self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_WEIGHT_COLUMN"))
         range_column = get_column_number(
             self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_RANGE_COLUMN"))
+        provider_name_column = get_column_number(
+            self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_PROVIDER_NAME_COLUMN"))
+        provider_url_column = get_column_number(
+            self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_PROVIDER_URL_COLUMN"))
+        source_data_column = get_column_number(
+            self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_SOURCE_DATA_COLUMN"))
+        source_name_column = get_column_number(
+            self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_SOURCE_NAME_COLUMN"))
+        source_url_column = get_column_number(
+            self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_SOURCE_URL_COLUMN"))
+        license_column = get_column_number(
+            self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_LICENSE_COLUMN"))
+        format_notes_column = get_column_number(
+            self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_FORMAT_NOTES_COLUMN"))
+        description_column = get_column_number(
+            self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_DESCRIPTION_COLUMN"))
+        units_column = get_column_number(
+            self._config.get("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_UNITS_COLUMN"))
         start_row = self._config.getint("STRUCTURE_ACCESS", "INDICATOR_SUBINDEX_COMPONENT_START_ROW")
         last_subindex_code = None
         last_index_code = None
         for row_number in range(start_row, indicator_sheet.nrows):
-            retrieved_code = indicator_sheet.cell(row_number, code_column).value
-            retrieved_type = indicator_sheet.cell(row_number, type_column).value
-            retrieved_weight = indicator_sheet.cell(row_number, weight_column).value
-            code = retrieved_code.upper().replace(" ", "_")
-            name = indicator_sheet.cell(row_number, name_column).value
-            short_name_retrieved = indicator_sheet.cell(row_number, short_name_column).value
-            short_name = short_name_retrieved.upper().replace(" ", "_")
+            _license = str_to_none(indicator_sheet.cell(row_number, license_column).value)
             _range = str_to_none(indicator_sheet.cell(row_number, range_column).value)
+            retrieved_type = indicator_sheet.cell(row_number, type_column).value
             _type = retrieved_type.upper()
+            retrieved_code = indicator_sheet.cell(row_number, code_column).value
+            code = retrieved_code.upper().replace(" ", "_")
+            description = indicator_sheet.cell(row_number, description_column).value
+            format_notes = str_to_none(indicator_sheet.cell(row_number, format_notes_column).value)
+            name = indicator_sheet.cell(row_number, name_column).value
+            provider_name = str_to_none(indicator_sheet.cell(row_number, provider_name_column).value)
+            provider_url = str_to_none(indicator_sheet.cell(row_number, provider_url_column).value)
+            retrieved_weight = indicator_sheet.cell(row_number, weight_column).value
+            retrieved_short_name = indicator_sheet.cell(row_number, short_name_column).value
+            short_name = retrieved_short_name.upper().replace(" ", "_")
+            source_data = str_to_none(indicator_sheet.cell(row_number, source_data_column).value)
+            source_name = str_to_none(indicator_sheet.cell(row_number, source_name_column).value)
+            source_url = str_to_none(indicator_sheet.cell(row_number, source_url_column).value)
+            units = str_to_none(indicator_sheet.cell(row_number, units_column).value)
             index = last_index_code if _type != 'INDEX' else None
             weight = weight_to_float(retrieved_weight)
             last_subindex_code = code if _type == "SUBINDEX" else last_subindex_code
             last_index_code = code if _type == "INDEX" else last_index_code
             subindex = last_subindex_code if _type == "COMPONENT" else None
             indicator = ExcelIndicator(index=index, code=code, name=name, _type=_type, short_name=short_name,
-                                       subindex=subindex, weight=weight, _range=_range)
+                                       subindex=subindex, weight=weight, _range=_range, description=description,
+                                       format_notes=format_notes, provider_name=provider_name,
+                                       provider_url=provider_url, source_data=source_data, source_name=source_name,
+                                       source_url=source_url, _license=_license, units=units)
             self._excel_indicators.append(indicator)
 
-    # TODO: too much boilerplate
     def _retrieve_primary_secondary_indicators(self, indicator_sheet):
         self._log.info("\tRetrieving primary & secondary indicators...")
         index = [i for i in self._excel_indicators if i.is_index()][0]
