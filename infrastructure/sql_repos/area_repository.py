@@ -1,30 +1,34 @@
+from functools import lru_cache
+
 from infrastructure.errors.errors import AreaRepositoryError
-from infrastructure.sql_repos.utils import create_insert_query, get_db
-from odb.domain.model.area import area
+from infrastructure.sql_repos.utils import create_insert_query, get_db, create_replace_query
+from odb.domain.model.area.area import Repository, Area
+from odb.domain.model.area.area_info import AreaInfo
+from odb.domain.model.area.area_short_info import AreaShortInfo
 from odb.domain.model.area.country import create_country
+from odb.domain.model.area.indicator_info import IndicatorInfoList, IndicatorInfo
 from odb.domain.model.area.region import create_region
 
 
-class AreaRepository(area.Repository):
+class AreaRepository(Repository):
     """
     Concrete sqlite repository for Areas.
     """
 
-    def __init__(self, recreate_db, log, config):
+    def __init__(self, recreate_db, config):
         """
         Constructor for AreaRepository
 
         Args:
         """
         self._config = config
-        self._log = log
         self._db = self._initialize_db(recreate_db)
 
     def _initialize_db(self, recreate_db):
         db = get_db(self._config)
         if recreate_db:
             db.execute('DROP TABLE IF EXISTS area')
-            sql = '''
+            sql = """
                 CREATE TABLE area
                 (
                     id INTEGER PRIMARY KEY,
@@ -32,19 +36,33 @@ class AreaRepository(area.Repository):
                     area TEXT,
                     iso2 TEXT COLLATE NOCASE,
                     iso3 TEXT COLLATE NOCASE,
+                    search TEXT,
                     short_name TEXT,
-                    iso_num INTEGER,
                     income TEXT,
                     hdi_rank INTEGER,
                     g20 BOOLEAN,
                     g7 BOOLEAN,
                     iodch BOOLEAN,
                     oecd BOOLEAN,
-                    cluster_group TEXT
+                    uri TEXT
                 );
-                '''
+                """
             db.execute(sql)
-            db.execute("CREATE INDEX area_iso3_iso2_index ON area(iso3  COLLATE NOCASE,iso2 COLLATE NOCASE)")
+            db.execute("CREATE UNIQUE INDEX area_iso3_iso2_index ON area(iso3 COLLATE NOCASE, iso2 COLLATE NOCASE)")
+            db.execute('DROP TABLE IF EXISTS area_info')
+            sql = """
+                CREATE TABLE area_info
+                (
+                    indicator_code TEXT,
+                    area TEXT,
+                    value TEXT,
+                    provider_url TEXT,
+                    provider_name TEXT,
+                    year INTEGER,
+                    CONSTRAINT area_info_indicator_code_year_area_pk PRIMARY KEY (indicator_code, year, area)
+                );
+                """
+            db.execute(sql)
             db.commit()
         return db
 
@@ -68,33 +86,40 @@ class AreaRepository(area.Repository):
             AreaRepositoryError: If there is not an area with the given name
         """
 
-        query = "SELECT * FROM area WHERE name LIKE :name"
+        query = "SELECT * FROM area WHERE name = :name"
         area_name = area_name or ''
         r = self._db.execute(query, {'name': area_name}).fetchone()
         if r is None:
             raise AreaRepositoryError("No area with name " + area_name)
 
         data = dict(r)
+        self.set_region_countries(data)
+        self.set_area_info(data)
         return AreaRowAdapter().dict_to_area(data)
 
     def find_by_code(self, area_code):
-        query = "SELECT * FROM area WHERE (iso3 LIKE :code OR iso2 LIKE :code)"
+        query = "SELECT * FROM area WHERE (iso3 = :code OR iso2 = :code)"
         area_code = area_code or ''
         r = self._db.execute(query, {'code': area_code}).fetchone()
         if r is None:
             raise AreaRepositoryError("No area with code " + area_code)
 
         data = dict(r)
+        self.set_region_countries(data)
+        self.set_area_info(data)
         return AreaRowAdapter().dict_to_area(data)
 
+    @lru_cache(maxsize=None)
     def find_by_iso3(self, iso3_code):
-        query = "SELECT * FROM area WHERE (iso3 LIKE :iso3_code)"
+        query = "SELECT * FROM area WHERE (iso3 = :iso3_code)"
         iso3_code = iso3_code or ''
         r = self._db.execute(query, {'iso3_code': iso3_code}).fetchone()
         if r is None:
-            raise AreaRepositoryError("No area with code " + iso3_code)
+            raise AreaRepositoryError("No area with code %s" % (iso3_code,))
 
         data = dict(r)
+        self.set_region_countries(data)
+        self.set_area_info(data)
         return AreaRowAdapter().dict_to_area(data)
 
     # FIXME: Review this method signature
@@ -113,51 +138,51 @@ class AreaRepository(area.Repository):
 
         """
 
-        query = "SELECT * FROM area WHERE (iso3 LIKE :iso3 OR iso2 LIKE :iso2 OR name LIKE :name)"
+        query = "SELECT * FROM area WHERE (iso3 = :iso3 OR iso2 = :iso2 OR name = :name)"
         r = self._db.execute(query, dict.fromkeys(['iso2', 'iso3', 'name'], area_code_or_income)).fetchone()
 
         if r is None:
             # FIXME: Review (old comment was: This is not working, order by is needed on method call)
-            countries = self.find_countries_by_region_or_income_or_cluster(area_code_or_income)
+            countries = self.find_countries_by_region_or_income(area_code_or_income)
             if not countries:
                 raise AreaRepositoryError("No countries for code %s" % (area_code_or_income,))
             else:
                 return countries
 
         area = dict(r)
+        self.set_area_info(area)
         self.set_region_countries(area)
-        self.area_uri(area)
 
         return AreaRowAdapter().dict_to_area(area)
 
-    def find_countries_by_region_or_income_or_cluster(self, region_or_income_or_cluster, order="iso3"):
+    def find_countries_by_region_or_income(self, region_or_income, order="iso3"):
         """
         Finds a list of countries by its region, income or type
 
         Args:
-            region_or_income_or_cluster (str): Code for region, income or type
+            region_or_income (str): Code for region or income
             order (str, optional): Attribute key to sort, default to iso3
 
         Returns:
-            list of Country: countries with the given continent, income or type
+            list of Country: countries with the given region or income
 
         Raises:
             AreaRepositoryCountry: If no countries are found
         """
         order = "name" if order is None else order
-        query = "SELECT * FROM area WHERE (area LIKE :area OR income LIKE :income OR cluster_group LIKE :cluster_group) ORDER BY :order ASC"
-        params = dict.fromkeys(['area', 'income', 'cluster_group'], region_or_income_or_cluster)
+        query = "SELECT * FROM area WHERE (area = :area OR income = :income) ORDER BY :order ASC"
+        params = dict.fromkeys(['area', 'income'], region_or_income)
         params['order'] = order
         rows = self._db.execute(query, params).fetchall()
 
         if not rows:
-            raise AreaRepositoryError("No countries for code %s" % (region_or_income_or_cluster,))
+            raise AreaRepositoryError("No countries for code %s" % (region_or_income,))
 
         country_list = []
 
         for country in [dict(r) for r in rows]:
             self.set_region_countries(country)
-            self.area_uri(country)
+            self.set_area_info(country)
             country_list.append(country)
 
         return CountryRowAdapter().transform_to_country_list(country_list)
@@ -176,7 +201,35 @@ class AreaRepository(area.Repository):
         if commit:
             self._db.commit()
 
-    def find_areas(self, order):
+    def upsert_area_info(self, area_or_iso3, area_info, commit=True):
+        iso3 = area_or_iso3.iso3 if isinstance(area_or_iso3, Area) else area_or_iso3
+        data = AreaInfoRowAdapter().info_to_dict(iso3, area_info)
+        query = create_replace_query('area_info', data)
+        self._db.execute(query, data)
+        if commit:
+            self._db.commit()
+
+    def update_search_data(self, iso3, search, commit=True):
+        self._db.execute('UPDATE area SET search=:search WHERE iso3=:iso3', {'iso3': iso3, 'search': search})
+        if commit:
+            self._db.commit()
+
+    def find_area_info(self, iso3):
+        """
+        Finds the area infor for the country with the iso3 specified
+        Args:
+            iso3: iso3 code for the related area
+
+        Returns:
+            list of AreaInfo: The list of AreaInfo objects
+
+        """
+        query = "SELECT * FROM area_info WHERE area = :iso3 ORDER BY year DESC"
+        rows = self._db.execute(query, {"iso3": iso3}).fetchall()
+
+        return [dict(r) for r in rows]
+
+    def find_areas(self, order="name"):
         """
         Finds all areas in the repository
 
@@ -186,13 +239,12 @@ class AreaRepository(area.Repository):
         Returns:
             list of Area: All regions and countries
         """
-        order = "name" if order is None else order
         regions = self.find_regions(order)
         countries = self.find_countries(order)
 
         return regions + countries
 
-    def find_regions(self, order):
+    def find_regions(self, order="name"):
         """
         Finds all regions in the repository
 
@@ -202,7 +254,6 @@ class AreaRepository(area.Repository):
         Returns:
             list of Region: All regions
         """
-        order = "name" if order is None else order
         query = "SELECT * FROM area WHERE area IS NULL ORDER BY :order ASC"
         rows = self._db.execute(query, {'order': order}).fetchall()
 
@@ -210,14 +261,13 @@ class AreaRepository(area.Repository):
 
         for region in [dict(r) for r in rows]:
             self.set_region_countries(region)
+            self.set_area_info(region)
 
-            # FIXME: Review
-            # self.area_uri(continent)
             regions.append(region)
 
         return RegionRowAdapter().transform_to_region_list(regions)
 
-    def find_countries(self, order):
+    def find_countries(self, order="name"):
         """
         Finds all countries in the repository
 
@@ -227,18 +277,29 @@ class AreaRepository(area.Repository):
         Returns:
             list of Country: All countries
         """
-        order = "name" if order is None else order
         query = "SELECT * FROM area WHERE area IS NOT NULL ORDER BY :order ASC"
         rows = self._db.execute(query, {'order': order}).fetchall()
 
         country_list = []
 
         for country in [dict(r) for r in rows]:
-            # FIXME: review
-            # self.area_uri(country)
+            self.set_area_info(country)
             country_list.append(country)
 
         return CountryRowAdapter().transform_to_country_list(country_list)
+
+    def set_area_info(self, area_dict):
+        """
+        Finds and sets the area info for an area_dict
+        Args:
+            area_dict (dict): dict with area data
+
+        Returns:
+
+        """
+        iso3 = area_dict["iso3"]
+        info_list = self.find_area_info(iso3)
+        area_dict["info"] = info_list
 
     def set_region_countries(self, region):
         """
@@ -251,71 +312,34 @@ class AreaRepository(area.Repository):
 
         """
         iso3 = region["iso3"]
-        query = "SELECT * FROM area WHERE area LIKE :iso3 ORDER BY name ASC"
+        query = "SELECT * FROM area WHERE area = :iso3 ORDER BY name ASC"
         rows = self._db.execute(query, {'iso3': iso3}).fetchall()
 
         country_list = []
 
         for country in [dict(r) for r in rows]:
-            # FIXME: review
-            self.area_uri(country)
+            self.set_area_info(country)
             country_list.append(country)
 
         if country_list:
             region["countries"] = country_list
 
-
-# def area_uri(self, area):
-#     """
-#     Sets the URI to the given area
-#
-#     Args:
-#         area (Area): Area to set the URI
-#     """
-#     field = "iso3" if area["iso3"] is not None else "name"
-#     uri(url_root=self._url_root, element=area, element_code=field,
-#         level="areas")
-
-# def enrich_country(self, iso3, indicator_list):
-#     """
-#     Enriches country data with indicator info
-#
-#     Note:
-#         The input indicator_list must contain the following attributes: indicator_code, year, value,
-#         provider_name and provider_value
-#     Args:
-#         iso3 (str): Iso3 of the country for which data is going to be appended.
-#         indicator_list (list of Indicator): Indicator list with the attributes in the note.
-#     """
-#     info_dict = {}
-#     for indicator in indicator_list:
-#         info_dict[indicator.indicator_code] = {
-#             "year": indicator.year,
-#             "value": indicator.value,
-#             "provider": {
-#                 "name": indicator.provider_name,
-#                 "url": indicator.provider_url
-#             }
-#         }
-#
-#     self._db["areas"].update({"iso3": iso3}, {"$set": {"info": info_dict}})
-
-# def get_areas_info(self):
-#     all_countries = self.find_countries(None)
-#     indicator_codes = set([info.indicator_code for country in all_countries for info in country.info])
-#     indicators_info_list = IndicatorInfoList()
-#     for indicator_code in indicator_codes:
-#         areas = []
-#         provider_name, provider_url = ('', '')
-#         for area in all_countries:
-#             for info_of_area in area.info:
-#                 if info_of_area.indicator_code == indicator_code:
-#                     areas.append(AreaShortInfo(area.iso3, info_of_area.value, info_of_area.year))
-#                     provider_name, provider_url = (info_of_area.provider_name, info_of_area.provider_url)
-#         indicator_info = IndicatorInfo(indicator_code, provider_name, provider_url)
-#         indicator_info.values = areas
-#         indicators_info_list.add_indicator_info(indicator_info)
-#     return indicators_info_list
+    def get_areas_info(self):
+        all_countries = self.find_countries()
+        indicator_codes = set([info.indicator_code for country in all_countries for info in country.info])
+        indicators_info_list = IndicatorInfoList()
+        for indicator_code in indicator_codes:
+            areas = []
+            provider_name, provider_url = ('', '')
+            for area in all_countries:
+                for info_of_area in area.info:
+                    if info_of_area.indicator_code == indicator_code:
+                        areas.append(AreaShortInfo(area.iso3, info_of_area.value, info_of_area.year))
+                        provider_name, provider_url = (info_of_area.provider_name, info_of_area.provider_url)
+            indicator_info = IndicatorInfo(indicator_code, provider_name, provider_url)
+            indicator_info.values = areas
+            indicators_info_list.add_indicator_info(indicator_info)
+        return indicators_info_list
 
 
 class AreaRowAdapter(object):
@@ -355,18 +379,16 @@ class RegionRowAdapter(object):
         Returns:
 
         """
-        # FIXME: Check if is needed to parse countries or area info
-        # TODO: we could avoid the need to be explicit with the fields if we just used **kwargs in create_region to swallow all the unwanted fields
-        data = dict((key, value) for key, value in list(region_dict.items()) if
-                    key in ['name', 'short_name', 'area', 'iso3', 'iso2', 'iso_num', 'id', 'search', 'info', 'uri'])
+        data = {key: value for key, value in region_dict.items() if
+                key in ['name', 'short_name', 'area', 'iso3', 'iso2', 'id', 'search', 'uri']}
         data['countries'] = CountryRowAdapter.transform_to_country_list(region_dict['countries'])
+        data['info'] = AreaInfoRowAdapter.transform_to_info_list(region_dict['info'])
         return create_region(**data)
 
     @staticmethod
     def region_to_dict(region):
-        # FIXME: Review fields
         data = dict((key, value) for key, value in list(region.to_dict().items()) if
-                    key not in ('countries', 'info', 'search', 'uri', 'iso_num'))
+                    key not in ['countries', 'info', 'search'])
         return data
 
     @staticmethod
@@ -386,13 +408,15 @@ class RegionRowAdapter(object):
 class CountryRowAdapter(object):
     @staticmethod
     def dict_to_country(country_dict):
-        # FIXME: Check if is needed to parse area info
-        return create_country(**country_dict)
+        data = {key: value for key, value in country_dict.items() if
+                key not in ['info']}
+        data['info'] = AreaInfoRowAdapter.transform_to_info_list(country_dict['info'])
+        return create_country(**data)
 
     @staticmethod
     def country_to_dict(country):
         data = dict((key, value) for key, value in list(country.to_dict().items()) if
-                    key not in ('countries', 'info', 'search', 'uri', 'iso_num'))
+                    key not in ('countries', 'info', 'search'))
         return data
 
     @staticmethod
@@ -409,39 +433,39 @@ class CountryRowAdapter(object):
         return [CountryRowAdapter.dict_to_country(country_dict) for country_dict in country_dict_list]
 
 
-# class AreaInfoDocumentAdapter(object):
-#     """
-#     Adapter class to transform area info from PyMongo format to Domain area info objects
-#     """
-#
-#     def transform_to_area_info_list(self, area_info_document_dict):
-#         """
-#         Transforms a dict with area infos
-#
-#         Args:
-#             area_info_document_dict (dict): Area info document dict in PyMongo format
-#
-#         Returns:
-#             A list of area infos
-#         """
-#         return [AreaInfo(indicator_code=area_info_key,
-#                          provider_name=area_info_document_dict[area_info_key]['provider']['name'],
-#                          provider_url=area_info_document_dict[area_info_key]['provider']['url'],
-#                          value=area_info_document_dict[area_info_key]['value'],
-#                          year=area_info_document_dict[area_info_key]['year'])
-#                 for area_info_key in area_info_document_dict.keys()]
+class AreaInfoRowAdapter(object):
+    @staticmethod
+    def info_to_dict(iso3, area_info):
+        """
+        Args:
+            iso3 (str):
+            area_info (AreaInfo):
+
+        Returns:
+            dict: dictionary to be inserted in SQlite
+        """
+        data = {'area': iso3, 'value': area_info.value, 'year': area_info.year, 'provider_url': area_info.provider_url,
+                'provider_name': area_info.provider_name, 'indicator_code': area_info.indicator_code}
+        return data
+
+    @staticmethod
+    def dict_to_info(info_dict):
+        data = {k: v for k, v in info_dict.items() if k != 'area'}
+        return AreaInfo(**data)
+
+    @staticmethod
+    def transform_to_info_list(info_dict_list):
+        return [AreaInfoRowAdapter.dict_to_info(info_dict) for info_dict in info_dict_list]
+
 
 if __name__ == "__main__":
-    import logging
     import configparser
     import json
 
-    logger = logging.getLogger(__name__)
-    config = configparser.RawConfigParser()
-    config.add_section('CONNECTION')
-    config.set('CONNECTION', 'SQLITE_DB', '../../odb2015.db')
-
-    repo = AreaRepository(False, logger, config)
+    sqlite_config = configparser.RawConfigParser()
+    sqlite_config.add_section("CONNECTION")
+    sqlite_config.set("CONNECTION", 'SQLITE_DB', '../../odb2015.db')
+    repo = AreaRepository(False, sqlite_config)
 
     high_income_countries = repo.find_countries_by_code_or_income('High income')
     assert len(high_income_countries) > 0 and all(
@@ -453,21 +477,20 @@ if __name__ == "__main__":
         [country.area == ':EU' for country in europe.countries])
     print(json.dumps(europe.to_dict()))
 
-    emerging_countries = repo.find_countries_by_region_or_income_or_cluster('Emerging and advancing')
-    assert len(emerging_countries) > 0 and all(
-        [country.cluster_group.lower() == 'emerging and advancing' for country in emerging_countries])
-    print(json.dumps([i.to_dict() for i in emerging_countries]))
-
     spain = repo.find_countries_by_code_or_income('es')
     assert spain is not None and spain.iso3 == 'ESP'
     print(json.dumps(spain.to_dict()))
 
-    regions = repo.find_regions('name')
-    assert len(regions) > 0
-    print(json.dumps([region.to_dict() for region in regions]))
+    regions_by_name = repo.find_regions('name')
+    assert len(regions_by_name) > 0
+    print(json.dumps([region.to_dict() for region in regions_by_name]))
 
     france = repo.find_by_code('fr')
     assert france is not None and france.iso2 == 'FR'
     print(json.dumps(france.to_dict()))
+
+    all_areas = repo.find_areas()
+    assert all_areas
+    print(json.dumps([area.to_dict() for area in all_areas]))
 
     print('OK!')

@@ -110,6 +110,9 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
-#Virtual environment
+# Virtual environment
 odbenv/
+
+# Other files
 odb2015.db
+application/json/

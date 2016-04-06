@@ -1,6 +1,3 @@
-
-
-
 class RepositoryError(Exception):
     """
     Exception parent class for all repositories, this class could be subclassed for custom behaviour

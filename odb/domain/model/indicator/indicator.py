@@ -69,6 +69,7 @@ class Indicator(Entity):
         self._provider_url = event.provider_url
         self._provider_url = event.provider_url
         self._range = event.range
+        self._short_name = event.short_name
         self._source_data = event.source_data
         self._source_name = event.source_name
         self._source_url = event.source_url
@@ -79,18 +80,10 @@ class Indicator(Entity):
         self._uri = event.uri
         self._weight = event.weight
 
-    # FIXME: Review this repr because I think it is not correct
-    # def __repr__(self):
-    #     return "{d}Indicator(id={id!r}," \
-    #            "country_coverage={i._country_coverage!r}, " \
-    #            "provider_link={i._provider_link!r}," \
-    #            "republish={i._republish!r}, high_low={i._high_low!r}, " \
-    #            "type={i._type!r}, label={i._label!r}, comment={i._comment!r}, " \
-    #            "notation={i._notation!r}, interval_starts={i._interval_starts!r}, " \
-    #            "interval_ends={i._interval_ends!r}, organization={i._organization})". \
-    #         format(d="*Discarded* " if self._discarded else "", id=self._id, i=self)
+    def __eq__(self, other):
+        return self.indicator == other.indicator
 
-    # TODO: This could be greatly simplified using the output of dir(self)
+    # TODO: This could be greatly simplified using reflection
     def to_dict(self):
         """
         Converts self object to dictionary
@@ -103,9 +96,9 @@ class Indicator(Entity):
             'provider_url': self.provider_url, 'description': self.description, 'uri': self.uri,
             'component': self.component, 'subindex': self.subindex, 'id': self.id, 'type': self.type,
             'children': [child.to_dict() for child in self.children], 'provider_name': self.provider_name,
-            'source_name': self.source_name, 'source_url': self.source_url, 'source_data': self.source_data,
-            'units': self.units, 'format_notes': self.format_notes, 'license': self.license, 'range': self.range,
-            'tags': self.tags, 'weight': self.weight}
+            'short_name': self.short_name, 'source_name': self.source_name, 'source_url': self.source_url,
+            'source_data': self.source_data, 'units': self.units, 'format_notes': self.format_notes,
+            'license': self.license, 'range': self.range, 'tags': self.tags, 'weight': self.weight}
 
     # TODO: Enforce rules about naming here?
 
@@ -243,6 +236,15 @@ class Indicator(Entity):
         self.increment_version()
 
     @property
+    def short_name(self):
+        return self._short_name
+
+    @short_name.setter
+    def short_name(self, short_name):
+        self._short_name = short_name
+        self.increment_version()
+
+    @property
     def tags(self):
         return self._tags
 
@@ -341,9 +343,9 @@ class Indicator(Entity):
 # Indicator aggregate root factory
 # =======================================================================================
 def create_indicator(id=None, index=None, indicator=None, name=None, component=None, source_name=None, source_url=None,
-                     source_data=None, range=None, units=None, format_notes=None, license=None,
-                     provider_url=None, description=None, uri=None, parent=None, provider_name=None,
-                     subindex=None, type=None, tags=None, weight=None, children=None):
+                     source_data=None, range=None, units=None, format_notes=None, license=None, short_name=None,
+                     provider_url=None, description=None, uri=None, parent=None, provider_name=None, subindex=None,
+                     type=None, tags=None, weight=None, children=None):
     """
     This function creates new indicators and acts as a factory
 
@@ -379,9 +381,9 @@ def create_indicator(id=None, index=None, indicator=None, name=None, component=N
     event = Indicator.Created(originator_id=indicator_id, originator_version=0, id=id, index=index, indicator=indicator,
                               name=name, parent=parent, provider_url=provider_url, description=description, uri=uri,
                               provider_name=provider_name, subindex=subindex, source_data=source_data,
-                              source_url=source_url, units=units, format_notes=format_notes, range=range,
-                              license=license, component=component, source_name=source_name, type=type, tags=tags,
-                              weight=weight, children=children)
+                              short_name=short_name, source_url=source_url, units=units, format_notes=format_notes,
+                              range=range, license=license, component=component, source_name=source_name, type=type,
+                              tags=tags, weight=weight, children=children)
     indicator = when(event)
     publish(event)
     return indicator
@@ -412,7 +414,7 @@ def _(event, indicator):
 class Repository(object, metaclass=ABCMeta):
     """Abstract implementation of generic queries for managing indicators."""
 
-    def find_indicator_by_code(self, indicator_code):
+    def find_indicator_by_code(self, indicator_code, _type=None):
         pass
 
     def find_indicators_index(self):
@@ -439,6 +441,8 @@ class Repository(object, metaclass=ABCMeta):
     def find_indicator_children(self, indicator):
         pass
 
-    def insert_indicator(self, indicator, indicator_uri=None, component_name=None, subindex_name=None, index_name=None,
-                         weight=None, provider_name=None, provider_url=None):
+    def insert_indicator(self, indicator):
+        pass
+
+    def find_component_by_short_name(self, short_name, subindex):
         pass

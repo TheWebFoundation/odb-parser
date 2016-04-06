@@ -1,6 +1,3 @@
-
-
-
 class IndicatorInfo(object):
     def __init__(self, indicator_code, provider_name, provider_url):
         self._indicator_code = indicator_code
@@ -49,10 +46,7 @@ class IndicatorInfo(object):
                 'provider_name': self.provider_name,
                 'provider_url': self.provider_url,
             },
-            'values': {
-                value.area_code: value.to_dict()
-                for value in self.values
-                }
+            'values': {value.area_code: value.to_dict() for value in self.values}
         }
 
 
@@ -72,7 +66,4 @@ class IndicatorInfoList(object):
         self._indicator_infos.append(indicator_info)
 
     def to_dict(self):
-        return {
-            indicator_info.indicator_code: indicator_info.to_dict()
-            for indicator_info in self.indicator_infos
-            }
+        return {indicator_info.indicator_code: indicator_info.to_dict() for indicator_info in self.indicator_infos}

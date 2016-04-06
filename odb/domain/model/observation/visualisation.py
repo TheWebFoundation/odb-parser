@@ -1,6 +1,4 @@
-
-
-from a4ai.domain.model.observation.statistics import Statistics
+from odb.domain.model.observation.statistics import Statistics
 
 
 class Visualisation(object):
@@ -12,7 +10,7 @@ class Visualisation(object):
         statistics (Statistics): Statistics for the visualization
     """
 
-    def __init__(self, observations, observations_all_areas=[]):
+    def __init__(self, observations, observations_all_areas=None):
         """
         Constructor for Visualization
 
@@ -20,9 +18,10 @@ class Visualisation(object):
             observations (list of Observation): Observations to store and calculate statistics
             observations_all_areas (list of Observations, optional): All observations without area filters
         """
+
         self._observations = observations
         self._statistics = Statistics(observations)
-        self._observations_all_areas = observations_all_areas
+        self._observations_all_areas = observations_all_areas if observations_all_areas else []
         self._statistics_all_areas = Statistics(observations_all_areas)
 
     @property
@@ -44,9 +43,9 @@ class Visualisation(object):
         Returns:
             dict: Dictionary representation of self object
         """
-        dict = self.to_dict_without_all_areas()
-        dict['statistics_all_areas'] = self.statistics_all_areas.to_dict()
-        return dict
+        d = self.to_dict_without_all_areas()
+        d['statistics_all_areas'] = self.statistics_all_areas.to_dict()
+        return d
 
     def to_dict_without_all_areas(self):
         """

@@ -49,16 +49,10 @@ class Area(Entity):
         self._uri = event.uri
         self._iso3 = event.iso3
         self._iso2 = event.iso2
-        self._iso_num = event.iso_num
         self._id = event.id
         self._search = event.search
         self._info = event.info
-
-    # FIXME: Review repr
-    # def __repr__(self):
-    #     return "{d}Region(id={s._id}, type={s._type}, label={s._label}, " \
-    #            "countries=[0..{n}])".format(d="*Discarded* " if self._discarded else "",
-    #                                         s=self, n=len(self._countries))
+        self._countries = event.countries
 
     def to_dict(self):
         """
@@ -68,16 +62,15 @@ class Area(Entity):
             dict: Dictionary representation of self object
         """
         return {
-            'name': self.name, 'short_name': self.short_name, 'area': self.area,
-            'uri': self.uri, 'iso3': self.iso3, 'iso2': self.iso2,
-            'iso_num': self.iso_num, 'id': self.id, "search": self.search,
+            'name': self.name, 'short_name': self.short_name, 'area': self.area, 'uri': self.uri, 'iso3': self.iso3,
+            'iso2': self.iso2, 'id': self.id, "search": self.search,
             'info': {area_info.indicator_code: area_info.to_dict() for area_info in self.info}
         }
 
     def to_dict_without_info(self):
-        dict = self.to_dict()
-        del dict['info']
-        return dict
+        d = self.to_dict()
+        del d['info']
+        return d
 
     # =======================================================================================
     # Properties
@@ -143,15 +136,6 @@ class Area(Entity):
     @iso2.setter
     def iso2(self, iso2):
         self._iso2 = iso2
-        self.increment_version()
-
-    @property
-    def iso_num(self):
-        return self._iso_num
-
-    @iso_num.setter
-    def iso_num(self, iso_num):
-        self._iso_num = iso_num
         self.increment_version()
 
     @property
@@ -263,7 +247,7 @@ class Repository(object, metaclass=ABCMeta):
     def find_by_name(self, area_name):
         pass
 
-    def find_countries_by_region_or_income_or_cluster(self, region_or_income_or_cluster):
+    def find_countries_by_region_or_income(self, region_or_income):
         pass
 
     def find_regions(self, order):
@@ -275,5 +259,14 @@ class Repository(object, metaclass=ABCMeta):
     def set_region_countries(self, area):
         pass
 
-    def area_uri(self, area):
+    def upsert_area_info(self, area, area_info, commit=True):
+        pass
+
+    def insert_region(self, region):
+        pass
+
+    def insert_country(self, country):
+        pass
+
+    def update_search_data(self, iso3, search, commit=True):
         pass

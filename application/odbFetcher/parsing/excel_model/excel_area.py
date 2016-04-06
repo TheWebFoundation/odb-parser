@@ -4,9 +4,7 @@ class ExcelArea(object):
     corresponds with the columns in the file.
     """
 
-    def __init__(self, iso2, iso3, name, region, income=None, hdi_rank=None, g20=None, g7=None, iodch=None, oecd=None,
-                 cluster_group=None):
-        self._cluster_group = cluster_group
+    def __init__(self, iso2, iso3, name, region, income=None, hdi_rank=None, g20=None, g7=None, iodch=None, oecd=None):
         self._g20 = g20
         self._g7 = g7
         self._hdi_rank = hdi_rank
@@ -33,10 +31,6 @@ class ExcelArea(object):
     @property
     def region(self):
         return self._region
-
-    @property
-    def cluster_group(self):
-        return self._cluster_group
 
     @property
     def g20(self):

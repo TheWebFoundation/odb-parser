@@ -35,12 +35,12 @@ class Parser(object):
         """
         Retrieves a xlrd sheet object given its file name and its index within it.
         :param file_name:
-        :param sheet_number:
+        :param sheet_name_or_index:
         :return xlrd sheet object:
         """
         book = xlrd.open_workbook(file_name)
         sheet = book.sheet_by_index(sheet_name_or_index) if is_number(sheet_name_or_index) else book.sheet_by_name(
-                sheet_name_or_index)
+            sheet_name_or_index)
         return sheet
 
     @staticmethod
@@ -50,3 +50,66 @@ class Parser(object):
         matching_sheet_names = [sheet_name for sheet_name in book.sheet_names() if pattern.match(sheet_name)]
         matching_sheets = [book.sheet_by_name(sheet_name) for sheet_name in matching_sheet_names]
         return matching_sheets
+
+    @staticmethod
+    def _decorate_config_key(key, year):
+        return "%s_%s" % (key, year)
+
+    def _config_getint(self, section_name, key_name, year):
+        """
+        Allow configuration keys to be overriden by an specified year
+        Args:
+            section_name:
+            key_name:
+            year:
+
+        Returns:
+
+        """
+        decorated_key = self._decorate_config_key(key_name, year)
+
+        if not self._config.has_option(section_name, decorated_key):
+            return self._config.getint(section_name, key_name)
+        else:
+            return self._config.getint(section_name, decorated_key)
+
+    def _config_get(self, section_name, key_name, year):
+        """
+        Allow configuration keys to be overriden by an specified year
+        Args:
+            section_name:
+            key_name:
+            year:
+
+        Returns:
+
+        """
+        decorated_key = self._decorate_config_key(key_name, year)
+        if not self._config.has_option(section_name, decorated_key):
+            return self._config.get(section_name, key_name)
+        else:
+            return self._config.get(section_name, decorated_key)
+
+
+class ParserError(Exception):
+    """
+    Exception parent class for all parsers, this class could be subclassed for custom behaviour
+
+    Attributes:
+        message (str): Error message for this exception
+    """
+
+    def __init__(self, message, custom_header=""):
+        """
+        Constructor for ParserError
+
+        Args:
+            message (str): Error message for this exception
+            custom_header (str): Title to introduce the error message
+        """
+        self._message = message
+        self._custom_header = custom_header
+
+    @property
+    def message(self):
+        return self._custom_header + " " + self._message

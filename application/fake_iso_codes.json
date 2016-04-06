@@ -1,0 +1,30 @@
+{
+  "middle east & north africa": {
+    "iso3": ":ME",
+    "iso2": ":M"
+  },
+  "latin america & caribbean": {
+    "iso3": ":LA",
+    "iso2": ":L"
+  },
+  "south asia": {
+    "iso3": ":SA",
+    "iso2": ":S"
+  },
+  "north america": {
+    "iso3": ":NA",
+    "iso2": ":N"
+  },
+  "east asia & pacific": {
+    "iso3": ":PA",
+    "iso2": ":P"
+  },
+  "europe & central asia": {
+    "iso3": ":EU",
+    "iso2": ":E"
+  },
+  "sub-saharan africa": {
+    "iso3": ":AF",
+    "iso2": ":A"
+  }
+}

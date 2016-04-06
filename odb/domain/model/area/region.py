@@ -36,12 +36,6 @@ class Region(Area):
         super(Region, self).__init__(event)
         self._countries = event.countries
 
-    # FIXME: Review repr
-    # def __repr__(self):
-    #     return "{d}Region(id={s._id}, type={s._type}, label={s._label}, " \
-    #            "countries=[0..{n}])".format(d="*Discarded* " if self._discarded else "",
-    #                                         s=self, n=len(self._countries))
-
     def to_dict(self):
         dictionary = super(Region, self).to_dict()
         dictionary['countries'] = [country.to_dict() for country in self._countries]
@@ -126,8 +120,8 @@ class Region(Area):
 # =======================================================================================
 # Region aggregate root factory
 # =======================================================================================
-def create_region(name=None, short_name=None, area=None, countries=None,
-                  uri=None, iso3=None, iso2=None, iso_num=None, id=None, search=None, info=None):
+def create_region(name=None, short_name=None, area=None, countries=None, uri=None, iso3=None, iso2=None, id=None,
+                  search=None, info=None):
     """
     This function creates new regions and acts as a factory
 
@@ -139,7 +133,6 @@ def create_region(name=None, short_name=None, area=None, countries=None,
         uri (str, optional): URI that identifies this unique resource, normally composed depending on deployment address
         iso3 (str, optional): ISO 3166-1 alpha-3 code for the country
         iso2 (str, optional): ISO 3166-1 alpha-2 code for the country
-        iso_num (str, optional): ISO 3166-1 number code for the country
         id (optional): Id code for the country
         search (str, optional): Search names separated by ';' with the name of the country in various languages
         info (list of AreaInfo): List of area info for this area
@@ -147,10 +140,8 @@ def create_region(name=None, short_name=None, area=None, countries=None,
     region_id = uuid.uuid4().hex[:24]
     if countries is None: countries = []
     if info is None: info = []
-    event = Region.Created(originator_id=region_id, originator_version=0,
-                           name=name, short_name=short_name, area=area,
-                           countries=countries, uri=uri, iso3=iso3, iso2=iso2,
-                           iso_num=iso_num, id=id, search=search, info=info)
+    event = Region.Created(originator_id=region_id, originator_version=0, name=name, short_name=short_name, area=area,
+                           countries=countries, uri=uri, iso3=iso3, iso2=iso2, id=id, search=search, info=info)
     region = when(event)
     publish(event)
     return region

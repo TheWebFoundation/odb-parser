@@ -1,15 +1,9 @@
+from functools import lru_cache
+
 from infrastructure.errors.errors import IndicatorRepositoryError
 from infrastructure.sql_repos.utils import create_insert_query, get_db
 from odb.domain.model.indicator.indicator import Repository, Indicator
 from odb.domain.model.indicator.indicator import create_indicator
-
-
-class _MockDB(object):
-    def __init__(self, log):
-        self._log = log
-
-    def insert(self, table, indicator):
-        self._log.info("\tStoring %s in %s", indicator.__dict__, table)
 
 
 class IndicatorRepository(Repository):
@@ -17,14 +11,13 @@ class IndicatorRepository(Repository):
     Concrete sqlite repository for Indicators.
     """
 
-    def __init__(self, recreate_db, log, config):
+    def __init__(self, recreate_db, config):
         """
         Constructor for IndicatorRepository
 
         Args:
         """
         self._config = config
-        self._log = log
         self._db = self._initialize_db(recreate_db)
 
     def _initialize_db(self, recreate_db):
@@ -45,6 +38,7 @@ class IndicatorRepository(Repository):
                     provider_name TEXT,
                     provider_url TEXT,
                     range TEXT,
+                    short_name TEXT,
                     source_data TEXT,
                     source_name TEXT,
                     source_url TEXT,
@@ -57,7 +51,7 @@ class IndicatorRepository(Repository):
                 );
                 '''
             db.execute(sql)
-            db.execute("CREATE INDEX indicator_indicator_index ON indicator (indicator COLLATE NOCASE)")
+            db.execute("CREATE UNIQUE INDEX indicator_indicator_index ON indicator (indicator COLLATE NOCASE)")
             db.commit()
         return db
 
@@ -67,28 +61,66 @@ class IndicatorRepository(Repository):
     def commit_transaction(self):
         self._db.commit()
 
-    # FIXME: Why the extra parameters?
-    def insert_indicator(self, indicator, indicator_uri=None, component_name=None, subindex_name=None, index_name=None,
-                         weight=None, source_name=None, provider_name=None, provider_url=None, is_percentage=None,
-                         scale=None, tags=None, commit=True):
+    def insert_indicator(self, indicator, commit=True):
         data = IndicatorRowAdapter().indicator_to_dict(indicator)
         query = create_insert_query('indicator', data)
         self._db.execute(query, data)
         if commit:
             self._db.commit()
 
-    def find_indicator_by_code(self, indicator_code):
-        query = "SELECT * FROM indicator WHERE indicator=:indicator"
-        indicator_code = indicator_code or ''
-        r = self._db.execute(query, {'indicator': indicator_code.upper()}).fetchone()
-        if r is None:
-            raise IndicatorRepositoryError("No indicator with code " + indicator_code)
+    @lru_cache(maxsize=None)
+    def find_indicator_by_code(self, indicator_code, _type=None):
+        query = "SELECT * FROM indicator WHERE indicator LIKE :indicator"
+        if not indicator_code:
+            raise IndicatorRepositoryError("Indicator name must not be empty")
+        data = {'indicator': indicator_code.upper()}
+        if _type:
+            query += " AND type LIKE :_type"
+            data['_type'] = _type
+
+        r = self._db.execute(query, data).fetchone()
+        if r is None and _type is None:
+            raise IndicatorRepositoryError("No indicator with code %s found" % (indicator_code,))
+        elif r is None and _type is not None:
+            raise IndicatorRepositoryError(
+                "No indicator with code %s and type %s found" % (indicator_code, _type))
 
         data = dict(r)
         children = self.find_indicator_children(data)
         data["children"] = children
 
         return IndicatorRowAdapter().dict_to_indicator(data)
+
+    def find_component_by_short_name(self, short_name, subindex):
+        query = "SELECT * FROM indicator WHERE short_name LIKE :short_name AND subindex LIKE :subindex"
+        if not short_name:
+            raise IndicatorRepositoryError("Indicator short name must not be empty")
+        if not subindex:
+            raise IndicatorRepositoryError("Indicator subindex must not be empty")
+        data = {'short_name': short_name.upper(), 'subindex': subindex.upper()}
+
+        r = self._db.execute(query, data).fetchone()
+        if r is None:
+            raise IndicatorRepositoryError(
+                "No component with short name %s and subindex %s found" % (short_name, subindex))
+
+        data = dict(r)
+        return IndicatorRowAdapter().dict_to_indicator(data)
+
+    def find_indicators(self):
+        """
+        Finds all indicators
+
+        Returns:
+            list of Indicator: All the indicators stored
+        """
+        _index = self.find_indicators_index()
+        subindices = self.find_indicators_sub_indexes()
+        components = self.find_indicators_components()
+        indicators = self.find_indicators_indicators()
+
+        result = (_index + subindices + components + indicators)
+        return result
 
     def find_indicators_index(self):
         """
@@ -100,6 +132,14 @@ class IndicatorRepository(Repository):
         return self.find_indicators_by_level("INDEX")
 
     def find_indicators_components(self, parent=None):
+        """
+
+        Args:
+            parent (Indicator, optional):
+
+        Returns:
+
+        """
         return self.find_indicators_by_level("COMPONENT", parent)
 
     def find_indicator_children(self, indicator_dict):
@@ -114,13 +154,13 @@ class IndicatorRepository(Repository):
         """
         # We could get everything in one query, but it is easier to read this way
         if indicator_dict['type'].upper() == 'INDEX':
-            query = "SELECT * FROM indicator WHERE (type LIKE 'SUBINDEX' AND index_code=:index_code)"
+            query = "SELECT * FROM indicator WHERE (type = 'SUBINDEX' AND index_code=:index_code)"
             indicators = self._db.execute(query, {'index_code': indicator_dict['indicator']}).fetchall()
         elif indicator_dict['type'].upper() == 'SUBINDEX':
-            query = "SELECT * FROM indicator WHERE (type LIKE 'COMPONENT' AND subindex=:subindex)"
+            query = "SELECT * FROM indicator WHERE (type = 'COMPONENT' AND subindex=:subindex)"
             indicators = self._db.execute(query, {'subindex': indicator_dict['indicator']}).fetchall()
         elif indicator_dict['type'].upper() == 'COMPONENT':
-            query = "SELECT * FROM indicator WHERE ((type LIKE 'PRIMARY' OR type LIKE 'SECONDARY') AND component LIKE :component)"
+            query = "SELECT * FROM indicator WHERE ((type = 'PRIMARY' OR type = 'SECONDARY') AND component = :component)"
             indicators = self._db.execute(query, {'component': indicator_dict['indicator']}).fetchall()
         else:
             return []
@@ -173,11 +213,12 @@ class IndicatorRepository(Repository):
         if parent is not None:
             # We filter by matching the parent_type to the column, in the future we may want to change this if there is
             # not a clear mapping or we are using relations (e.g. foreign keys)
-            where_clause = "WHERE (type LIKE :type AND %s LIKE :parent_code)" % (parent.type,)
+            parent_column = "index_code" if parent.type == "INDEX" else parent.type
+            where_clause = "WHERE (type = :type AND %s = :parent_code)" % (parent_column,)
             query = "SELECT * FROM indicator %s" % (where_clause,)
             rows = self._db.execute(query, {'type': level, 'parent_code': parent.indicator}).fetchall()
         else:
-            where_clause = "WHERE (type LIKE :type)"
+            where_clause = "WHERE (type = :type)"
             query = "SELECT * FROM indicator %s" % (where_clause,)
             rows = self._db.execute(query, {'type': level}).fetchall()
 
@@ -246,16 +287,14 @@ class IndicatorRowAdapter(object):
 
 
 if __name__ == "__main__":
-    import logging
     import configparser
     import json
 
-    logger = logging.getLogger(__name__)
-    config = configparser.RawConfigParser()
-    config.add_section('CONNECTION')
-    config.set('CONNECTION', 'SQLITE_DB', '../../odb2015.db')
+    sqlite_config = configparser.RawConfigParser()
+    sqlite_config.add_section('CONNECTION')
+    sqlite_config.set('CONNECTION', 'SQLITE_DB', '../../odb2015.db')
 
-    repo = IndicatorRepository(False, logger, config)
+    repo = IndicatorRepository(False, sqlite_config)
 
     indicator = repo.find_indicator_by_code('ODB.2015.C.MANAG')
     assert indicator.indicator == 'ODB.2015.C.MANAG'
@@ -275,7 +314,7 @@ if __name__ == "__main__":
 
     readiness = repo.find_indicator_by_code('readiness')
     indicators = repo.find_indicators_by_level('component', parent=readiness)
-    assert len(indicators) > 0 and len(indicators) < 10
+    assert 0 < len(indicators) < 10
     print(json.dumps([i.to_dict() for i in indicators]))
 
     print('OK!')

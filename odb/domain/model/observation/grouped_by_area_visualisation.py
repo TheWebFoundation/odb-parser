@@ -1,6 +1,5 @@
-from a4ai.domain.model.observation.statistics import Statistics
-
-from a4ai.domain.model.observation.visualisation import Visualisation
+from odb.domain.model.observation.statistics import Statistics
+from odb.domain.model.observation.visualisation import Visualisation
 
 
 class GroupedByAreaVisualisation(object):
@@ -32,8 +31,7 @@ class GroupedByAreaVisualisation(object):
         Returns:
             list of Observations: Filtered observations by area iso3 code
         """
-        return [obs for obs in self._observations
-                if obs.area == area_code or obs.continent == area_code]
+        return [obs for obs in self._observations if obs.area.iso3 == area_code]
 
     def to_dict(self):
         """
@@ -42,10 +40,9 @@ class GroupedByAreaVisualisation(object):
         Returns:
             dict: Dictionary representation of self object
         """
-        dict = {
+        d = {
             'statistics_all_areas': self._statistics_all_areas.to_dict()
         }
         for area_code in self._area_codes:
-            dict[area_code] = \
-                Visualisation(observations=self.observation_by_area(area_code)).to_dict_without_all_areas()
-        return dict
+            d[area_code] = Visualisation(observations=self.observation_by_area(area_code)).to_dict_without_all_areas()
+        return d

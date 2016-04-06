@@ -8,6 +8,13 @@ def create_insert_query(table, data):
     return query
 
 
+def create_replace_query(table, data):
+    columns = ', '.join(list(data.keys()))
+    placeholders = ':' + ', :'.join(list(data.keys()))
+    query = 'INSERT OR REPLACE INTO %s (%s) VALUES (%s)' % (table, columns, placeholders)
+    return query
+
+
 def get_db(config):
     db = sqlite3.connect(config.get("CONNECTION", "SQLITE_DB"))
     db.row_factory = sqlite3.Row

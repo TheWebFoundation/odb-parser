@@ -1,5 +1,6 @@
 import re
 
+from odb.domain.model.area.area_info import AreaInfo
 from odb.domain.model.area.country import create_country
 from odb.domain.model.area.region import create_region
 from odb.domain.model.indicator.indicator import *
@@ -22,7 +23,7 @@ def string_to_bool(string):
         return string.lower().strip() == "true"
 
 
-def non_empty_string_to_bool(string):
+def is_not_empty(string):
     if not string:
         return False
     else:
@@ -46,6 +47,27 @@ def is_number(s):
     return False
 
 
+def colx_from_colname(colname):
+    colx = 0
+    for ch in colname:
+        colx = colx * 26 + ord(ch) - ord('A') + 1
+    return colx - 1
+
+
+def get_column_number(colname):
+    """
+
+    Args:
+        colname (str): a colname that can either be an identifier 'A', 'B', 'AF', etc. or a number '0', '1', '127'
+
+    Returns:
+        (int): the column number as an integer ready to be passed to xlrd functions
+    """
+    if not colname:
+        return None
+    return colx_from_colname(colname) if colname.isalpha() else int(colname)
+
+
 def weight_to_float(s):
     if s is not None and is_fraction_pattern.match(s):
         try:
@@ -67,6 +89,7 @@ def excel_indicator_to_dom(excel_indicator):
                                  provider_name=excel_indicator.provider_name,
                                  provider_url=excel_indicator.provider_url,
                                  range=excel_indicator.range,
+                                 short_name=excel_indicator.short_name,
                                  source_data=excel_indicator.source_data,
                                  source_name=excel_indicator.source_name,
                                  source_url=excel_indicator.source_url,
@@ -78,13 +101,29 @@ def excel_indicator_to_dom(excel_indicator):
     return indicator
 
 
-def excel_observation_to_dom(excel_observation, area, indicator):
+def excel_observation_to_dom(excel_observation, area, indicator, dataset_indicator=None):
     observation = create_observation(value=excel_observation.value,
-                                     indicator=indicator,
                                      year=Year(excel_observation.year),
-                                     area=area,
-                                     ranking=excel_observation.ranking)
+                                     rank=excel_observation.rank,
+                                     rank_change=excel_observation.rank_change,
+                                     indicator=indicator,
+                                     dataset_indicator=dataset_indicator,
+                                     area=area)
     return observation
+
+
+def excel_area_info_to_dom(excel_area_info):
+    """
+
+    Args:
+        excel_area_info (ExcelAreaInfo):
+
+    Returns:
+
+    """
+    area_info = AreaInfo(indicator_code=excel_area_info.indicator_code, value=excel_area_info.value,
+                         year=excel_area_info.year)
+    return area_info
 
 
 def excel_region_to_dom(excel_region):
@@ -111,8 +150,7 @@ def excel_country_to_dom(excel_country):
 
     """
     country = create_country(name=excel_country.name, iso2=excel_country.iso2, iso3=excel_country.iso3,
-                             short_name=excel_country.name, area=excel_country.region,
-                             cluster_group=excel_country.cluster_group, hdi_rank=excel_country.hdi_rank,
+                             short_name=excel_country.name, area=excel_country.region, hdi_rank=excel_country.hdi_rank,
                              g20=excel_country.g20, g7=excel_country.g7, iodch=excel_country.iodch,
                              oecd=excel_country.oecd, income=excel_country.income)
     return country

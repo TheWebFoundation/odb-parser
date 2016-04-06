@@ -61,39 +61,15 @@ class Observation(Entity):
             event: The event with the required attributes
         """
         super(Observation, self).__init__(event.originator_id, event.originator_version)
-        # self._provider_url = event.provider_url
         self._indicator = event.indicator
-        # self._indicator_name = event.indicator_name
-        # self._indicator_type = event.indicator_type
-        # self._short_name = event.short_name
+        self._dataset_indicator = event.dataset_indicator
         self._area = event.area
-        # self._area_name = event.area_name
-        # self._uri = event.uri
+        self._uri = event.uri
         self._value = event.value
         self._year = event.year
-        # self._provider_name = event.provider_name
         self._id = event.id
-        # self._continent = event.continent
-        self._tendency = event.tendency
-        # self._republish = event.republish
-        # self._area_type = event.area_type
-        self._ranking = event.ranking
-        # self._ranking_type = event.ranking_type
-
-    # FIXME: Review
-    # def __repr__(self):
-    #     return "{d}Observation(id={id!r}, " \
-    #            "issued={issued!r}, " \
-    #            "publisher={publisher!r}, type={obs_type!r}, label={label!r}, " \
-    #            "status={status!r}, " \
-    #            "ref_indicator={ref_indicator!r}, value={value!r}, " \
-    #            "ref_area={ref_area!r}, ref_year={ref_year!r}) ". \
-    #         format(d="*Discarded* " if self.discarded else "", id=self._id,
-    #                issued=self._issued, publisher=self._publisher,
-    #                obs_type=self._type, label=self._label,
-    #                status=self._status, ref_indicator=self._ref_indicator_id,
-    #                value=self._value, ref_area=self._ref_area_id,
-    #                ref_year=self._ref_year)
+        self._rank = event.rank
+        self._rank_change = event.rank_change
 
     def to_dict(self):
         """
@@ -102,23 +78,15 @@ class Observation(Entity):
         Returns:
             dict: Dictionary representation of self object
         """
-        return {'indicator': self.indicator.to_dict(), 'area': self.area.to_dict(), 'value': self.value,
-                'year': self.year, 'id': self.id, 'tendency': self.tendency, 'ranking': self.ranking
-                }
+        # There could be data without an indicator associated
+        indicator_dict = self.indicator.to_dict() if self.indicator else None
+        return {'indicator': indicator_dict, 'area': self.area.to_dict(), 'value': self.value, 'year': self.year,
+                'id': self.id, 'rank': self.rank, 'rank_change': self.rank_change, 'uri': self.uri,
+                'dataset_indicator': self.dataset_indicator}
 
     # =======================================================================================
     # Properties
     # =======================================================================================
-
-    @property
-    def provider_url(self):
-        return self._provider_url
-
-    @provider_url.setter
-    def provider_url(self, provider_url):
-        self._provider_url = provider_url
-        self.increment_version()
-
     @property
     def indicator(self):
         return self._indicator
@@ -129,30 +97,12 @@ class Observation(Entity):
         self.increment_version()
 
     @property
-    def indicator_name(self):
-        return self._indicator_name
+    def dataset_indicator(self):
+        return self._dataset_indicator
 
-    @indicator_name.setter
-    def indicator_name(self, indicator_name):
-        self._indicator_name = indicator_name
-        self.increment_version()
-
-    @property
-    def indicator_type(self):
-        return self._indicator_type
-
-    @indicator_type.setter
-    def indicator_type(self, indicator_type):
-        self._indicator_type = indicator_type
-        self.increment_version()
-
-    @property
-    def short_name(self):
-        return self._short_name
-
-    @short_name.setter
-    def short_name(self, short_name):
-        self._short_name = short_name
+    @dataset_indicator.setter
+    def dataset_indicator(self, dataset_indicator):
+        self._dataset_indicator = dataset_indicator
         self.increment_version()
 
     @property
@@ -162,15 +112,6 @@ class Observation(Entity):
     @area.setter
     def area(self, area):
         self._area = area
-        self.increment_version()
-
-    @property
-    def area_name(self):
-        return self._area_name
-
-    @area_name.setter
-    def area_name(self, area_name):
-        self._area_name = area_name
         self.increment_version()
 
     @property
@@ -192,12 +133,12 @@ class Observation(Entity):
         self.increment_version()
 
     @property
-    def value(self):
-        return self._value
+    def rank_change(self):
+        return self._rank_change
 
-    @value.setter
-    def value(self, value):
-        self._value = value
+    @rank_change.setter
+    def rank_change(self, rank_change):
+        self._rank_change = rank_change
         self.increment_version()
 
     @property
@@ -210,70 +151,16 @@ class Observation(Entity):
         self.increment_version()
 
     @property
-    def provider_name(self):
-        return self._provider_name
-
-    @provider_name.setter
-    def provider_name(self, provider_name):
-        self._provider_name = provider_name
-        self.increment_version()
-
-    @property
     def id(self):
         return self._id
 
     @property
-    def continent(self):
-        return self._continent
+    def rank(self):
+        return self._rank
 
-    @continent.setter
-    def continent(self, continent):
-        self._continent = continent
-        self.increment_version()
-
-    @property
-    def tendency(self):
-        return self._tendency
-
-    @tendency.setter
-    def tendency(self, tendency):
-        self._tendency = tendency
-        self.increment_version()
-
-    @property
-    def republish(self):
-        return self._republish
-
-    @republish.setter
-    def republish(self, republish):
-        self._republish = republish
-        self.increment_version()
-
-    @property
-    def area_type(self):
-        return self._area_type
-
-    @area_type.setter
-    def area_type(self, area_type):
-        self._area_type = area_type
-        self.increment_version()
-
-    @property
-    def ranking(self):
-        return self._ranking
-
-    @ranking.setter
-    def ranking(self, ranking):
-        self._ranking = ranking
-        self.increment_version()
-
-    @property
-    def ranking_type(self):
-        return self._ranking_type
-
-    @ranking_type.setter
-    def ranking_type(self, ranking_type):
-        self._ranking_type = ranking_type
+    @rank.setter
+    def rank(self, rank):
+        self._rank = rank
         self.increment_version()
 
     # =======================================================================================
@@ -338,7 +225,8 @@ class Observation(Entity):
 # =======================================================================================
 # Observation aggregate root factory
 # =======================================================================================
-def create_observation(indicator=None, area=None, value=None, year=1970, id=None, tendency=0, ranking=None):
+def create_observation(indicator=None, area=None, value=None, year=1970, id=None, rank=None, rank_change=None,
+                       uri=None, dataset_indicator=None):
     """
     This function creates new observations and acts as a factory
 
@@ -366,8 +254,9 @@ def create_observation(indicator=None, area=None, value=None, year=1970, id=None
         Observation: Created observation
     """
     obs_id = uuid.uuid4().hex[:24]
-    event = Observation.Created(originator_id=obs_id, originator_version=0, indicator=indicator,
-                                area=area, value=value, year=year, id=id, tendency=tendency, ranking=ranking)
+    event = Observation.Created(originator_id=obs_id, originator_version=0, indicator=indicator, area=area, value=value,
+                                year=year, id=id, rank=rank, rank_change=rank_change, uri=uri,
+                                dataset_indicator=dataset_indicator)
     obs = when(event)
     publish(event)
     return obs

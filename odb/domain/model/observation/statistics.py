@@ -1,7 +1,6 @@
 from functools import reduce
 
 
-
 class Statistics(object):
     """
     Statistics entity
@@ -38,21 +37,22 @@ class Statistics(object):
         values = self._observations_values()
         return self._median(values)
 
-    @property
-    def average_developing(self):
-        return self._average(self._filter_observations_values_by_area_type(self.DEVELOPING))
-
-    @property
-    def median_developing(self):
-        return self._median(self._filter_observations_values_by_area_type(self.DEVELOPING))
-
-    @property
-    def average_emerging(self):
-        return self._average(self._filter_observations_values_by_area_type(self.EMERGING))
-
-    @property
-    def median_emerging(self):
-        return self._median(self._filter_observations_values_by_area_type(self.EMERGING))
+    # FIXME: Review
+    # @property
+    # def average_developing(self):
+    #     return self._average(self._filter_observations_values_by_area_type(self.DEVELOPING))
+    #
+    # @property
+    # def median_developing(self):
+    #     return self._median(self._filter_observations_values_by_area_type(self.DEVELOPING))
+    #
+    # @property
+    # def average_emerging(self):
+    #     return self._average(self._filter_observations_values_by_area_type(self.EMERGING))
+    #
+    # @property
+    # def median_emerging(self):
+    #     return self._median(self._filter_observations_values_by_area_type(self.EMERGING))
 
     @property
     def max(self):
@@ -62,7 +62,8 @@ class Statistics(object):
     def min(self):
         return min(self._observations_values()) if len(self._observations_values()) > 0 else 0
 
-    def _average(self, values):
+    @staticmethod
+    def _average(values):
         """
         Calculates the average of a set of values
 
@@ -86,7 +87,7 @@ class Statistics(object):
             float: Median of the given values
         """
         values.sort()
-        half = len(values) / 2
+        half = len(values) // 2
         if len(values) == 0:
             return 0
         if len(values) % 2 == 0:
@@ -107,7 +108,7 @@ class Statistics(object):
         Returns:
             list of Observation: Filtered observations without blank values
         """
-        return [obs for obs in self._observations if obs.value != ""]  # avoids unknown values
+        return [obs for obs in self._observations if obs.value != "" and obs.value]  # avoids unknown values
 
     def _observations_values(self):
         """
@@ -139,10 +140,10 @@ class Statistics(object):
         return {
             'average': self.average,
             'median': self.median,
-            'average_developing': self.average_developing,
-            'median_developing': self.median_developing,
-            'average_emerging': self.average_emerging,
-            'median_emerging': self.median_emerging,
+            # 'average_developing': self.average_developing,
+            # 'median_developing': self.median_developing,
+            # 'average_emerging': self.average_emerging,
+            # 'median_emerging': self.median_emerging,
             'max': self.max,
             'min': self.min
         }
