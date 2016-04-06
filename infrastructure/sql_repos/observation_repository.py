@@ -98,6 +98,8 @@ class ObservationRepository(Repository):
     def find_tree_observations(self, indicator_code, area_code=None, year=None, level='COMPONENT', filter_dataset=True):
         if indicator_code is not None:
             self._indicator_repo.find_indicator_by_code(indicator_code)
+        if area_code is not None and area_code != "ALL":
+            self._area_repo.find_by_code(area_code)
 
         data = {'indicator': indicator_code}
         year_query_filter = self._build_year_query_filter(year)
@@ -106,7 +108,8 @@ class ObservationRepository(Repository):
         if area_query_filter:
             data['area'] = area_code
         dataset_query_filter = "dataset_indicator IS NULL" if filter_dataset else None
-        query_filter = " AND ".join(filter(None, [dataset_query_filter, year_query_filter, level_query_filter]))
+        query_filter = " AND ".join(
+            filter(None, [dataset_query_filter, year_query_filter, level_query_filter, area_query_filter]))
         query = "SELECT * FROM observation WHERE " + query_filter if query_filter else "SELECT * FROM observation"
         rows = self._db.execute(query, data).fetchall()
 
