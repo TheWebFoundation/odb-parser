@@ -1,15 +1,33 @@
-# a4aiDom
-A4AI domain model using DDD and Hexagonal Architecture
+# ODB 2015
+## Getting started
+1. Download the Excel file with the ODB data, put it under the `application` subfolder with the name `data.xlsx` (the name could be different, but in that case we'll have to change it in the settings)
+2. Parse the data with the app under the `application` subfolder
+    1. (Optional) Configure the parser settings under `parser_config.ini`
+    2. Run the parser: `python parse.py`, the resulting sqlite database will be on the root folder with the name `odb2015.db`
+3. Serve the data with the app under the `api` subfolder
+    1. Run the server: `python api.py`
+4. Generate the jsons with the app under the `application` subfolder
+    1. Run the app: `python generate_json_files.py`
+    2. Get the results under the `json` subfolder
+    
+The parser makes use of two files `search.json` and `fake_iso_codes.json` to enrich the data.
+- The `fake_iso_codes.json` file is a manually crafted file specifiying iso codes for top level virtual regions
+- The `search.json` file is generated with the script listed in the appendix. The file contains semicolon separated names in different languages for iso codes
 
 
 ## Notes
+- Based on the code for the A4AI domain model using DDD and Hexagonal Architecture
+- Source code comments:
+    - **TODO**: Things work well without implementing this change, but it might be a good idea to take it into account in the future
+    - **FIXME**: This should be corrected, specially before going into production
+    - **HACK**: A hack
+    - **XXX**: Custom marker, probably also a **HACK**
+    
+## FIXME and TODO
+- Mainly pydocs 
 
-- Some columns missing
-- Old importer had hardcoded Year (2014)
-- Column disposition is different (primary and secondary index descriptions?)
-- Some raw indicators have the year in the column name
-
-## Simple script to get search names
+## Appendix
+### `search.json` generation script
 ```
 'use strict';
 

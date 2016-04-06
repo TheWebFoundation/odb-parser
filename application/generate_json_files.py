@@ -1,8 +1,8 @@
+import json
 import logging
 import os
 from operator import itemgetter
 
-import json
 from application.odbFetcher.enrichment.rest_client import get_json
 
 
