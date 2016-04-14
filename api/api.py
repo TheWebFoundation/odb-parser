@@ -149,15 +149,6 @@ def show_area(area_code):
     return area_json_encoder(request, area)
 
 
-# FIXME: Previous request already returns countries
-@app.route("/areas/<area_code>/countries")
-@cache.cached(timeout=TIMEOUT, key_prefix=make_cache_key)
-def show_area_countries(area_code):
-    order = request.args.get('orderBy')
-    area_repo = AreaRepository(recreate_db=False, config=sqlite_config)
-    countries = area_repo.find_countries_by_region_or_income(area_code, order)
-    return area_json_encoder(request, countries)
-
 
 ##########################################################################################
 ##                                     INDICATORS                                       ##
@@ -337,6 +328,23 @@ def list_observations_by_indicator_and_country_and_year(indicator_code, area_cod
 
 
 ## Ad-hoc queries
+
+@app.route("/yearsWithIndicatorData")
+@cache.cached(timeout=TIMEOUT, key_prefix=make_cache_key)
+def years_with_indicator_data():
+    area_repo = AreaRepository(recreate_db=False, config=sqlite_config)
+    indicator_repo = IndicatorRepository(recreate_db=False, config=sqlite_config)
+    observation_repo = ObservationRepository(recreate_db=False, area_repo=area_repo, indicator_repo=indicator_repo,
+                                             config=sqlite_config)
+
+    query_result = observation_repo._get_years_with_indicator()
+    data = {}
+    for (year, indicator) in query_result:
+        if year not in data:
+            data[year] = []
+        data[year].append(indicator)
+
+    return json_response_ok(request, data)
 
 @app.route("/indexObservations/<year>")
 @cache.cached(timeout=TIMEOUT, key_prefix=make_cache_key)

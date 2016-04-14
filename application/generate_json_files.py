@@ -79,6 +79,14 @@ def generateOdbPerCountryJson(log):
         json.dump(response['data'], open(filename, "w"), ensure_ascii=False)
 
 
+def generateYearsWithIndicatorDataJson(log):
+    log.info('Generating years with indicator data document')
+    uri = "http://localhost:5000/yearsWithIndicatorData"
+    filename = os.path.join(os.path.dirname(__file__), "json", "years_with_data.json")
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    response = get_json(uri, {"format": "json"})
+    json.dump(response['data'], open(filename, "w"), ensure_ascii=False)
+
 def run():
     configure_log()
     log = logging.getLogger("odbFetcher")
@@ -87,6 +95,7 @@ def run():
     generateCountriesJson(log)
     generateOdbJson(log)
     generateOdbPerCountryJson(log)
+    generateYearsWithIndicatorDataJson(log)
     log.info('Done')
 
 

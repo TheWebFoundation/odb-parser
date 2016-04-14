@@ -95,6 +95,11 @@ class ObservationRepository(Repository):
 
         return YearRowAdapter().transform_to_year_list([dict(r) for r in rows])
 
+    # TODO: expand into proper domain object
+    def _get_years_with_indicator(self):
+        query = "SELECT year, indicator FROM observation GROUP BY indicator, year"
+        return self._db.execute(query)
+
     def find_tree_observations(self, indicator_code, area_code=None, year=None, level='COMPONENT', filter_dataset=True):
         if indicator_code is not None:
             self._indicator_repo.find_indicator_by_code(indicator_code)
