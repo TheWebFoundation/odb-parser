@@ -145,7 +145,13 @@ class ObservationParser(Parser):
                 if len(indicator_code_retrieved.split()) > 1:
                     self._log.debug('Indicator %s in had to be stripped of year while parsing %s',
                                     indicator_code_retrieved, raw_obs_sheet.name)
-                indicator_code = indicator_code_retrieved.split()[0]
+                try:
+                    indicator_code = indicator_code_retrieved.split()[0]
+                except IndexError:
+                    self._log.warn(
+                        'Wrong Indicator name %s while parsing %s[%s], skipping column' % (
+                            indicator_code_retrieved, raw_obs_sheet.name, colname(column_number)))
+                    continue
 
                 try:
                     indicator = self._indicator_repo.find_indicator_by_code(indicator_code)
