@@ -51,6 +51,7 @@ class Area(Entity):
         self._iso2 = event.iso2
         self._id = event.id
         self._search = event.search
+        self._years_with_data = event.years_with_data
         self._info = event.info
         self._countries = event.countries
 
@@ -63,8 +64,8 @@ class Area(Entity):
         """
         return {
             'name': self.name, 'short_name': self.short_name, 'area': self.area, 'uri': self.uri, 'iso3': self.iso3,
-            'iso2': self.iso2, 'id': self.id, "search": self.search,
-            'info': {area_info.indicator_code: area_info.to_dict() for area_info in self.info}
+            'iso2': self.iso2, 'id': self.id, "search": self.search, "years_with_data": self._years_with_data,
+            'info': {area_info.indicator_code: area_info.to_dict() for area_info in self._info}
         }
 
     def to_dict_without_info(self):
@@ -157,7 +158,16 @@ class Area(Entity):
 
     @info.setter
     def info(self, info):
-        self.info = info
+        self._info = info
+        self.increment_version()
+
+    @property
+    def years_with_data(self):
+        return self._years_with_data
+
+    @years_with_data.setter
+    def years_with_data(self, years_with_data):
+        self._years_with_data = years_with_data
         self.increment_version()
 
     # =======================================================================================

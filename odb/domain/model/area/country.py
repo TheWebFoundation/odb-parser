@@ -145,7 +145,8 @@ class Country(Area):
 # Region aggregate root factory
 # =======================================================================================
 def create_country(name=None, short_name=None, area=None, income=None, uri=None, iso3=None, iso2=None, id=None,
-                   search=None, hdi_rank=None, g20=None, g7=None, iodch=None, oecd=None, info=None):
+                   search=None, hdi_rank=None, g20=None, g7=None, iodch=None, oecd=None, info=None,
+                   years_with_data=None):
     """
     This function creates new countries and acts as a factory
 
@@ -168,7 +169,8 @@ def create_country(name=None, short_name=None, area=None, income=None, uri=None,
     if not info: info = []
     event = Country.Created(originator_id=country_id, originator_version=0, name=name, short_name=short_name, area=area,
                             income=income, uri=uri, iso3=iso3, iso2=iso2, id=id, search=search, g20=g20, g7=g7,
-                            hdi_rank=hdi_rank, oecd=oecd, iodch=iodch, info=info, countries=None)
+                            hdi_rank=hdi_rank, oecd=oecd, iodch=iodch, info=info, countries=None,
+                            years_with_data=years_with_data)
     country = when(event)
     publish(event)
     return country
