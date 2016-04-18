@@ -95,6 +95,7 @@ class AreaRepository(Repository):
         data = dict(r)
         self.set_region_countries(data)
         self.set_area_info(data)
+        self.set_years_with_data(data)
         return AreaRowAdapter().dict_to_area(data)
 
     def find_by_code(self, area_code):
@@ -107,6 +108,7 @@ class AreaRepository(Repository):
         data = dict(r)
         self.set_region_countries(data)
         self.set_area_info(data)
+        self.set_years_with_data(data)
         return AreaRowAdapter().dict_to_area(data)
 
     @lru_cache(maxsize=None)
@@ -120,6 +122,7 @@ class AreaRepository(Repository):
         data = dict(r)
         self.set_region_countries(data)
         self.set_area_info(data)
+        self.set_years_with_data(data)
         return AreaRowAdapter().dict_to_area(data)
 
     # FIXME: Review this method signature
@@ -152,6 +155,7 @@ class AreaRepository(Repository):
         area = dict(r)
         self.set_area_info(area)
         self.set_region_countries(area)
+        self.set_years_with_data(area)
 
         return AreaRowAdapter().dict_to_area(area)
 
@@ -183,6 +187,7 @@ class AreaRepository(Repository):
         for country in [dict(r) for r in rows]:
             self.set_region_countries(country)
             self.set_area_info(country)
+            self.set_years_with_data(country)
             country_list.append(country)
 
         return CountryRowAdapter().transform_to_country_list(country_list)
@@ -214,6 +219,7 @@ class AreaRepository(Repository):
         if commit:
             self._db.commit()
 
+    @lru_cache(maxsize=None)
     def find_area_info(self, iso3):
         """
         Finds the area infor for the country with the iso3 specified
@@ -284,9 +290,22 @@ class AreaRepository(Repository):
 
         for country in [dict(r) for r in rows]:
             self.set_area_info(country)
+            self.set_years_with_data(country)
             country_list.append(country)
 
         return CountryRowAdapter().transform_to_country_list(country_list)
+
+    @lru_cache(maxsize=None)
+    def find_years_with_data(self, iso3):
+        query = "SELECT DISTINCT(observation.year) FROM area INNER JOIN observation ON area.iso3 = observation.area WHERE area.area IS NOT NULL AND AREA.iso3 = :iso3"
+        rows = self._db.execute(query, {'iso3': iso3})
+
+        return [r['year'] for r in rows]
+
+    def set_years_with_data(self, area_dict):
+        iso3 = area_dict["iso3"]
+        year_list = self.find_years_with_data(iso3)
+        area_dict["years_with_data"] = year_list
 
     def set_area_info(self, area_dict):
         """
@@ -319,6 +338,7 @@ class AreaRepository(Repository):
 
         for country in [dict(r) for r in rows]:
             self.set_area_info(country)
+            self.set_years_with_data(country)
             country_list.append(country)
 
         if country_list:
