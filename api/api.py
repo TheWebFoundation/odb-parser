@@ -149,7 +149,6 @@ def show_area(area_code):
     return area_json_encoder(request, area)
 
 
-
 ##########################################################################################
 ##                                     INDICATORS                                       ##
 ##########################################################################################
@@ -346,6 +345,7 @@ def years_with_indicator_data():
 
     return json_response_ok(request, data)
 
+
 @app.route("/indexObservations/<year>")
 @cache.cached(timeout=TIMEOUT, key_prefix=make_cache_key)
 def indexObservations_by_year(year):
@@ -372,9 +372,20 @@ def indexObservations_by_year(year):
     for indicator_code in sorted(set([o.indicator.indicator for o in observations])):
         per_indicator_obs = [o.value for o in observations if
                              o.indicator.indicator == indicator_code and o.value is not None]
-        data['stats'][indicator_code] = OrderedDict()
-        data['stats'][indicator_code]['mean'] = statistics.mean(per_indicator_obs)
-        data['stats'][indicator_code]['median'] = statistics.median(per_indicator_obs)
+        if indicator_code not in data['stats']:
+            data['stats'][indicator_code] = OrderedDict()
+        data['stats'][indicator_code][':::'] = OrderedDict()
+        data['stats'][indicator_code][':::']['mean'] = statistics.mean(per_indicator_obs)
+        data['stats'][indicator_code][':::']['median'] = statistics.median(per_indicator_obs)
+        for region in area_repo.find_regions():
+            per_region_obs = [o.value for o in observations if
+                              o.indicator.indicator == indicator_code and o.value is not None and o.area.iso3 in [c.iso3
+                                                                                                                  for c
+                                                                                                                  in
+                                                                                                                  region.countries]]
+            data['stats'][indicator_code][region.iso3] = OrderedDict()
+            data['stats'][indicator_code][region.iso3]['mean'] = statistics.mean(per_region_obs)
+            data['stats'][indicator_code][region.iso3]['median'] = statistics.median(per_region_obs)
 
     return json_response_ok(request, data)
 
