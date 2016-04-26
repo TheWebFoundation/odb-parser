@@ -390,6 +390,73 @@ def indexObservations_by_year(year):
     return json_response_ok(request, data)
 
 
+# @app.route("/indexStats/<year>")
+# @cache.cached(timeout=TIMEOUT, key_prefix=make_cache_key)
+# def indexStats_by_year(year):
+#     area_repo = AreaRepository(recreate_db=False, config=sqlite_config)
+#     indicator_repo = IndicatorRepository(recreate_db=False, config=sqlite_config)
+#     observation_repo = ObservationRepository(recreate_db=False, area_repo=area_repo, indicator_repo=indicator_repo,
+#                                              config=sqlite_config)
+#     index_indicator = indicator_repo.find_indicators_index()[0]
+#     observations = observation_repo.find_tree_observations(index_indicator.indicator, 'ALL', year, 'INDICATOR')
+#     areas = area_repo.find_countries(order="iso3")
+#
+#     data = {'year': year, 'stats': OrderedDict()}
+#
+#     for indicator_code in sorted(set([o.indicator.indicator for o in observations])):
+#         per_indicator_obs = [o.value for o in observations if
+#                              o.indicator.indicator == indicator_code and o.value is not None]
+#         if indicator_code not in data['stats']:
+#             data['stats'][indicator_code] = OrderedDict()
+#         data['stats'][indicator_code][':::'] = OrderedDict()
+#         data['stats'][indicator_code][':::']['mean'] = statistics.mean(per_indicator_obs)
+#         data['stats'][indicator_code][':::']['median'] = statistics.median(per_indicator_obs)
+#         for region in area_repo.find_regions():
+#             per_region_obs = [o.value for o in observations if
+#                               o.indicator.indicator == indicator_code
+#                               and o.value is not None
+#                               and o.area.iso3 in [c.iso3 for c in region.countries]]
+#             data['stats'][indicator_code][region.iso3] = OrderedDict()
+#             data['stats'][indicator_code][region.iso3]['mean'] = statistics.mean(per_region_obs)
+#             data['stats'][indicator_code][region.iso3]['median'] = statistics.median(per_region_obs)
+#
+#     return json_response_ok(request, data)
+
+@app.route("/indexStats/<year>")
+@cache.cached(timeout=TIMEOUT, key_prefix=make_cache_key)
+def indexStats_by_year(year):
+    area_repo = AreaRepository(recreate_db=False, config=sqlite_config)
+    indicator_repo = IndicatorRepository(recreate_db=False, config=sqlite_config)
+    observation_repo = ObservationRepository(recreate_db=False, area_repo=area_repo, indicator_repo=indicator_repo,
+                                             config=sqlite_config)
+    index_indicator = indicator_repo.find_indicators_index()[0]
+    observations = observation_repo.find_tree_observations(index_indicator.indicator, 'ALL', year, 'INDICATOR')
+    areas = area_repo.find_countries(order="iso3")
+
+    data = {'year': year, 'stats': OrderedDict()}
+
+    for region in area_repo.find_regions():
+        per_region_obs = [o for o in observations if o.value is not None
+                          and o.area.iso3 in [c.iso3 for c in region.countries]]
+        for indicator_code in sorted(set([o.indicator.indicator for o in observations])):
+            per_indicator_obs = [o.value for o in per_region_obs if
+                                 o.indicator.indicator == indicator_code and o.value is not None]
+            if region.iso3 not in data['stats']:
+                data['stats'][region.iso3] = OrderedDict()
+            data['stats'][region.iso3][indicator_code] = OrderedDict()
+            data['stats'][region.iso3][indicator_code]['mean'] = statistics.mean(per_indicator_obs)
+            data['stats'][region.iso3][indicator_code]['median'] = statistics.median(per_indicator_obs)
+
+    data['stats'][':::'] = OrderedDict()
+    for indicator_code in sorted(set([o.indicator.indicator for o in observations])):
+        per_indicator_obs = [o.value for o in observations if
+                             o.indicator.indicator == indicator_code and o.value is not None]
+        data['stats'][':::'][indicator_code] = OrderedDict()
+        data['stats'][':::'][indicator_code]['mean'] = statistics.mean(per_indicator_obs)
+        data['stats'][':::'][indicator_code]['median'] = statistics.median(per_indicator_obs)
+
+    return json_response_ok(request, data)
+
 @app.route("/countryObservations/<area_code>")
 @cache.cached(timeout=TIMEOUT, key_prefix=make_cache_key)
 def countryObservations_by_area(area_code):
