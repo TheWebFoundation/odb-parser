@@ -37,23 +37,6 @@ class Statistics(object):
         values = self._observations_values()
         return self._median(values)
 
-    # FIXME: Review
-    # @property
-    # def average_developing(self):
-    #     return self._average(self._filter_observations_values_by_area_type(self.DEVELOPING))
-    #
-    # @property
-    # def median_developing(self):
-    #     return self._median(self._filter_observations_values_by_area_type(self.DEVELOPING))
-    #
-    # @property
-    # def average_emerging(self):
-    #     return self._average(self._filter_observations_values_by_area_type(self.EMERGING))
-    #
-    # @property
-    # def median_emerging(self):
-    #     return self._median(self._filter_observations_values_by_area_type(self.EMERGING))
-
     @property
     def max(self):
         return max(self._observations_values()) if len(self._observations_values()) > 0 else 0

@@ -100,7 +100,6 @@ class Indicator(Entity):
             'source_data': self.source_data, 'units': self.units, 'format_notes': self.format_notes,
             'license': self.license, 'range': self.range, 'tags': self.tags, 'weight': self.weight}
 
-    # TODO: Enforce rules about naming here?
 
     # =======================================================================================
     # Properties
@@ -334,7 +333,6 @@ class Indicator(Entity):
         publish(event)
 
     def add_child(self, indicator):
-        # TODO: use event system
         self._children.append(indicator)
         self.increment_version()
 

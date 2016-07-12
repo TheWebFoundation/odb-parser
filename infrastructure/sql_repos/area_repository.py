@@ -125,7 +125,6 @@ class AreaRepository(Repository):
         self.set_years_with_data(data)
         return AreaRowAdapter().dict_to_area(data)
 
-    # FIXME: Review this method signature
     def find_countries_by_code_or_income(self, area_code_or_income):
         """
         Finds countries by code or income if no area is found it will search by income
@@ -145,7 +144,6 @@ class AreaRepository(Repository):
         r = self._db.execute(query, dict.fromkeys(['iso2', 'iso3', 'name'], area_code_or_income)).fetchone()
 
         if r is None:
-            # FIXME: Review (old comment was: This is not working, order by is needed on method call)
             countries = self.find_countries_by_region_or_income(area_code_or_income)
             if not countries:
                 raise AreaRepositoryError("No countries for code %s" % (area_code_or_income,))

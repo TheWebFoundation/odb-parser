@@ -134,8 +134,6 @@ class ObservationRepository(Repository):
 
         return ObservationRowAdapter.transform_to_observation_list(processed_observation_list)
 
-    # FIXME: Review area_type subquery
-    # FIXME: Filter out or not dataset observations when asked for an indicator?
     def find_observations(self, indicator_code=None, area_code=None, year=None, area_type=None, filter_dataset=True):
         """
         Returns all observations that satisfy the given filters
@@ -183,7 +181,7 @@ class ObservationRepository(Repository):
                 observation['dataset_indicator']) if observation['dataset_indicator'] else None
             processed_observation_list.append(observation)
 
-        # FIXME: The original sorted everything by ranking, do we want it too?
+        # NOTE: The original sorted everything by ranking
         return ObservationRowAdapter.transform_to_observation_list(processed_observation_list)
 
     def find_dataset_observations(self, indicator_code, area_code, year):

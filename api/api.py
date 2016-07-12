@@ -174,7 +174,7 @@ def list_indicators_flattened():
         q.extendleft(i.children)
         i.children = []
 
-    # TODO: Uncomment to include orphan indicators (e.g. dataset_assesment)
+    # Note: Uncomment to include orphan indicators (e.g. dataset_assesment)
     # final_indicators.extend([i for i in indicators if i not in final_indicators])
     return json_encoder(request, final_indicators)
 
@@ -193,7 +193,7 @@ def list_indicators_meta():
         q.extendleft(i.children)
         i.children = []
 
-    # TODO: Uncomment to include orphan indicators (e.g. dataset_assesment)
+    # NOTE: Uncomment to include orphan indicators (e.g. dataset_assesment)
     final_indicators = [i for i in indicators if i not in final_indicators]
     return json_encoder(request, final_indicators)
 
