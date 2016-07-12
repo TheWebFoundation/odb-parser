@@ -602,7 +602,6 @@ def list_observations_by_indicator_and_country_and_year_visualisations(indicator
     return json_encoder(request, visualisation)
 
 
-# FIXME
 ##########################################################################################
 ##                             VISUALISATION GROUPED BY AREA                            ##
 ##########################################################################################
