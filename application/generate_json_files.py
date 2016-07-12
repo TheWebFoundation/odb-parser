@@ -78,7 +78,6 @@ def generateOdbPerCountryJson(log):
         response = get_json(uri, {"format": "json"})
         json.dump(response['data'], open(filename, "w"), ensure_ascii=False)
 
-
 def generateYearsWithIndicatorDataJson(log):
     log.info('Generating years with indicator data document')
     uri = "http://localhost:5000/yearsWithIndicatorData"
@@ -86,6 +85,23 @@ def generateYearsWithIndicatorDataJson(log):
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     response = get_json(uri, {"format": "json"})
     json.dump(response['data'], open(filename, "w"), ensure_ascii=False)
+
+
+def generateStatsJson(log):
+    log.info('Generating stats document')
+    filename = os.path.join(os.path.dirname(__file__), "json", "stats.json")
+
+    uri = "http://localhost:5000/years"
+    response = get_json(uri, {"format": "json"})
+    years = [y['value'] for y in response["data"]]
+
+    data = {}
+    for year in years:
+        uri = "http://localhost:5000/indexStats/%s" % (year,)
+        response = get_json(uri, {"format": "json"})
+        data[year] = response['data']['stats']
+
+    json.dump(data, open(filename, "w"), ensure_ascii=False)
 
 def run():
     configure_log()
@@ -96,6 +112,7 @@ def run():
     generateOdbJson(log)
     generateOdbPerCountryJson(log)
     generateYearsWithIndicatorDataJson(log)
+    generateStatsJson(log)
     log.info('Done')
 
 

@@ -1,12 +1,14 @@
 # ODB 2015
 ## Getting started
-1. Download the Excel file with the ODB data, put it under the `application` subfolder with the name `data.xlsx` (the name could be different, but in that case we'll have to change it in the settings)
-2. Parse the data with the app under the `application` subfolder
+1. Clone this repo.
+2. Install the requirements with `pip install -r requirements.txt`
+3. Download the Excel file with the ODB data, put it under the `application` subfolder with the name `data.xlsx` (the name could be different, but in that case we'll have to change it in the settings)
+4. Parse the data with the app under the `application` subfolder
     1. (Optional) Configure the parser settings under `parser_config.ini`
     2. Run the parser: `python parse.py`, the resulting sqlite database will be on the root folder with the name `odb2015.db`
-3. Serve the data with the app under the `api` subfolder
+5. Serve the data with the app under the `api` subfolder
     1. Run the server: `python api.py`
-4. Generate the jsons with the app under the `application` subfolder
+6. Generate the jsons with the app under the `application` subfolder
     1. Run the app: `python generate_json_files.py`
     2. Get the results under the `json` subfolder
     

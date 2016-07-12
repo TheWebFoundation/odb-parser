@@ -194,6 +194,7 @@ class AreaRepository(Repository):
 
     def insert_region(self, region, commit=True):
         data = RegionRowAdapter().region_to_dict(region)
+        del data['years_with_data']
         query = create_insert_query('area', data)
         self._db.execute(query, data)
         if commit:
@@ -201,6 +202,7 @@ class AreaRepository(Repository):
 
     def insert_country(self, country, commit=True):
         data = CountryRowAdapter().country_to_dict(country)
+        del data['years_with_data']
         query = create_insert_query('area', data)
         self._db.execute(query, data)
         if commit:
