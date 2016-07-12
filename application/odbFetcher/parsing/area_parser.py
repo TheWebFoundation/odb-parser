@@ -1,5 +1,6 @@
 import os
 import re
+from json import load
 from urllib.parse import urljoin
 
 from application.odbFetcher.parsing.excel_model.excel_area import ExcelArea
@@ -7,7 +8,6 @@ from application.odbFetcher.parsing.excel_model.excel_area_info import ExcelArea
 from application.odbFetcher.parsing.parser import Parser
 from application.odbFetcher.parsing.utils import excel_region_to_dom, excel_country_to_dom, str_to_none, is_not_empty, \
     get_column_number, excel_area_info_to_dom
-from json import load
 
 
 class AreaParser(Parser):
@@ -78,7 +78,6 @@ class AreaParser(Parser):
                 year = area_info_sheet.cell(row_number, year_column).value
                 # FIXME: How to format properly? and do we need to add long name?
                 indicator_code = "CLUSTER"  # area_info_sheet.cell(area_info_name_row, cluster_column).value
-                # FIXME: Need to sanitize?
                 value = str_to_none(area_info_sheet.cell(row_number, cluster_column).value)
 
                 if iso3 not in self._excel_area_infos:
