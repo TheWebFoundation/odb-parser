@@ -1,0 +1,16 @@
+{
+  "name": "generate_search",
+  "version": "1.0.0",
+  "description": "",
+  "main": "generate_search.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fast-csv": "^2.4.0",
+    "lodash": "^4.17.4",
+    "world-countries": "^1.8.1"
+  }
+}

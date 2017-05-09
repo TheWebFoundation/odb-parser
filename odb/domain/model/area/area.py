@@ -145,7 +145,10 @@ class Area(Entity):
 
     @property
     def search(self):
-        return self._search
+        if self._search:
+            return self._search
+
+        return ""
 
     @search.setter
     def search(self, search):
