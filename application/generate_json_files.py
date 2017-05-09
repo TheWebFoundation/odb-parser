@@ -30,6 +30,19 @@ def generateOdbJson(log):
         response = get_json(uri, {"format": "json"})
         json.dump(response['data'], open(filename, "w"), ensure_ascii=False)
 
+def generateOdbEvolutionJson(log):
+    log.info('Generating ODB evolution data per year documents')
+    uri = "http://localhost:5000/years"
+    response = get_json(uri, {"format": "json"})
+    years = [y['value'] for y in response['data']]
+    for year in years:
+        log.info('\tRetrieving ODB evolution data for %s' % (year,))
+        uri = "http://localhost:5000/indexEvolution/%s" % (year,)
+        filename = os.path.join(os.path.dirname(__file__), "json", "odb_evolution_%s.json" % (year,))
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        response = get_json(uri, {"format": "json"})
+        json.dump(response['data'], open(filename, "w"), ensure_ascii=False)
+
 
 def generateCountriesJson(log):
     log.info('Generating countries document')
@@ -110,6 +123,7 @@ def run():
     generateMetaIndicatorsJson(log)
     generateCountriesJson(log)
     generateOdbJson(log)
+    generateOdbEvolutionJson(log)
     generateOdbPerCountryJson(log)
     generateYearsWithIndicatorDataJson(log)
     generateStatsJson(log)
