@@ -390,6 +390,67 @@ def indexObservations_by_year(year):
     return json_response_ok(request, data)
 
 
+@app.route("/indexEvolution/<year>")
+@cache.cached(timeout=TIMEOUT, key_prefix=make_cache_key)
+def indexEvolution_by_year(year):
+    area_repo = AreaRepository(recreate_db=False, config=sqlite_config)
+    indicator_repo = IndicatorRepository(recreate_db=False, config=sqlite_config)
+    observation_repo = ObservationRepository(recreate_db=False, area_repo=area_repo, indicator_repo=indicator_repo,
+                                             config=sqlite_config)
+    index_indicator = indicator_repo.find_indicators_index()[0]
+    observations = observation_repo.find_tree_observations(index_indicator.indicator, 'ALL', None, 'COMPONENT')
+    areas = area_repo.find_countries(order="iso3")
+
+    data = {'year': year, 'areas': OrderedDict(), 'stats': OrderedDict()}
+    for area in sorted(areas, key=attrgetter('iso3')):
+        for obs in sorted([obs for obs in observations if obs.area.iso3 == area.iso3],
+                          key=lambda o: o.indicator.indicator):
+            if area.iso3 not in data['areas']:
+                data['areas'][area.iso3] = OrderedDict()
+            if obs.indicator.indicator not in data['areas'][area.iso3]:
+                data['areas'][area.iso3][obs.indicator.indicator] = OrderedDict()
+
+            if obs.year == int(year):
+                data['areas'][area.iso3][obs.indicator.indicator]['value'] = obs.value
+                if obs.indicator.type == 'INDEX':
+                    data['areas'][area.iso3][obs.indicator.indicator]['rank'] = obs.rank
+                    data['areas'][area.iso3][obs.indicator.indicator]['rank_change'] = obs.rank_change
+
+            if obs.indicator.type == 'INDEX':
+                if 'rank_evolution' not in data['areas'][area.iso3][obs.indicator.indicator]:
+                    data['areas'][area.iso3][obs.indicator.indicator]['rank_evolution'] = []
+                    # data['areas'][area.iso3][obs.indicator.indicator]['value_evolution'] = []
+                data['areas'][area.iso3][obs.indicator.indicator]['rank_evolution'].append(
+                    {'year': obs.year, 'value': obs.rank})
+                # data['areas'][area.iso3][obs.indicator.indicator]['value_evolution'].append(
+                #     {'year': obs.year, 'value': obs.value})
+
+    # Clean areas without data that year
+    for area in list(data['areas'].keys()):
+        if 'value' not in data['areas'][area]['ODB']:
+            del data['areas'][area]
+
+    for indicator_code in sorted(set([o.indicator.indicator for o in observations])):
+        per_indicator_obs = [o.value for o in observations if
+                             o.indicator.indicator == indicator_code and o.value is not None]
+        if indicator_code not in data['stats']:
+            data['stats'][indicator_code] = OrderedDict()
+        data['stats'][indicator_code][':::'] = OrderedDict()
+        data['stats'][indicator_code][':::']['mean'] = statistics.mean(per_indicator_obs)
+        data['stats'][indicator_code][':::']['median'] = statistics.median(per_indicator_obs)
+        for region in area_repo.find_regions():
+            per_region_obs = [o.value for o in observations if
+                              o.indicator.indicator == indicator_code and o.value is not None and o.area.iso3 in [c.iso3
+                                                                                                                  for c
+                                                                                                                  in
+                                                                                                                  region.countries]]
+            data['stats'][indicator_code][region.iso3] = OrderedDict()
+            data['stats'][indicator_code][region.iso3]['mean'] = statistics.mean(per_region_obs)
+            data['stats'][indicator_code][region.iso3]['median'] = statistics.median(per_region_obs)
+
+    return json_response_ok(request, data)
+
+
 # @app.route("/indexStats/<year>")
 # @cache.cached(timeout=TIMEOUT, key_prefix=make_cache_key)
 # def indexStats_by_year(year):
@@ -457,6 +518,7 @@ def indexStats_by_year(year):
 
     return json_response_ok(request, data)
 
+
 @app.route("/countryObservations/<area_code>")
 @cache.cached(timeout=TIMEOUT, key_prefix=make_cache_key)
 def countryObservations_by_area(area_code):
@@ -504,7 +566,7 @@ def countryObservations_by_area(area_code):
             data['years'][year]['stats'][indicator_code]['median'] = statistics.median(
                 per_indicator_obs) if per_indicator_obs else None
 
-        assert (data['years'][year]['observations'])
+            # assert (data['years'][year]['observations'])
     return json_response_ok(request, data)
 
 
