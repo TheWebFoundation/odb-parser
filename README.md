@@ -281,3 +281,9 @@ fs.createReadStream("cow.csv")
     });
 
 ```
+
+### Export CSV Files
+``` bash
+mkdir csv
+sqlite3 odb2015.db "SELECT iso3 FROM area WHERE iso3 NOT LIKE ':%'" | while read in; do sqlite3 -header -csv odb2015.db "SELECT observation.area AS 'iso3', area.name AS 'country', observation.indicator AS 'Indicator code', indicator.name AS 'Indicator name', indicator.type as 'Indicator type', observation.value AS 'value', observation.year AS 'year' From observation inner join indicator on observation.indicator = indicator.indicator inner join area on observation.area = area.iso3 WHERE observation.area='$in' ORDER BY year DESC" > csv/$in.csv; done
+```
