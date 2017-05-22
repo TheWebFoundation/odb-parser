@@ -417,11 +417,11 @@ def indexEvolution_by_year(year):
                     data['areas'][area.iso3][obs.indicator.indicator]['rank_change'] = obs.rank_change
 
             if obs.indicator.type == 'INDEX':
-                if 'rank_evolution' not in data['areas'][area.iso3][obs.indicator.indicator]:
-                    data['areas'][area.iso3][obs.indicator.indicator]['rank_evolution'] = []
+                if 'score_evolution' not in data['areas'][area.iso3][obs.indicator.indicator]:
+                    data['areas'][area.iso3][obs.indicator.indicator]['score_evolution'] = []
                     # data['areas'][area.iso3][obs.indicator.indicator]['value_evolution'] = []
-                data['areas'][area.iso3][obs.indicator.indicator]['rank_evolution'].append(
-                    {'year': obs.year, 'value': obs.rank})
+                data['areas'][area.iso3][obs.indicator.indicator]['score_evolution'].append(
+                    {'year': obs.year, 'value': obs.value})
                 # data['areas'][area.iso3][obs.indicator.indicator]['value_evolution'].append(
                 #     {'year': obs.year, 'value': obs.value})
 
